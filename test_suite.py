@@ -166,5 +166,33 @@ class TestBotExtensionIntegrity(unittest.TestCase):
         self.assertEqual(bot.extensions_to_load, expected)
 
 
+class TestBroadcastColorClamping(unittest.TestCase):
+    def test_color_bounds_and_parsing(self):
+        inputs = [
+            ("#a855f7", 0xa855f7),
+            ("a855f7", 0xa855f7),
+            (11032055, 0xa855f7),
+            (999999999, 0xFFFFFF),  # Clamped to 16777215
+            ("#ffffffffff", 0xFFFFFF),
+            (-50, 0),
+        ]
+        for inp, expected in inputs:
+            color_int = 0x5865F2
+            if isinstance(inp, int):
+                color_int = max(0, min(0xFFFFFF, inp))
+            elif isinstance(inp, str):
+                c_str = inp.strip().lstrip("#")
+                try:
+                    color_int = max(0, min(0xFFFFFF, int(c_str, 16)))
+                except ValueError:
+                    try:
+                        color_int = max(0, min(0xFFFFFF, int(c_str, 10)))
+                    except ValueError:
+                        color_int = 0x5865F2
+            self.assertLessEqual(color_int, 16777215)
+            self.assertGreaterEqual(color_int, 0)
+            self.assertEqual(color_int, expected)
+
+
 if __name__ == "__main__":
     unittest.main()

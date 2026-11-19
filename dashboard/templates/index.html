@@ -940,7 +940,7 @@ async function sendBroadcast() {
   const btn = document.getElementById('bc-send-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Sending…';
-  const r = await apiFetch('/api/broadcast', { method: 'POST', body: { channel_id: channelId, title, message, color: parseInt(color.slice(1), 16), use_embed: useEmbed } });
+  const r = await apiFetch('/api/broadcast', { method: 'POST', body: { channel_id: channelId, title, message, color, use_embed: useEmbed } });
   btn.disabled = false;
   btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Broadcast';
   if (r) showToast('Broadcast sent successfully!', 'success');

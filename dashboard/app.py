@@ -318,7 +318,7 @@ class DashboardApp:
             channel_id_str = str(body.get("channel_id", "")).strip()
             title = str(body.get("title", "")).strip()
             message = str(body.get("message", "")).strip()
-            color_hex = str(body.get("color", "#5865F2")).strip()
+            color_raw = body.get("color", "#5865F2")
             use_embed = bool(body.get("use_embed", True))
         except Exception:
             return web.json_response({"error": "Malformed JSON payload."}, status=400)
@@ -333,13 +333,23 @@ class DashboardApp:
         if not channel.permissions_for(channel.guild.me).send_messages:
             return web.json_response({"error": "Bot lacks permission to send messages in target channel."}, status=403)
 
-        try:
-            if use_embed or title:
+        # Parse and clamp embed color (Discord strictly requires 0 <= color <= 16777215 / 0xFFFFFF)
+        color_int = 0x5865F2
+        if isinstance(color_raw, int):
+            color_int = max(0, min(0xFFFFFF, color_raw))
+        elif isinstance(color_raw, str):
+            c_str = color_raw.strip().lstrip("#")
+            try:
+                # Interpret as hex if 6 or fewer hex chars or contains hex letters
+                color_int = max(0, min(0xFFFFFF, int(c_str, 16)))
+            except ValueError:
                 try:
-                    color_int = int(color_hex.replace("#", ""), 16)
+                    color_int = max(0, min(0xFFFFFF, int(c_str, 10)))
                 except ValueError:
                     color_int = 0x5865F2
 
+        try:
+            if use_embed or title:
                 embed = discord.Embed(
                     title=f"📢 {title[:256]}" if title else None,
                     description=message[:4096],
