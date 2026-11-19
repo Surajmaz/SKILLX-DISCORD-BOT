@@ -93,5 +93,32 @@ class TestEmbedBuilders(unittest.TestCase):
         self.assertLessEqual(len(embed.description), 4096)
 
 
+class TestCommunityUtilities(unittest.TestCase):
+    def test_parse_time_to_seconds(self):
+        from cogs.community import parse_time_to_seconds
+
+        self.assertEqual(parse_time_to_seconds("30s"), 30)
+        self.assertEqual(parse_time_to_seconds("5m"), 300)
+        self.assertEqual(parse_time_to_seconds("2h"), 7200)
+        self.assertEqual(parse_time_to_seconds("1d"), 86400)
+        self.assertIsNone(parse_time_to_seconds("invalid"))
+        self.assertIsNone(parse_time_to_seconds("10x"))
+
+
+class TestGeminiPersonas(unittest.TestCase):
+    def test_personas_exist_and_non_empty(self):
+        from gemini_client import PERSONAS
+
+        self.assertIn("default", PERSONAS)
+        self.assertIn("developer", PERSONAS)
+        self.assertIn("tutor", PERSONAS)
+        self.assertIn("creative", PERSONAS)
+        self.assertIn("concise", PERSONAS)
+
+        for name, prompt in PERSONAS.items():
+            self.assertIsInstance(prompt, str)
+            self.assertGreater(len(prompt), 10)
+
+
 if __name__ == "__main__":
     unittest.main()

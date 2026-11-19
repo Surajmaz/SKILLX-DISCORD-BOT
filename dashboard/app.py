@@ -9,10 +9,7 @@ from datetime import datetime, timezone
 import json
 import logging
 from pathlib import Path
-try:
-    import resource
-except ImportError:
-    resource = None
+import resource
 import sys
 from typing import Optional
 from aiohttp import web
@@ -32,7 +29,19 @@ class DashboardApp:
         self.security = DashboardSecurityManager(password, secret_key)
         self.app = web.Application(middlewares=[security_headers_middleware])
         self.runner: Optional[web.AppRunner] = None
+        self.activity_logs: list[dict] = []
         self._setup_routes()
+
+    def log_activity(self, event_type: str, message: str, meta: Optional[dict] = None) -> None:
+        """Stores a recent activity event for the live telemetry feed."""
+        self.activity_logs.append({
+            "type": event_type,
+            "message": message,
+            "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S"),
+            "meta": meta or {},
+        })
+        if len(self.activity_logs) > 60:
+            self.activity_logs.pop(0)
 
     def _setup_routes(self) -> None:
         self.app.router.add_get("/", self.handle_index)
@@ -43,10 +52,14 @@ class DashboardApp:
         # Authenticated APIs
         self.app.router.add_get("/api/stats", self.handle_api_stats)
         self.app.router.add_get("/api/guilds", self.handle_api_guilds)
+        self.app.router.add_get("/api/logs", self.handle_api_logs)
+        self.app.router.add_get("/api/infractions", self.handle_api_infractions)
         self.app.router.add_post("/api/broadcast", self.handle_api_broadcast)
         self.app.router.add_post("/api/ai-test", self.handle_api_ai_test)
         self.app.router.add_post("/api/clear-memory", self.handle_api_clear_memory)
         self.app.router.add_post("/api/presence", self.handle_api_presence)
+        self.app.router.add_post("/api/moderation/action", self.handle_api_moderation)
+        self.app.router.add_post("/api/cogs/reload", self.handle_api_reload_cog)
 
     def _get_client_ip(self, request: web.Request) -> str:
         forwarded = request.headers.get("X-Forwarded-For")
@@ -117,6 +130,7 @@ class DashboardApp:
 
         self.security.reset_failed_logins(ip)
         session_token = self.security.create_session_token()
+        self.log_activity("auth", f"Administrator logged into web dashboard from {ip}")
         response = web.json_response({"success": True})
         response.set_cookie(
             name="skillx_session",
@@ -124,7 +138,7 @@ class DashboardApp:
             max_age=86400,
             httponly=True,
             samesite="Lax",
-            secure=False,  # Set to True when served behind HTTPS
+            secure=False,
             path="/",
         )
         return response
@@ -151,40 +165,65 @@ class DashboardApp:
             hours, rem = divmod(rem, 3600)
             mins, secs = divmod(rem, 60)
             uptime_str = f"{days}d {hours}h {mins}m {secs}s"
+            uptime_sec = int(delta.total_seconds())
         else:
             uptime_str = "Calculating..."
+            uptime_sec = 0
 
-        # Calculate AI memory active sessions
+        # AI stats
         ai_cog = self.bot.get_cog("AI Chat")
         ai_memory_count = len(ai_cog.memory) if ai_cog and hasattr(ai_cog, "memory") else 0
+        ai_persona_count = len(ai_cog.user_personas) if ai_cog and hasattr(ai_cog, "user_personas") else 0
+
+        # AutoMod stats
+        automod_cog = self.bot.get_cog("AutoMod")
+        total_warns = 0
+        if automod_cog and hasattr(automod_cog, "infractions"):
+            total_warns = sum(len(w) for w in automod_cog.infractions.values())
 
         # Gateway ping
         ws_latency = round(self.bot.latency * 1000) if self.bot.latency is not None else 0
 
         # Memory usage
         try:
-            if resource is not None:
-                mem_mb = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
-            else:
-                mem_mb = 38.4
+            mem_mb = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
         except Exception:
             mem_mb = 0.0
 
         py_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-
         total_users = sum(g.member_count or 0 for g in self.bot.guilds)
+
+        bot_user_data = None
+        if self.bot.user:
+            avatar_url = None
+            try:
+                if hasattr(self.bot.user, "display_avatar") and self.bot.user.display_avatar:
+                    avatar_url = str(self.bot.user.display_avatar.url)
+            except Exception:
+                avatar_url = None
+
+            bot_user_data = {
+                "name": str(getattr(self.bot.user, "name", "SkillX")),
+                "id": str(getattr(self.bot.user, "id", "0")),
+                "avatar": avatar_url,
+            }
 
         data = {
             "guilds": len(self.bot.guilds),
             "users": total_users,
             "latency_ms": ws_latency,
             "uptime_str": uptime_str,
+            "uptime_seconds": uptime_sec,
             "ai_memory_contexts": ai_memory_count,
+            "ai_persona_overrides": ai_persona_count,
+            "total_infractions": total_warns,
+            "bot_user": bot_user_data,
             "system": {
                 "python": py_ver,
                 "discord_py": discord.__version__,
                 "memory_mb": mem_mb,
                 "cogs_count": len(self.bot.cogs),
+                "cogs_list": list(self.bot.cogs.keys()),
             },
         }
         return web.json_response(data)
@@ -197,18 +236,58 @@ class DashboardApp:
         guild_list = []
         for g in self.bot.guilds:
             text_channels = [
-                {"id": str(ch.id), "name": ch.name}
+                {
+                    "id": str(ch.id),
+                    "name": ch.name,
+                    "can_send": ch.permissions_for(g.me).send_messages,
+                }
                 for ch in g.text_channels
-                if ch.permissions_for(g.me).send_messages
             ]
+            voice_channels = [{"id": str(v.id), "name": v.name} for v in g.voice_channels]
+            roles = [{"id": str(r.id), "name": r.name, "color": f"#{r.color.value:06x}"} for r in reversed(g.roles) if not r.is_default()][:15]
+
             guild_list.append({
                 "id": str(g.id),
                 "name": g.name,
                 "icon": g.icon.url if g.icon else None,
+                "owner": str(g.owner) if g.owner else "Unknown",
                 "member_count": g.member_count or 0,
-                "channels": text_channels,
+                "text_channels": text_channels,
+                "voice_channels": voice_channels,
+                "roles_sample": roles,
             })
         return web.json_response(guild_list)
+
+    async def handle_api_logs(self, request: web.Request) -> web.Response:
+        is_auth, _ = self._authenticate_request(request)
+        if not is_auth:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+        return web.json_response(list(reversed(self.activity_logs)))
+
+    async def handle_api_infractions(self, request: web.Request) -> web.Response:
+        is_auth, _ = self._authenticate_request(request)
+        if not is_auth:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+
+        automod_cog = self.bot.get_cog("AutoMod")
+        infractions_data = []
+        if automod_cog and hasattr(automod_cog, "infractions"):
+            for key, items in automod_cog.infractions.items():
+                try:
+                    guild_id_str, user_id_str = key.split("_", 1)
+                except ValueError:
+                    continue
+                for item in items:
+                    infractions_data.append({
+                        "guild_id": guild_id_str,
+                        "user_id": user_id_str,
+                        "case_id": item.get("id"),
+                        "moderator_id": item.get("moderator_id"),
+                        "reason": item.get("reason"),
+                        "timestamp": item.get("timestamp"),
+                    })
+
+        return web.json_response(list(reversed(infractions_data))[:50])
 
     # ---------------------------------------------------------
     # INTERACTIVE ACTION APIS
@@ -224,6 +303,8 @@ class DashboardApp:
             channel_id_str = str(body.get("channel_id", "")).strip()
             title = str(body.get("title", "")).strip()
             message = str(body.get("message", "")).strip()
+            color_hex = str(body.get("color", "#5865F2")).strip()
+            use_embed = bool(body.get("use_embed", True))
         except Exception:
             return web.json_response({"error": "Malformed JSON payload."}, status=400)
 
@@ -238,11 +319,16 @@ class DashboardApp:
             return web.json_response({"error": "Bot lacks permission to send messages in target channel."}, status=403)
 
         try:
-            if title:
+            if use_embed or title:
+                try:
+                    color_int = int(color_hex.replace("#", ""), 16)
+                except ValueError:
+                    color_int = 0x5865F2
+
                 embed = discord.Embed(
-                    title=f"📢 {title[:256]}",
+                    title=f"📢 {title[:256]}" if title else None,
                     description=message[:4096],
-                    color=0x5865F2,
+                    color=color_int,
                     timestamp=datetime.now(timezone.utc),
                 )
                 embed.set_footer(text="Broadcasted via SkillX Web Console")
@@ -250,7 +336,7 @@ class DashboardApp:
             else:
                 await channel.send(message[:2000])
 
-            logger.info("Broadcast dispatched to #%s (%s)", channel.name, channel.id)
+            self.log_activity("broadcast", f"Announcement dispatched to #{channel.name} in {channel.guild.name}")
             return web.json_response({"success": True})
         except Exception as exc:
             logger.error("Failed to dispatch broadcast: %s", exc, exc_info=True)
@@ -264,6 +350,8 @@ class DashboardApp:
         try:
             body = await request.json()
             prompt = str(body.get("prompt", "")).strip()
+            persona = str(body.get("persona", "default")).strip()
+            temp = float(body.get("temperature", 0.7))
         except Exception:
             return web.json_response({"error": "Malformed payload."}, status=400)
 
@@ -274,11 +362,20 @@ class DashboardApp:
         if not ai_cog or not hasattr(ai_cog, "gemini"):
             return web.json_response({"error": "AI cog subsystem is not currently loaded."}, status=503)
 
-        text, model = await ai_cog.gemini.generate_with_fallback(prompt)
+        t1 = asyncio.get_event_loop().time()
+        text, model = await ai_cog.gemini.generate_with_fallback(prompt, persona=persona, temperature=temp)
+        elapsed_ms = round((asyncio.get_event_loop().time() - t1) * 1000)
+
         if not text:
             return web.json_response({"error": "All Gemini fallback models failed or were exhausted."}, status=502)
 
-        return web.json_response({"success": True, "response": text, "model": model})
+        self.log_activity("ai", f"Web AI query processed with {model} ({elapsed_ms}ms)")
+        return web.json_response({
+            "success": True,
+            "response": text,
+            "model": model,
+            "elapsed_ms": elapsed_ms,
+        })
 
     async def handle_api_clear_memory(self, request: web.Request) -> web.Response:
         is_auth, token = self._authenticate_request(request)
@@ -287,9 +384,10 @@ class DashboardApp:
 
         ai_cog = self.bot.get_cog("AI Chat")
         if ai_cog and hasattr(ai_cog, "memory"):
+            count = len(ai_cog.memory)
             ai_cog.memory.clear()
-            logger.info("All conversational memory cleared via web dashboard.")
-            return web.json_response({"success": True})
+            self.log_activity("memory", f"Wiped {count} conversational memory session(s)")
+            return web.json_response({"success": True, "cleared_count": count})
         return web.json_response({"error": "AI Cog unavailable."}, status=503)
 
     async def handle_api_presence(self, request: web.Request) -> web.Response:
@@ -323,8 +421,86 @@ class DashboardApp:
         activity = discord.Activity(type=activity_type, name=text or "/help | @SkillX")
         await self.bot.change_presence(activity=activity, status=discord_status)
 
-        logger.info("Presence updated via web dashboard: %s (%s)", text, status_str)
+        self.log_activity("presence", f"Presence adjusted to '{text}' ({status_str})")
         return web.json_response({"success": True})
+
+    async def handle_api_moderation(self, request: web.Request) -> web.Response:
+        is_auth, token = self._authenticate_request(request)
+        if not is_auth or not self._verify_csrf(request, token):
+            return web.json_response({"error": "Unauthorized or invalid CSRF token."}, status=403)
+
+        try:
+            body = await request.json()
+            action = str(body.get("action", "")).lower()
+            guild_id = int(body.get("guild_id", 0))
+            user_id = int(body.get("user_id", 0))
+            reason = str(body.get("reason", "Action via Web Console")).strip()
+        except Exception:
+            return web.json_response({"error": "Malformed payload."}, status=400)
+
+        guild = self.bot.get_guild(guild_id)
+        if not guild:
+            return web.json_response({"error": "Guild not found."}, status=404)
+
+        member = guild.get_member(user_id)
+        if not member and action != "ban":
+            return web.json_response({"error": "Member not found in guild."}, status=404)
+
+        try:
+            if action == "kick":
+                if member.top_role >= guild.me.top_role:
+                    return web.json_response({"error": "Bot role is lower than target member."}, status=403)
+                await member.kick(reason=reason)
+                self.log_activity("mod", f"Kicked member {member.name} ({user_id}) from {guild.name}")
+
+            elif action == "ban":
+                await guild.ban(discord.Object(id=user_id), reason=reason)
+                self.log_activity("mod", f"Banned user ({user_id}) from {guild.name}")
+
+            elif action == "warn":
+                automod_cog = self.bot.get_cog("AutoMod")
+                if not automod_cog:
+                    return web.json_response({"error": "AutoMod cog is not loaded."}, status=503)
+                automod_cog.add_warning(guild.id, user_id, self.bot.user.id, reason)
+                self.log_activity("mod", f"Warned member ({user_id}) in {guild.name}: {reason}")
+
+            else:
+                return web.json_response({"error": f"Unknown action '{action}'."}, status=400)
+
+            return web.json_response({"success": True})
+        except discord.Forbidden:
+            return web.json_response({"error": "Bot lacks Discord permissions to perform this action."}, status=403)
+        except Exception as exc:
+            return web.json_response({"error": str(exc)}, status=500)
+
+    async def handle_api_reload_cog(self, request: web.Request) -> web.Response:
+        is_auth, token = self._authenticate_request(request)
+        if not is_auth or not self._verify_csrf(request, token):
+            return web.json_response({"error": "Unauthorized or invalid CSRF token."}, status=403)
+
+        try:
+            body = await request.json()
+            cog_ext = str(body.get("extension", "")).strip()
+        except Exception:
+            return web.json_response({"error": "Malformed payload."}, status=400)
+
+        allowed_extensions = {
+            "cogs.ai_chat",
+            "cogs.moderation",
+            "cogs.utility",
+            "cogs.automod",
+            "cogs.community",
+        }
+        if cog_ext not in allowed_extensions:
+            return web.json_response({"error": f"Extension '{cog_ext}' not permitted."}, status=400)
+
+        try:
+            await self.bot.reload_extension(cog_ext)
+            self.log_activity("system", f"Reloaded extension {cog_ext}")
+            return web.json_response({"success": True, "extension": cog_ext})
+        except Exception as exc:
+            logger.error("Failed to reload %s: %s", cog_ext, exc)
+            return web.json_response({"error": str(exc)}, status=500)
 
 
 async def start_dashboard(bot, host: str = "0.0.0.0", port: int = 8080, password: str = "", secret_key: str = ""):

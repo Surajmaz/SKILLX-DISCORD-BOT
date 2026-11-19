@@ -137,6 +137,8 @@ class SkillXBot(commands.Bot):
             "cogs.ai_chat",
             "cogs.moderation",
             "cogs.utility",
+            "cogs.automod",
+            "cogs.community",
         ]
         self.dashboard_runner = None
 

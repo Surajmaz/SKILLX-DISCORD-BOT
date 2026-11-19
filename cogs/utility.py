@@ -226,17 +226,22 @@ class Utility(commands.Cog, name="Utility"):
         )
         embed.add_field(
             name="🤖 Artificial Intelligence",
-            value="`/chat <prompt>` • `@SkillX <prompt>` • `/forget`\n*Natural language reasoning powered by Google Gemini*",
+            value="`/chat` • `/persona` • `/code` • `/summarize` • `/forget`\n*Conversational Gemini 3.x, code reviews, and chat recaps*",
             inline=False,
         )
         embed.add_field(
-            name="🛡️ Moderation",
-            value="`/kick` • `/ban` • `/timeout` • `/purge`\n*Server safety suite with confirmation modals*",
+            name="🛡️ Moderation & AutoMod",
+            value="`/kick` • `/ban` • `/timeout` • `/purge` • `/warn` • `/warnings` • `/clearwarns` • `/lock` • `/unlock` • `/slowmode`\n*Server safety suite with anti-spam, invite filters, and infractions*",
+            inline=False,
+        )
+        embed.add_field(
+            name="🎉 Community & Engagement",
+            value="`/poll` • `/giveaway` • `/remind` • `/avatar`\n*Interactive button polls with live bars, automated giveaways, and timers*",
             inline=False,
         )
         embed.add_field(
             name="🔧 Utilities & System",
-            value="`/ping` • `/serverinfo` • `/userinfo` • `/botinfo` • `/help`\n*Diagnostics and profile inspection*",
+            value="`/ping` • `/serverinfo` • `/userinfo` • `/botinfo` • `/help`\n*Diagnostics, latency graphs, and profile inspection*",
             inline=False,
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)

@@ -22,13 +22,15 @@ RATE_LIMIT_MESSAGES = {
 
 
 class AIChat(commands.Cog, name="AI Chat"):
-    """Gemini-powered natural language conversation with memory and pagination."""
+    """Gemini-powered natural language conversation with memory, personas, code review, and summarization."""
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.gemini = GeminiClient(GEMINI_API_KEY)
         # In-memory user conversation history: user_id -> list of role/parts messages
         self.memory: dict[int, list[dict]] = {}
+        # User customized persona: user_id -> persona name
+        self.user_personas: dict[int, str] = {}
 
     async def cog_app_command_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
@@ -45,6 +47,10 @@ class AIChat(commands.Cog, name="AI Chat"):
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             logger.error("Unhandled error in AI cog: %s", error, exc_info=True)
+
+    # ---------------------------------------------------------
+    # CHAT COMMANDS
+    # ---------------------------------------------------------
 
     @app_commands.command(name="chat", description="Converse with the Gemini AI assistant")
     @app_commands.describe(prompt="What would you like to ask or talk about?")
@@ -78,7 +84,10 @@ class AIChat(commands.Cog, name="AI Chat"):
 
         # 3. Model Generation
         history = self.memory.get(interaction.user.id, [])
-        response_text, model_used = await self.gemini.generate_with_fallback(clean_prompt, history)
+        persona = self.user_personas.get(interaction.user.id, "default")
+        response_text, model_used = await self.gemini.generate_with_fallback(
+            clean_prompt, history, persona=persona
+        )
 
         if not response_text:
             if model_used == "auth_error":
@@ -133,7 +142,10 @@ class AIChat(commands.Cog, name="AI Chat"):
         # 3. Model Generation with native Discord typing indicator
         async with ctx.typing():
             history = self.memory.get(ctx.author.id, [])
-            response_text, model_used = await self.gemini.generate_with_fallback(clean_prompt, history)
+            persona = self.user_personas.get(ctx.author.id, "default")
+            response_text, model_used = await self.gemini.generate_with_fallback(
+                clean_prompt, history, persona=persona
+            )
 
         if not response_text:
             if model_used == "auth_error":
@@ -161,6 +173,165 @@ class AIChat(commands.Cog, name="AI Chat"):
         history.append({"role": "user", "parts": [{"text": clean_prompt}]})
         history.append({"role": "model", "parts": [{"text": response_text}]})
         self.memory[ctx.author.id] = history[-12:]
+
+    # ---------------------------------------------------------
+    # PERSONA SWITCHER
+    # ---------------------------------------------------------
+
+    @app_commands.command(name="persona", description="Switch your AI assistant personality")
+    @app_commands.describe(mode="The personality mode to converse with")
+    @app_commands.choices(mode=[
+        app_commands.Choice(name="Default (Helpful & Balanced)", value="default"),
+        app_commands.Choice(name="Developer (Senior Systems Architect)", value="developer"),
+        app_commands.Choice(name="Tutor (Patient Concept Educator)", value="tutor"),
+        app_commands.Choice(name="Creative (Witty Writer & Storyteller)", value="creative"),
+        app_commands.Choice(name="Concise (Brief & Direct)", value="concise"),
+    ])
+    async def persona_slash(self, interaction: discord.Interaction, mode: app_commands.Choice[str]):
+        self.user_personas[interaction.user.id] = mode.value
+        embed = success_embed(
+            "Persona Updated",
+            f"SkillX persona set to **{mode.name}**.\nAll subsequent messages will converse using this style."
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @commands.command(
+        name="persona",
+        help="Switch your AI personality (default, developer, tutor, creative, concise). Example: !persona developer",
+    )
+    async def persona_prefix(self, ctx: commands.Context, mode: str = "default"):
+        mode_lower = mode.lower()
+        valid = ["default", "developer", "tutor", "creative", "concise"]
+        if mode_lower not in valid:
+            await ctx.reply(
+                embed=error_embed("Invalid Persona", f"Choose from: `{', '.join(valid)}`"),
+                delete_after=10,
+                mention_author=False,
+            )
+            return
+        self.user_personas[ctx.author.id] = mode_lower
+        embed = success_embed(
+            "Persona Updated",
+            f"SkillX persona set to **{mode_lower.capitalize()}**."
+        )
+        await ctx.reply(embed=embed, delete_after=10, mention_author=False)
+
+    # ---------------------------------------------------------
+    # CODE REVIEW COMMAND
+    # ---------------------------------------------------------
+
+    @app_commands.command(name="code", description="Review, debug, or optimize code with Gemini Senior Dev")
+    @app_commands.describe(code="The code snippet to review", language="Programming language (e.g. python, js, rust)")
+    @app_commands.checks.cooldown(3, 60.0, key=lambda i: i.user.id)
+    async def code_slash(self, interaction: discord.Interaction, code: str, language: Optional[str] = "python"):
+        await interaction.response.defer(thinking=True)
+        response_text, model_used = await self.gemini.review_code(code, language or "python")
+        if not response_text:
+            await interaction.followup.send(embed=error_embed("Review Failed", "Gemini service is currently busy."))
+            return
+
+        pages = split_response_into_pages(response_text)
+        if len(pages) > 1:
+            view = PaginatedResponseView(pages, interaction.user.id, f"Code Review ({language})", model_used)
+            msg = await interaction.followup.send(embed=view.build_embed(), view=view)
+            view.message = msg
+        else:
+            embed = ai_response_embed(f"Code Review ({language})", response_text, interaction.user, model_used)
+            await interaction.followup.send(embed=embed)
+
+    @commands.command(name="code", help="Review and optimize code. Example: !code def add(a,b): return a+b")
+    @commands.cooldown(3, 60.0, commands.BucketType.user)
+    async def code_prefix(self, ctx: commands.Context, *, code: str):
+        async with ctx.typing():
+            response_text, model_used = await self.gemini.review_code(code)
+        if not response_text:
+            await ctx.reply(embed=error_embed("Review Failed", "Gemini models busy."), delete_after=10)
+            return
+
+        pages = split_response_into_pages(response_text)
+        if len(pages) > 1:
+            view = PaginatedResponseView(pages, ctx.author.id, "Code Review", model_used)
+            msg = await ctx.reply(embed=view.build_embed(), view=view, mention_author=False)
+            view.message = msg
+        else:
+            embed = ai_response_embed("Code Review", response_text, ctx.author, model_used)
+            await ctx.reply(embed=embed, mention_author=False)
+
+    # ---------------------------------------------------------
+    # CHAT SUMMARIZER
+    # ---------------------------------------------------------
+
+    @app_commands.command(name="summarize", description="Summarize recent chat messages in this channel")
+    @app_commands.describe(amount="Number of recent messages to analyze (5–50)")
+    @app_commands.guild_only()
+    @app_commands.checks.cooldown(2, 60.0, key=lambda i: i.user.id)
+    async def summarize_slash(self, interaction: discord.Interaction, amount: Optional[int] = 25):
+        await interaction.response.defer(thinking=True)
+        limit = max(5, min(50, amount or 25))
+
+        lines = []
+        async for msg in interaction.channel.history(limit=limit):
+            if not msg.author.bot and msg.content.strip():
+                lines.append(f"{msg.author.display_name}: {msg.content.strip()}")
+        lines.reverse()
+
+        if not lines:
+            await interaction.followup.send(
+                embed=error_embed("No Content", "No user messages found in recent channel history to summarize."),
+                ephemeral=True
+            )
+            return
+
+        dialogue_text = "\n".join(lines[:limit])
+        response_text, model_used = await self.gemini.summarize_text(dialogue_text)
+        if not response_text:
+            await interaction.followup.send(embed=error_embed("Summary Failed", "AI models busy. Please retry."))
+            return
+
+        embed = base_embed(
+            title=f"📋 Channel Summary (Last {len(lines)} messages)",
+            description=response_text[:4000],
+            color=0x9B59B6,
+            user=interaction.user,
+            footer_text=f"Model: {model_used} • Channel #{interaction.channel.name}"
+        )
+        await interaction.followup.send(embed=embed)
+
+    @commands.command(name="summarize", help="Summarize recent chat. Example: !summarize 20")
+    @commands.guild_only()
+    @commands.cooldown(2, 60.0, commands.BucketType.user)
+    async def summarize_prefix(self, ctx: commands.Context, amount: int = 25):
+        limit = max(5, min(50, amount))
+        async with ctx.typing():
+            lines = []
+            async for msg in ctx.channel.history(limit=limit):
+                if not msg.author.bot and msg.content.strip():
+                    lines.append(f"{msg.author.display_name}: {msg.content.strip()}")
+            lines.reverse()
+
+            if not lines:
+                await ctx.reply(embed=error_embed("No Content", "No messages found."), delete_after=10)
+                return
+
+            dialogue_text = "\n".join(lines[:limit])
+            response_text, model_used = await self.gemini.summarize_text(dialogue_text)
+
+        if not response_text:
+            await ctx.reply(embed=error_embed("Summary Failed", "Models busy."), delete_after=10)
+            return
+
+        embed = base_embed(
+            title=f"📋 Channel Summary (Last {len(lines)} messages)",
+            description=response_text[:4000],
+            color=0x9B59B6,
+            user=ctx.author,
+            footer_text=f"Model: {model_used} • Channel #{ctx.channel.name}"
+        )
+        await ctx.reply(embed=embed, mention_author=False)
+
+    # ---------------------------------------------------------
+    # MEMORY RESET
+    # ---------------------------------------------------------
 
     @app_commands.command(name="forget", description="Clear your stored AI conversation history")
     async def forget_slash(self, interaction: discord.Interaction):
@@ -192,6 +363,10 @@ class AIChat(commands.Cog, name="AI Chat"):
         else:
             embed = info_embed("No Memory Found", "You have no active conversation history stored.")
         await ctx.reply(embed=embed, delete_after=10, mention_author=False)
+
+    # ---------------------------------------------------------
+    # ON_MESSAGE CONVERSATIONAL LISTENER
+    # ---------------------------------------------------------
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -237,10 +412,11 @@ class AIChat(commands.Cog, name="AI Chat"):
             embed = base_embed(
                 title=f"👋 Hello, {message.author.display_name}!",
                 description=(
-                    "I am **SkillX**, a modern prefix-less Discord AI bot.\n\n"
+                    "I am **SkillX**, an advanced Discord AI and management bot.\n\n"
                     "• **Conversational AI:** Mention me `@SkillX <prompt>` or reply to my messages to chat!\n"
-                    "• **Slash Commands:** Type `/` to access `/chat`, `/ping`, `/help`, and moderation tools.\n"
-                    "• **Reset Context:** Use `/forget` anytime to wipe our conversational memory."
+                    "• **AI Personas:** Switch styles with `/persona` (Developer, Tutor, Creative, Concise).\n"
+                    "• **Code & Summaries:** Try `/code` for code reviews and `/summarize` for chat recaps.\n"
+                    "• **Slash Commands:** Type `/` to browse all commands (`/help`, `/ping`, moderation, community)."
                 ),
                 user=message.author,
             )
@@ -267,11 +443,12 @@ class AIChat(commands.Cog, name="AI Chat"):
             await message.reply(embed=embed, delete_after=10, mention_author=False)
             return
 
-        # AI Generation with typing indicator
+        # AI Generation with typing indicator and user persona
         async with message.channel.typing():
             history = self.memory.get(message.author.id, [])
+            persona = self.user_personas.get(message.author.id, "default")
             response_text, model_used = await self.gemini.generate_with_fallback(
-                sanitized_prompt, history
+                sanitized_prompt, history, persona=persona
             )
 
         if not response_text:

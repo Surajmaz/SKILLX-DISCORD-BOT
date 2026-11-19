@@ -4,12 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkillX Bot Control Console</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -17,276 +11,95 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                    },
                     colors: {
                         brand: {
-                            400: '#7983f5',
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
                             500: '#5865F2',
                             600: '#4752C4',
-                            700: '#3c45a5',
-                            800: '#2d337d',
+                            700: '#373ea8',
                         },
-                        cyber: {
-                            purple: '#a855f7',
-                            cyan: '#06b6d4',
-                            emerald: '#10b981',
-                            amber: '#f59e0b',
-                            rose: '#f43f5e',
-                            indigo: '#6366f1'
-                        }
-                    },
-                    animation: {
-                        'float': 'floating 4s ease-in-out infinite',
-                        'pulse-slow': 'pulseGlow 5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'spin-slow': 'spin 12s linear infinite',
-                        'radar': 'radarPulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
-                        'shimmer': 'shimmer 2.5s infinite linear',
-                        'gradient-x': 'gradientX 8s ease infinite',
-                    },
-                    keyframes: {
-                        floating: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-6px)' },
-                        },
-                        pulseGlow: {
-                            '0%, 100%': { opacity: '0.35', transform: 'scale(1)' },
-                            '50%': { opacity: '0.65', transform: 'scale(1.06)' },
-                        },
-                        radarPulse: {
-                            '0%': { transform: 'scale(0.8)', opacity: '0.9' },
-                            '100%': { transform: 'scale(2.2)', opacity: '0' },
-                        },
-                        shimmer: {
-                            '0%': { backgroundPosition: '-200% 0' },
-                            '100%': { backgroundPosition: '200% 0' },
-                        },
-                        gradientX: {
-                            '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
-                            '50%': { 'background-size': '200% 200%', 'background-position': 'right center' }
+                        dark: {
+                            800: '#111827',
+                            850: '#0e1422',
+                            900: '#090d16',
+                            950: '#050810',
                         }
                     }
                 }
             }
         }
     </script>
-    
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Canvas Confetti CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
     <style>
-        * {
-            box-sizing: border-box;
-        }
         body {
-            background-color: #070a13;
-            color: #e2e8f0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow-x: hidden;
-        }
-
-        /* Ambient Cyber Grid */
-        .cyber-grid {
-            background-size: 40px 40px;
+            background-color: #060911;
             background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            mask-image: radial-gradient(ellipse 70% 70% at 50% 30%, #000 60%, transparent 100%);
+                radial-gradient(at 0% 0%, rgba(88, 101, 242, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
         }
-
-        /* Glassmorphic Panel with Iridescent Borders */
-        .glass-panel {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.72) 0%, rgba(11, 17, 32, 0.82) 100%);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-        }
-        .glass-panel:hover {
-            border-color: rgba(88, 101, 242, 0.3);
-            box-shadow: 0 16px 40px -10px rgba(88, 101, 242, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        /* Spotlight Card Effect */
-        .spotlight-card {
-            position: relative;
-            overflow: hidden;
-        }
-        .spotlight-card::after {
-            content: '';
-            position: absolute;
-            top: var(--mouse-y, -1000px);
-            left: var(--mouse-x, -1000px);
-            width: 320px;
-            height: 320px;
-            background: radial-gradient(circle, rgba(88, 101, 242, 0.14), transparent 70%);
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            transition: opacity 0.3s;
-            opacity: 0;
-        }
-        .spotlight-card:hover::after {
-            opacity: 1;
-        }
-
-        /* Glow buttons */
-        .btn-brand-glow {
-            background: linear-gradient(135deg, #5865F2 0%, #6f34ff 100%);
-            box-shadow: 0 4px 18px rgba(88, 101, 242, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .btn-brand-glow:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(88, 101, 242, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-        }
-        .btn-brand-glow:active {
-            transform: translateY(1px);
-        }
-
-        /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
             width: 5px;
             height: 5px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.4);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(100, 116, 139, 0.45);
+            background: rgba(99, 102, 241, 0.3);
             border-radius: 9999px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(88, 101, 242, 0.6);
+            background: rgba(99, 102, 241, 0.6);
         }
-
-        /* Tab Transition Animation */
-        .tab-content {
-            animation: fadeInTab 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .glow-border {
+            box-shadow: 0 0 25px -5px rgba(88, 101, 242, 0.15);
         }
-        @keyframes fadeInTab {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Discord Embed Simulator Styling */
-        .discord-embed-preview {
+        .discord-preview {
             background-color: #2b2d31;
-            border-left: 4px solid #5865f2;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-
-        /* Retro Terminal Styling */
-        .terminal-feed {
-            background: rgba(8, 12, 22, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            font-family: 'JetBrains Mono', monospace;
+            border-left: 4px solid #5865F2;
         }
     </style>
 </head>
-<body class="min-h-screen text-slate-100 font-sans antialiased flex flex-col selection:bg-brand-500 selection:text-white relative">
-    
+<body class="min-h-screen text-slate-100 font-sans antialiased flex flex-col custom-scrollbar">
     <!-- CSRF Token Meta from Server -->
     <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
 
-    <!-- Interactive Ambient Canvas Background -->
-    <canvas id="ambientCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
-    
-    <!-- Ambient Background Gradients & Cyber Grid -->
-    <div class="fixed inset-0 cyber-grid pointer-events-none z-0"></div>
-    <div class="fixed -top-40 -left-40 w-96 h-96 bg-brand-500/15 rounded-full blur-[140px] pointer-events-none animate-pulse-slow"></div>
-    <div class="fixed -bottom-40 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" style="animation-delay: 2.5s;"></div>
-    <div class="fixed top-1/3 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-
     <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none"></div>
 
-    <!-- Top Navigation Header -->
-    <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-2xl sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-            
-            <!-- Brand & Gateway Status -->
-            <div class="flex items-center gap-3.5">
-                <div class="relative w-11 h-11 bg-gradient-to-tr from-brand-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/30 border border-white/20 animate-float">
-                    <i class="bi bi-robot text-2xl text-white"></i>
-                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-950 rounded-full animate-pulse"></span>
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-brand-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/25 border border-white/10">
+                    <i class="bi bi-robot text-xl text-white"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="font-extrabold text-lg text-white tracking-tight flex items-center gap-1.5">
-                            SkillX <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">Bot Control Console</span>
+                        <span class="font-extrabold text-base text-white tracking-wide">SkillX</span>
+                        <span class="text-[10px] bg-brand-500/20 text-brand-400 border border-brand-500/30 px-1.5 py-0.5 rounded font-mono font-semibold">v2.5 Enterprise</span>
+                        <span id="gatewayStatusBadge" class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Online
                         </span>
-                        <span class="text-[10px] bg-brand-500/20 text-brand-300 border border-brand-500/30 px-2 py-0.5 rounded-full font-mono font-bold tracking-wider">v2.0</span>
-                    </div>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <span id="gatewayStatusBadge" class="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            Shard 0 Connected
-                        </span>
-                        <span class="text-slate-600">•</span>
-                        <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Async Loop Active</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Header Controls & Telemetry -->
-            <div class="flex items-center gap-3">
-                <!-- Live Telemetry Badges -->
-                <div class="hidden md:flex items-center gap-2.5 text-xs text-slate-400 bg-slate-900/60 border border-slate-800/80 rounded-xl px-3 py-1.5 backdrop-blur-md">
-                    <span class="flex items-center gap-1.5 font-mono">
-                        <i class="bi bi-clock-history text-brand-400"></i>
-                        <span>Uptime:</span>
-                        <strong id="headerUptime" class="text-slate-200 font-semibold">0s</strong>
-                    </span>
-                    <span class="text-slate-700">|</span>
-                    <span class="flex items-center gap-1.5 font-mono">
-                        <i class="bi bi-reception-4 text-emerald-400"></i>
-                        <span>Ping:</span>
-                        <strong id="headerPing" class="text-emerald-400 font-semibold">0 ms</strong>
-                    </span>
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex items-center gap-3 text-xs text-slate-400 border-r border-slate-800 pr-4">
+                    <span class="flex items-center gap-1.5"><i class="bi bi-clock-history text-slate-500"></i> Uptime: <strong id="headerUptime" class="text-slate-200">0s</strong></span>
+                    <span class="flex items-center gap-1.5"><i class="bi bi-reception-4 text-slate-500"></i> Ping: <strong id="headerPing" class="text-slate-200">0 ms</strong></span>
+                    <span class="flex items-center gap-1.5"><i class="bi bi-cpu text-slate-500"></i> RAM: <strong id="headerMemory" class="text-slate-200">0 MB</strong></span>
                 </div>
-
-                <!-- Quick Command Palette Button -->
-                <button 
-                    onclick="openCommandPalette()" 
-                    title="Quick Commands (Ctrl+K)"
-                    class="hidden sm:flex items-center gap-2 text-xs bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 px-3 py-2 rounded-xl transition-all shadow-sm"
-                >
-                    <i class="bi bi-command text-brand-400"></i>
-                    <span class="text-[11px] font-mono text-slate-400">Cmd+K</span>
-                </button>
-
-                <!-- Sound FX Toggle -->
-                <button 
-                    id="soundToggleBtn" 
-                    onclick="toggleAudio()" 
-                    title="Toggle Audio Feedback"
-                    class="w-9 h-9 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-all"
-                >
-                    <i id="soundIcon" class="bi bi-volume-up text-base"></i>
-                </button>
-
-                <!-- Logout Button -->
-                <button 
-                    onclick="handleLogout()" 
-                    class="text-xs bg-slate-900/80 hover:bg-rose-500/20 hover:text-rose-300 border border-slate-800 hover:border-rose-500/30 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 text-slate-300 shadow-sm"
-                >
+                <button onclick="handleLogout()" class="text-xs bg-slate-900 hover:bg-red-500/20 hover:text-red-400 border border-slate-800 hover:border-red-500/30 px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 text-slate-300 cursor-pointer shadow-sm">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>Logout</span>
                 </button>
@@ -294,317 +107,299 @@
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8 z-10">
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
         
-        <!-- Key Metrics Animated Banner Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            
-            <!-- Metric 1: Connected Guilds -->
-            <div class="glass-panel spotlight-card rounded-2xl p-5 relative overflow-hidden group">
+        <!-- Live KPI Telemetry Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-6 gap-3.5 sm:gap-4">
+            <!-- Metric 1: Guilds -->
+            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-brand-500/40 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">Connected Guilds</p>
-                        <h3 id="statGuildCount" class="text-3xl font-extrabold text-white mt-1 font-mono tracking-tight">0</h3>
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Guilds</p>
+                        <h3 id="statGuildCount" class="text-xl sm:text-2xl font-black text-white mt-0.5">0</h3>
                     </div>
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500/20 to-indigo-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 text-2xl group-hover:scale-110 transition-transform shadow-lg shadow-brand-500/10">
+                    <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-lg">
                         <i class="bi bi-server"></i>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center justify-between text-[11px] pt-3 border-t border-slate-800/80">
-                    <span class="flex items-center gap-1.5 text-slate-400">
-                        <i class="bi bi-arrow-repeat text-brand-400 animate-spin" style="animation-duration: 6s;"></i>
-                        <span>Auto-synced guilds</span>
-                    </span>
-                    <span class="font-mono text-brand-300 font-semibold">Discord API v10</span>
+                <div class="mt-2 text-[10px] text-slate-400 truncate flex items-center gap-1">
+                    <i class="bi bi-check2 text-emerald-400"></i> Live Sync
                 </div>
             </div>
 
-            <!-- Metric 2: Cached Members -->
-            <div class="glass-panel spotlight-card rounded-2xl p-5 relative overflow-hidden group">
+            <!-- Metric 2: Members -->
+            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-purple-500/40 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">Cached Members</p>
-                        <h3 id="statUserCount" class="text-3xl font-extrabold text-white mt-1 font-mono tracking-tight">0</h3>
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Users</p>
+                        <h3 id="statUserCount" class="text-xl sm:text-2xl font-black text-white mt-0.5">0</h3>
                     </div>
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 text-2xl group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/10">
-                        <i class="bi bi-people-fill"></i>
+                    <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg">
+                        <i class="bi bi-people"></i>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center justify-between text-[11px] pt-3 border-t border-slate-800/80">
-                    <span class="flex items-center gap-1.5 text-slate-400">
-                        <i class="bi bi-shield-check text-purple-400"></i>
-                        <span>Active community reach</span>
-                    </span>
-                    <span class="font-mono text-purple-300 font-semibold">100% Verified</span>
+                <div class="mt-2 text-[10px] text-slate-400 truncate flex items-center gap-1">
+                    <i class="bi bi-shield-check text-purple-400"></i> Total Cached
                 </div>
             </div>
 
-            <!-- Metric 3: Gateway Latency -->
-            <div class="glass-panel spotlight-card rounded-2xl p-5 relative overflow-hidden group">
+            <!-- Metric 3: Ping Latency -->
+            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">Gateway Latency</p>
-                        <div class="flex items-baseline gap-2 mt-1">
-                            <h3 id="statLatency" class="text-3xl font-extrabold text-emerald-400 font-mono tracking-tight">0 ms</h3>
-                        </div>
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Gateway</p>
+                        <h3 id="statLatency" class="text-xl sm:text-2xl font-black text-emerald-400 mt-0.5">0 ms</h3>
                     </div>
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-2xl group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/10">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg">
                         <i class="bi bi-activity"></i>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center justify-between text-[11px] pt-3 border-t border-slate-800/80">
-                    <span id="latencyStatusPill" class="flex items-center gap-1.5 text-emerald-400 font-medium">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                        <span>Optimal response time</span>
-                    </span>
-                    <span class="font-mono text-slate-400">WebSocket</span>
-                </div>
+                <div class="mt-2 text-[10px] text-emerald-400 truncate font-medium">Optimal Status</div>
             </div>
 
             <!-- Metric 4: AI Contexts -->
-            <div class="glass-panel spotlight-card rounded-2xl p-5 relative overflow-hidden group">
+            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">Active AI Contexts</p>
-                        <h3 id="statAiMemory" class="text-3xl font-extrabold text-amber-400 mt-1 font-mono tracking-tight">0</h3>
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">AI Memory</p>
+                        <h3 id="statAiMemory" class="text-xl sm:text-2xl font-black text-amber-400 mt-0.5">0</h3>
                     </div>
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl group-hover:scale-110 transition-transform shadow-lg shadow-amber-500/10">
-                        <i class="bi bi-cpu-fill"></i>
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-lg">
+                        <i class="bi bi-memory"></i>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center justify-between text-[11px] pt-3 border-t border-slate-800/80">
-                    <span class="flex items-center gap-1.5 text-slate-400">
-                        <i class="bi bi-stars text-amber-400"></i>
-                        <span>Multi-turn dialogues</span>
-                    </span>
-                    <span class="font-mono text-amber-300 font-semibold">Gemini Flash</span>
+                <div class="mt-2 text-[10px] text-slate-400 truncate flex items-center gap-1">
+                    <i class="bi bi-sparkles text-amber-400"></i> Active Threads
                 </div>
+            </div>
+
+            <!-- Metric 5: Active Infractions -->
+            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-rose-500/40 transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Infractions</p>
+                        <h3 id="statInfractions" class="text-xl sm:text-2xl font-black text-rose-400 mt-0.5">0</h3>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 text-lg">
+                        <i class="bi bi-shield-slash"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-[10px] text-slate-400 truncate">Total AutoMod Logged</div>
+            </div>
+
+            <!-- Metric 6: Cogs -->
+            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cogs</p>
+                        <h3 id="statCogs" class="text-xl sm:text-2xl font-black text-cyan-400 mt-0.5">5</h3>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg">
+                        <i class="bi bi-puzzle"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-[10px] text-slate-400 truncate">Modular Subsystems</div>
             </div>
         </div>
 
-        <!-- Navigation Tabs Bar -->
-        <div class="flex items-center bg-slate-900/60 p-1.5 rounded-2xl border border-slate-800/80 gap-1.5 overflow-x-auto custom-scrollbar backdrop-blur-xl">
-            <button 
-                onclick="switchTab('tab-overview')" 
-                id="nav-tab-overview" 
-                class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2.5 transition-all bg-brand-500 text-white shadow-lg shadow-brand-500/30"
-            >
+        <!-- Navigation Tabs -->
+        <div class="flex items-center border-b border-slate-800/80 gap-2 overflow-x-auto custom-scrollbar pb-1">
+            <button onclick="switchTab('tab-overview')" id="nav-tab-overview" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all bg-brand-500/20 text-brand-400 border border-brand-500/30 whitespace-nowrap">
                 <i class="bi bi-speedometer2"></i>
-                <span>Overview & Telemetry</span>
+                <span>Mission Control</span>
             </button>
-            <button 
-                onclick="switchTab('tab-servers')" 
-                id="nav-tab-servers" 
-                class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-medium rounded-xl flex items-center gap-2.5 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
-            >
+            <button onclick="switchTab('tab-servers')" id="nav-tab-servers" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap">
                 <i class="bi bi-hdd-network"></i>
-                <span>Server Explorer</span>
+                <span>Server & Embed Studio</span>
             </button>
-            <button 
-                onclick="switchTab('tab-ai')" 
-                id="nav-tab-ai" 
-                class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-medium rounded-xl flex items-center gap-2.5 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
-            >
-                <i class="bi bi-chat-square-dots"></i>
-                <span>AI Studio & Memory</span>
+            <button onclick="switchTab('tab-ai')" id="nav-tab-ai" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap">
+                <i class="bi bi-cpu"></i>
+                <span>Gemini AI Studio</span>
             </button>
-            <button 
-                onclick="switchTab('tab-controls')" 
-                id="nav-tab-controls" 
-                class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-medium rounded-xl flex items-center gap-2.5 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
-            >
-                <i class="bi bi-sliders"></i>
-                <span>Presence & Controls</span>
+            <button onclick="switchTab('tab-automod')" id="nav-tab-automod" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap">
+                <i class="bi bi-shield-shaded"></i>
+                <span>AutoMod & Infractions</span>
+            </button>
+            <button onclick="switchTab('tab-controls')" id="nav-tab-controls" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap">
+                <i class="bi bi-sliders2"></i>
+                <span>Presence & Cog Manager</span>
             </button>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- TAB 1: OVERVIEW & TELEMETRY -->
-        <!-- ========================================================= -->
+        <!-- ==================================================== -->
+        <!-- TAB 1: MISSION CONTROL -->
+        <!-- ==================================================== -->
         <section id="tab-overview" class="tab-content space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <!-- Telemetry Chart Module -->
-                <div class="lg:col-span-2 glass-panel rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col justify-between">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <!-- Latency Chart -->
+                <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
                         <div>
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-bold text-white text-base tracking-wide flex items-center gap-2">
-                                    <i class="bi bi-graph-up text-brand-400"></i>
-                                    Gateway Latency Telemetry
-                                </h3>
-                                <span class="relative flex h-2 w-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
-                                </span>
-                            </div>
-                            <p class="text-xs text-slate-400 mt-0.5">Continuous roundtrip Discord gateway heartbeat polling</p>
+                            <h3 class="font-bold text-white text-base">Gateway Latency Telemetry</h3>
+                            <p class="text-xs text-slate-400">Live heartbeat roundtrip latency polled every 4 seconds</p>
                         </div>
-
-                        <!-- Chart Controls / Mode -->
-                        <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-950/60 border border-slate-800 text-slate-300 flex items-center gap-1.5">
-                                <i class="bi bi-broadcast text-emerald-400"></i>
-                                Live Stream (4s)
-                            </span>
-                        </div>
+                        <span class="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-ping"></span>
+                            Live Stream
+                        </span>
                     </div>
-
-                    <div class="h-64 sm:h-72 w-full relative">
+                    <div class="h-64 w-full">
                         <canvas id="latencyChart"></canvas>
-                    </div>
-
-                    <div class="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-3 gap-4 text-center text-xs">
-                        <div>
-                            <span class="text-slate-400 text-[11px]">Minimum</span>
-                            <p id="chartMinPing" class="font-mono font-bold text-emerald-400 mt-0.5">-- ms</p>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 text-[11px]">Average</span>
-                            <p id="chartAvgPing" class="font-mono font-bold text-brand-400 mt-0.5">-- ms</p>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 text-[11px]">Peak Latency</span>
-                            <p id="chartMaxPing" class="font-mono font-bold text-amber-400 mt-0.5">-- ms</p>
-                        </div>
                     </div>
                 </div>
 
-                <!-- System Specifications & Engine -->
-                <div class="glass-panel rounded-3xl p-6 shadow-2xl space-y-6 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-bold text-white text-base flex items-center gap-2">
-                                <i class="bi bi-cpu text-brand-400"></i>
-                                Runtime Specifications
-                            </h3>
-                            <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">aiohttp</span>
-                        </div>
-
-                        <div class="space-y-3.5 text-xs">
-                            <div class="flex justify-between items-center py-2 border-b border-slate-800/80">
-                                <span class="text-slate-400 flex items-center gap-2">
-                                    <i class="bi bi-filetype-py text-amber-400"></i> Python Runtime
-                                </span>
-                                <span id="sysPython" class="font-mono text-slate-200 font-semibold">v3.15</span>
-                            </div>
-                            <div class="flex justify-between items-center py-2 border-b border-slate-800/80">
-                                <span class="text-slate-400 flex items-center gap-2">
-                                    <i class="bi bi-discord text-brand-400"></i> discord.py Engine
-                                </span>
-                                <span id="sysDiscordPy" class="font-mono text-slate-200 font-semibold">v2.7</span>
-                            </div>
-                            <div class="flex justify-between items-center py-2 border-b border-slate-800/80">
-                                <span class="text-slate-400 flex items-center gap-2">
-                                    <i class="bi bi-memory text-cyan-400"></i> Memory Allocation
-                                </span>
-                                <span id="sysMemory" class="font-mono text-slate-200 font-semibold">~45 MB</span>
-                            </div>
-                            <div class="flex justify-between items-center py-2 border-b border-slate-800/80">
-                                <span class="text-slate-400 flex items-center gap-2">
-                                    <i class="bi bi-puzzle text-purple-400"></i> Loaded Subsystems
-                                </span>
-                                <span id="sysCogs" class="font-mono text-slate-200 font-semibold">3 Active</span>
-                            </div>
-                            <div class="flex justify-between items-center py-2">
-                                <span class="text-slate-400 flex items-center gap-2">
-                                    <i class="bi bi-stars text-amber-400"></i> Primary AI Core
-                                </span>
-                                <span class="font-mono text-emerald-400 font-semibold">Gemini 3.5 Flash</span>
-                            </div>
-                        </div>
+                <!-- Live Activity Feed -->
+                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+                        <h3 class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="bi bi-lightning-charge-fill text-amber-400"></i>
+                            Live Activity Stream
+                        </h3>
+                        <span class="text-[10px] text-slate-500 font-mono">Auto-refreshed</span>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-brand-500/10 to-purple-500/10 border border-brand-500/20 text-xs text-brand-200 flex items-start gap-3">
-                        <i class="bi bi-shield-check text-brand-400 text-lg flex-shrink-0 mt-0.5"></i>
-                        <span class="leading-relaxed text-[11px]">
-                            Non-blocking asynchronous event loop secured with constant-time HMAC verification & CSRF token authentication.
-                        </span>
+                    <div id="activityFeedList" class="flex-1 space-y-2.5 overflow-y-auto max-h-60 pr-1 custom-scrollbar text-xs">
+                        <div class="text-center text-slate-500 py-6">Connecting to telemetry feed...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Live Gateway Event Feed / Terminal -->
-            <div class="glass-panel rounded-3xl p-6 shadow-2xl space-y-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
-                        <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
-                        <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
-                        <span class="text-xs font-mono text-slate-400 ml-2 font-semibold flex items-center gap-2">
-                            <i class="bi bi-terminal-fill text-brand-400"></i>
-                            Live Telemetry Activity Console
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="clearActivityLog()" class="text-[11px] font-mono text-slate-400 hover:text-white bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700/80 transition-all">
-                            Clear Log
-                        </button>
-                    </div>
+            <!-- System Specifications Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-1">
+                    <div class="text-slate-400">Python Runtime</div>
+                    <div id="sysPython" class="font-mono text-sm font-bold text-white">v3.15</div>
                 </div>
-
-                <div id="terminalLogContainer" class="terminal-feed rounded-2xl p-4 h-44 overflow-y-auto custom-scrollbar text-xs space-y-2 text-slate-300 font-mono">
-                    <div class="text-slate-500">[System] Initializing SkillX telemetry feed monitor...</div>
-                    <div class="text-emerald-400">[Heartbeat] Gateway connection established successfully.</div>
+                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-1">
+                    <div class="text-slate-400">Discord Engine</div>
+                    <div id="sysDiscordPy" class="font-mono text-sm font-bold text-brand-400">v2.7.1</div>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-1">
+                    <div class="text-slate-400">Resident Memory (RSS)</div>
+                    <div id="sysMemory" class="font-mono text-sm font-bold text-emerald-400">0 MB</div>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-1">
+                    <div class="text-slate-400">Primary AI Fallback Tier</div>
+                    <div class="font-mono text-sm font-bold text-purple-400">Gemini 3.5 Flash Lite</div>
                 </div>
             </div>
         </section>
 
-        <!-- ========================================================= -->
-        <!-- TAB 2: SERVER EXPLORER -->
-        <!-- ========================================================= -->
+        <!-- ==================================================== -->
+        <!-- TAB 2: SERVERS & LIVE EMBED STUDIO -->
+        <!-- ==================================================== -->
         <section id="tab-servers" class="tab-content hidden space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h3 class="font-bold text-white text-lg flex items-center gap-2">
-                        <i class="bi bi-hdd-network text-brand-400"></i>
-                        Connected Guild Directory
-                    </h3>
-                    <p class="text-xs text-slate-400">Inspect server infrastructure, member volume, and broadcast announcements</p>
-                </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                <div class="flex items-center gap-3">
-                    <!-- Search Input -->
-                    <div class="relative">
-                        <i class="bi bi-search absolute left-3.5 top-2.5 text-slate-500 text-xs"></i>
-                        <input 
-                            type="text" 
-                            id="guildSearchInput" 
-                            oninput="filterGuilds()" 
-                            placeholder="Filter servers..." 
-                            class="bg-slate-900/90 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-all"
-                        />
+                <!-- Left: Embed Designer -->
+                <div class="lg:col-span-7 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
+                    <div>
+                        <h3 class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="bi bi-pencil-square text-brand-400"></i>
+                            Discord Embed & Announcement Studio
+                        </h3>
+                        <p class="text-xs text-slate-400">Design custom rich embeds and broadcast them directly to any channel</p>
                     </div>
 
-                    <!-- Broadcast Button -->
-                    <button onclick="openBroadcastModal()" class="btn-brand-glow text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg shadow-brand-500/25">
-                        <i class="bi bi-megaphone-fill"></i>
-                        <span>New Announcement</span>
-                    </button>
+                    <form onsubmit="handleSendBroadcast(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Target Channel</label>
+                                <select id="broadcastChannelSelect" required class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-brand-500">
+                                    <option value="">Loading channels...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Embed Theme Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="broadcastColor" value="#5865F2" oninput="updateEmbedPreview()" class="w-10 h-9 bg-transparent border-0 rounded cursor-pointer">
+                                    <input type="text" id="broadcastColorHex" value="#5865F2" oninput="syncColorInput(this.value)" class="flex-1 bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-mono text-white">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Embed Title</label>
+                            <input type="text" id="broadcastTitle" placeholder="e.g. 📢 Server Announcement" oninput="updateEmbedPreview()" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Message Description (Markdown Supported)</label>
+                            <textarea id="broadcastContent" rows="4" required placeholder="Type your announcement content here..." oninput="updateEmbedPreview()" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl p-3.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 custom-scrollbar"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2">
+                            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                                <input type="checkbox" id="broadcastUseEmbed" checked onchange="updateEmbedPreview()" class="rounded bg-slate-950 border-slate-700 text-brand-500">
+                                <span>Send as Discord Embed card</span>
+                            </label>
+
+                            <button type="submit" id="broadcastSubmitBtn" class="bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl text-xs shadow-lg shadow-brand-500/25 transition-all flex items-center gap-2 cursor-pointer">
+                                <i class="bi bi-send-fill"></i>
+                                <span>Dispatch Announcement</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right: Realistic Live Discord Embed Preview -->
+                <div class="lg:col-span-5 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl flex flex-col">
+                    <div class="pb-3 border-b border-slate-800 mb-4 flex items-center justify-between">
+                        <h4 class="font-bold text-white text-xs uppercase tracking-wider text-slate-400">Live Discord Client Preview</h4>
+                        <span class="text-[10px] text-slate-500 font-mono">Simulated Render</span>
+                    </div>
+
+                    <div class="flex-1 bg-[#313338] p-4 rounded-xl border border-white/5 space-y-3 font-sans">
+                        <!-- Bot Message Header -->
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-sm font-bold">
+                                S
+                            </div>
+                            <div>
+                                <span class="font-semibold text-white text-xs">SkillX</span>
+                                <span class="bg-[#5865F2] text-[9px] text-white px-1 py-0.5 rounded ml-1 font-semibold">BOT</span>
+                                <span class="text-[10px] text-[#949ba4] ml-1.5">Today at 12:00 PM</span>
+                            </div>
+                        </div>
+
+                        <!-- Embed Card -->
+                        <div id="discordPreviewCard" class="discord-preview rounded p-3 text-xs space-y-1.5 shadow-sm">
+                            <div id="previewTitle" class="font-bold text-white text-sm">📢 Announcement Title</div>
+                            <div id="previewBody" class="text-[#dbdee1] text-xs whitespace-pre-wrap leading-relaxed">Your announcement message description will be rendered here with live markdown and colors.</div>
+                            <div class="text-[10px] text-[#949ba4] pt-2 border-t border-white/5 flex items-center gap-1.5">
+                                <i class="bi bi-shield-lock-fill"></i>
+                                <span>Broadcasted via SkillX Web Console</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Guilds Table Container -->
-            <div class="glass-panel rounded-3xl shadow-2xl overflow-hidden">
+            <!-- Connected Guilds Table -->
+            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-white text-base">Connected Guild Directory</h3>
+                        <p class="text-xs text-slate-400">Active server nodes running SkillX</p>
+                    </div>
+                    <span id="guildTableCountBadge" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg">0 Servers</span>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-950/80 text-[11px] uppercase text-slate-400 tracking-wider border-b border-slate-800 font-mono">
+                        <thead class="bg-slate-950/60 text-xs uppercase text-slate-400 tracking-wider border-b border-slate-800">
                             <tr>
-                                <th class="px-6 py-4">Guild Identity</th>
-                                <th class="px-6 py-4">Guild Snowflake ID</th>
-                                <th class="px-6 py-4">Cached Members</th>
-                                <th class="px-6 py-4">Text Channels</th>
-                                <th class="px-6 py-4 text-right">Quick Dispatch</th>
+                                <th class="px-6 py-4">Guild</th>
+                                <th class="px-6 py-4">Guild ID</th>
+                                <th class="px-6 py-4">Owner</th>
+                                <th class="px-6 py-4">Members</th>
+                                <th class="px-6 py-4">Channels</th>
                             </tr>
                         </thead>
                         <tbody id="guildTableBody" class="divide-y divide-slate-800/60 font-normal">
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center text-slate-500 text-xs">
-                                    <div class="flex flex-col items-center gap-2">
-                                        <i class="bi bi-arrow-repeat text-2xl animate-spin text-brand-400"></i>
-                                        <span>Synchronizing connected guilds from Discord gateway...</span>
-                                    </div>
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-500 text-xs">
+                                    Loading connected servers...
                                 </td>
                             </tr>
                         </tbody>
@@ -613,123 +408,87 @@
             </div>
         </section>
 
-        <!-- ========================================================= -->
-        <!-- TAB 3: AI STUDIO & MEMORY -->
-        <!-- ========================================================= -->
+        <!-- ==================================================== -->
+        <!-- TAB 3: GEMINI AI STUDIO -->
+        <!-- ==================================================== -->
         <section id="tab-ai" class="tab-content hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <!-- Gemini Playground -->
-                <div class="lg:col-span-2 glass-panel rounded-3xl p-6 sm:p-7 shadow-2xl space-y-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="font-bold text-white text-base flex items-center gap-2">
-                                <i class="bi bi-stars text-purple-400 text-lg"></i>
-                                Gemini AI Interactive Studio
-                            </h3>
-                            <p class="text-xs text-slate-400 mt-0.5">Test real-time generations through SkillX's resilient fallback matrix</p>
-                        </div>
-                        <span class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                            Auto-Fallback Engine
-                        </span>
-                    </div>
-
-                    <!-- Quick Prompt Presets -->
+                <!-- AI Console -->
+                <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
                     <div>
-                        <span class="text-[11px] text-slate-400 block mb-2 font-mono">Quick Preset Prompts:</span>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="setPromptPreset('Explain the bot moderation architecture and safety rules.')" class="text-[11px] bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg transition-all">
-                                🛡️ Moderation Logic
-                            </button>
-                            <button onclick="setPromptPreset('Draft a friendly community update for upcoming gaming events.')" class="text-[11px] bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg transition-all">
-                                📢 Community Post
-                            </button>
-                            <button onclick="setPromptPreset('Verify AI token latency and provide a status confirmation.')" class="text-[11px] bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg transition-all">
-                                ⚡ Latency Diagnostic
-                            </button>
-                        </div>
+                        <h3 class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="bi bi-cpu text-purple-400"></i>
+                            Gemini 3.x Interactive Studio
+                        </h3>
+                        <p class="text-xs text-slate-400">Test queries live against Gemini with custom persona styles and temperatures</p>
                     </div>
 
-                    <!-- AI Form -->
                     <form onsubmit="handleAiTest(event)" class="space-y-4">
-                        <div class="relative">
-                            <textarea 
-                                id="aiPromptInput" 
-                                rows="3" 
-                                required 
-                                placeholder="Enter a prompt to dispatch to Gemini..."
-                                class="w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-all custom-scrollbar font-sans"
-                            ></textarea>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Persona Archetype</label>
+                                <select id="aiPersonaSelect" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-brand-500">
+                                    <option value="default">Default (Helpful & Balanced)</option>
+                                    <option value="developer">Developer (Elite Software Architect)</option>
+                                    <option value="tutor">Tutor (Patient Concept Educator)</option>
+                                    <option value="creative">Creative (Witty Writer & Storyteller)</option>
+                                    <option value="concise">Concise (Direct & Brief)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                                    Creativity Temperature (<span id="tempVal">0.7</span>)
+                                </label>
+                                <input type="range" id="aiTemperature" min="0.0" max="1.0" step="0.1" value="0.7" oninput="document.getElementById('tempVal').textContent = this.value" class="w-full accent-brand-500 mt-2">
+                            </div>
                         </div>
-                        
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <span class="text-xs text-slate-400 flex items-center gap-1.5">
-                                <i class="bi bi-shield-check text-purple-400"></i>
-                                HarmBlockThreshold: BLOCK_ONLY_HIGH
-                            </span>
 
-                            <button 
-                                type="submit" 
-                                id="aiSubmitBtn"
-                                class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                            >
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Input Prompt</label>
+                            <textarea id="aiPromptInput" rows="3" required placeholder="Ask Gemini anything (e.g. Optimize an async Python function, explain quantum mechanics)..." class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl p-3.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 custom-scrollbar"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] text-slate-400">Multi-tier failover guarantees 99.9% prompt resolution</span>
+                            <button type="submit" id="aiSubmitBtn" class="bg-gradient-to-r from-brand-500 to-purple-600 hover:opacity-90 text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-2 cursor-pointer">
                                 <span id="aiBtnText">Execute Query</span>
-                                <i id="aiBtnIcon" class="bi bi-lightning-charge-fill"></i>
+                                <i class="bi bi-lightning-charge-fill"></i>
                             </button>
                         </div>
                     </form>
 
-                    <!-- Response Preview Container -->
-                    <div id="aiResponseBox" class="hidden rounded-2xl bg-slate-950/95 border border-purple-500/30 p-5 space-y-3 shadow-2xl animate-fade-in relative">
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+                    <!-- Response Preview -->
+                    <div id="aiResponseBox" class="hidden rounded-xl bg-slate-950/90 border border-slate-800 p-4 space-y-3">
+                        <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-800">
+                            <span class="text-slate-400">Generated AI Response</span>
                             <div class="flex items-center gap-2">
-                                <span class="relative flex h-2 w-2">
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-400"></span>
-                                </span>
-                                <span class="text-xs font-semibold text-purple-300">Gemini Response</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span id="aiModelBadge" class="bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full font-mono text-[11px]"></span>
-                                <button onclick="copyAiResponse()" class="text-xs text-slate-400 hover:text-white bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg transition-all" title="Copy to clipboard">
-                                    <i class="bi bi-clipboard"></i>
-                                </button>
+                                <span id="aiElapsedBadge" class="text-[10px] text-slate-400 font-mono">0ms</span>
+                                <span id="aiModelBadge" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded font-mono text-[10px]"></span>
                             </div>
                         </div>
-                        <div id="aiResponseText" class="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed font-sans max-h-72 overflow-y-auto custom-scrollbar"></div>
+                        <div id="aiResponseText" class="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed font-sans"></div>
                     </div>
                 </div>
 
-                <!-- Memory Management Card -->
-                <div class="glass-panel rounded-3xl p-6 shadow-2xl space-y-6 flex flex-col justify-between">
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <h3 class="font-bold text-white text-base flex items-center gap-2">
-                                <i class="bi bi-memory text-amber-400"></i>
-                                Conversational Memory
-                            </h3>
-                            <span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded font-mono">12-Turn Window</span>
-                        </div>
+                <!-- Memory Management -->
+                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
+                    <h3 class="font-bold text-white text-base flex items-center gap-2">
+                        <i class="bi bi-memory text-amber-400"></i>
+                        Conversational Memory
+                    </h3>
 
-                        <p class="text-xs text-slate-400 leading-relaxed">
-                            SkillX maintains sliding contextual memory windows across user interactions to retain context during multi-prompt threads.
-                        </p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        SkillX stores multi-turn conversation contexts per user. You can inspect or reset memory contexts across all connected servers.
+                    </p>
 
-                        <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-2">
-                            <div class="flex justify-between items-center text-xs">
-                                <span class="text-slate-400">Stored User Contexts:</span>
-                                <span id="memoryCountBadge" class="font-bold font-mono text-amber-400 text-sm">0 users</span>
-                            </div>
-                            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                <div class="bg-gradient-to-r from-amber-400 to-orange-500 h-1.5 rounded-full" style="width: 25%"></div>
-                            </div>
+                    <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400">Active Memory Threads:</span>
+                            <span id="memoryCountBadge" class="font-bold text-amber-400 text-sm">0 users</span>
                         </div>
                     </div>
 
-                    <button 
-                        type="button" 
-                        onclick="handleClearMemory()" 
-                        class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold py-3 rounded-xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/10"
-                    >
+                    <button type="button" onclick="handleClearMemory()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-medium py-2.5 rounded-xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
                         <i class="bi bi-trash3-fill"></i>
                         <span>Wipe All Stored Contexts</span>
                     </button>
@@ -737,48 +496,120 @@
             </div>
         </section>
 
-        <!-- ========================================================= -->
-        <!-- TAB 4: PRESENCE & CONTROLS -->
-        <!-- ========================================================= -->
-        <section id="tab-controls" class="tab-content hidden space-y-6">
+        <!-- ==================================================== -->
+        <!-- TAB 4: AUTOMOD & INFRACTIONS -->
+        <!-- ==================================================== -->
+        <section id="tab-automod" class="tab-content hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <!-- Presence Form -->
-                <div class="lg:col-span-2 glass-panel rounded-3xl p-6 sm:p-7 shadow-2xl space-y-6">
+                <!-- Quick Web Moderation Console -->
+                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-4">
                     <div>
                         <h3 class="font-bold text-white text-base flex items-center gap-2">
-                            <i class="bi bi-sliders text-brand-400"></i>
-                            Bot Presence State Manager
+                            <i class="bi bi-hammer text-rose-400"></i>
+                            Web Moderation Action
                         </h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Dynamically tune bot Discord presence & activity without restart</p>
+                        <p class="text-xs text-slate-400">Execute disciplinary actions directly from the browser</p>
                     </div>
 
-                    <form onsubmit="handleUpdatePresence(event)" class="space-y-5">
+                    <form onsubmit="handleWebModAction(event)" class="space-y-3.5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Action Type</label>
+                            <select id="webModAction" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-brand-500">
+                                <option value="warn">Warn Member (AutoMod Record)</option>
+                                <option value="kick">Kick Member</option>
+                                <option value="ban">Ban Member</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Server / Guild</label>
+                            <select id="webModGuildSelect" required class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-brand-500">
+                                <option value="">Select guild...</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Target User ID</label>
+                            <input type="text" id="webModUserId" required placeholder="e.g. 123456789012345678" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Reason</label>
+                            <input type="text" id="webModReason" required placeholder="Reason for disciplinary action..." class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2.5 rounded-xl text-xs shadow-lg shadow-rose-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="bi bi-shield-exclamation"></i>
+                            <span>Execute Moderation</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Recent Infractions Table -->
+                <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden flex flex-col">
+                    <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-white text-base">Recorded Member Infractions</h3>
+                            <p class="text-xs text-slate-400">AutoMod infractions and warnings history</p>
+                        </div>
+                        <button onclick="fetchInfractions()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+
+                    <div class="flex-1 overflow-x-auto max-h-96 custom-scrollbar">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-950/60 text-[11px] uppercase text-slate-400 tracking-wider sticky top-0 border-b border-slate-800">
+                                <tr>
+                                    <th class="px-5 py-3">Case</th>
+                                    <th class="px-5 py-3">User ID</th>
+                                    <th class="px-5 py-3">Reason</th>
+                                    <th class="px-5 py-3">Issued By</th>
+                                    <th class="px-5 py-3">Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="infractionsTableBody" class="divide-y divide-slate-800/60">
+                                <tr>
+                                    <td colspan="5" class="px-5 py-6 text-center text-slate-500 text-xs">
+                                        Loading infractions log...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================================================== -->
+        <!-- TAB 5: PRESENCE & COG MANAGER -->
+        <!-- ==================================================== -->
+        <section id="tab-controls" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Presence Editor -->
+                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
+                    <div>
+                        <h3 class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="bi bi-person-badge text-brand-400"></i>
+                            Live Bot Presence Controller
+                        </h3>
+                        <p class="text-xs text-slate-400">Update bot activity and presence state live without restarting</p>
+                    </div>
+
+                    <form onsubmit="handleUpdatePresence(event)" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-mono">
-                                    Status Availability
-                                </label>
-                                <select 
-                                    id="presenceStatusSelect" 
-                                    onchange="updatePresencePreview()"
-                                    class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-500"
-                                >
-                                    <option value="online">Online (🟢 Available)</option>
-                                    <option value="idle">Idle (🟡 Away)</option>
-                                    <option value="dnd">Do Not Disturb (🔴 Busy)</option>
+                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Status State</label>
+                                <select id="presenceStatusSelect" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-brand-500">
+                                    <option value="online">Online (🟢)</option>
+                                    <option value="idle">Idle (🟡)</option>
+                                    <option value="dnd">Do Not Disturb (🔴)</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-mono">
-                                    Activity Type
-                                </label>
-                                <select 
-                                    id="presenceActivityType" 
-                                    onchange="updatePresencePreview()"
-                                    class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-500"
-                                >
+                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Activity Type</label>
+                                <select id="presenceActivityType" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-brand-500">
                                     <option value="listening">Listening to</option>
                                     <option value="playing">Playing</option>
                                     <option value="watching">Watching</option>
@@ -788,522 +619,193 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-mono">
-                                Activity Description
-                            </label>
-                            <input 
-                                type="text" 
-                                id="presenceText" 
-                                required 
-                                oninput="updatePresencePreview()"
-                                placeholder="e.g. /help | @SkillX"
-                                value="/help | @SkillX"
-                                class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 font-mono"
-                            />
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Activity Text</label>
+                            <input type="text" id="presenceText" required placeholder="e.g. /help | @SkillX" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500">
                         </div>
 
-                        <button 
-                            type="submit" 
-                            id="presenceSubmitBtn"
-                            class="btn-brand-glow text-white font-semibold py-3 px-6 rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-lg shadow-brand-500/25"
-                        >
+                        <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium py-2.5 px-5 rounded-xl text-xs shadow-lg shadow-brand-500/20 transition-all flex items-center gap-2 cursor-pointer">
                             <i class="bi bi-arrow-repeat"></i>
-                            <span>Apply Presence Changes</span>
+                            <span>Apply Presence</span>
                         </button>
                     </form>
                 </div>
 
-                <!-- Live Discord Profile Card Preview -->
-                <div class="glass-panel rounded-3xl p-6 shadow-2xl space-y-4">
-                    <h3 class="font-bold text-white text-xs uppercase tracking-wider text-slate-400 font-mono">
-                        Discord Live Profile Preview
-                    </h3>
+                <!-- Cog Manager -->
+                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
+                    <div>
+                        <h3 class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="bi bi-puzzle-fill text-cyan-400"></i>
+                            Modular Cog Subsystem Manager
+                        </h3>
+                        <p class="text-xs text-slate-400">Hot-reload bot extensions in real-time with zero downtime</p>
+                    </div>
 
-                    <div class="bg-[#111214] border border-[#232428] rounded-2xl p-5 space-y-4">
-                        <div class="flex items-center gap-3.5">
-                            <div class="relative">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-500 to-purple-600 flex items-center justify-center text-white text-2xl shadow-md">
-                                    <i class="bi bi-robot"></i>
-                                </div>
-                                <span id="previewStatusDot" class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-3 border-[#111214]"></span>
+                    <div class="space-y-2.5" id="cogsListContainer">
+                        <!-- Loaded cogs with reload buttons -->
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
+                                <span class="font-mono font-semibold text-white">cogs.ai_chat</span>
                             </div>
-                            <div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="font-bold text-white text-sm">SkillX</span>
-                                    <span class="bg-[#5865f2] text-white text-[9px] px-1 py-0.2 rounded font-bold uppercase tracking-wider">Bot</span>
-                                </div>
-                                <span class="text-xs text-slate-400 font-mono">skillx#0000</span>
-                            </div>
+                            <button onclick="handleReloadCog('cogs.ai_chat')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
+                                Reload
+                            </button>
                         </div>
 
-                        <div class="pt-3 border-t border-[#232428] space-y-1">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Activity</span>
-                            <div class="text-xs text-slate-200 flex items-center gap-1.5">
-                                <i id="previewActivityIcon" class="bi bi-headphones text-brand-400"></i>
-                                <span id="previewActivityText" class="font-medium">Listening to /help | @SkillX</span>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
+                                <span class="font-mono font-semibold text-white">cogs.moderation</span>
                             </div>
+                            <button onclick="handleReloadCog('cogs.moderation')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
+                                Reload
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
+                                <span class="font-mono font-semibold text-white">cogs.utility</span>
+                            </div>
+                            <button onclick="handleReloadCog('cogs.utility')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
+                                Reload
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
+                                <span class="font-mono font-semibold text-white">cogs.automod</span>
+                            </div>
+                            <button onclick="handleReloadCog('cogs.automod')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
+                                Reload
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
+                                <span class="font-mono font-semibold text-white">cogs.community</span>
+                            </div>
+                            <button onclick="handleReloadCog('cogs.community')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
+                                Reload
+                            </button>
                         </div>
                     </div>
                 </div>
-
             </div>
         </section>
 
     </main>
 
-    <!-- ========================================================= -->
-    <!-- BROADCAST ANNOUNCEMENT MODAL WITH LIVE DISCORD EMBED PREVIEW -->
-    <!-- ========================================================= -->
-    <div id="broadcastModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl w-full max-w-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative border border-slate-700/80 animate-fade-in">
-            
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 text-xl">
-                        <i class="bi bi-megaphone-fill"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-white text-base">Broadcast Guild Announcement</h3>
-                        <p class="text-xs text-slate-400">Publish rich embedded notices into designated server channels</p>
-                    </div>
-                </div>
-                <button onclick="closeBroadcastModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-all">
-                    <i class="bi bi-x-lg text-sm"></i>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Form Inputs -->
-                <form id="broadcastForm" onsubmit="handleSendBroadcast(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-mono">
-                            Target Channel
-                        </label>
-                        <select 
-                            id="broadcastChannelSelect" 
-                            required 
-                            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 font-mono"
-                        >
-                            <option value="">Select target channel...</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-mono">
-                            Embed Title (Optional)
-                        </label>
-                        <input 
-                            type="text" 
-                            id="broadcastTitle" 
-                            oninput="updateDiscordEmbedPreview()"
-                            placeholder="e.g. Scheduled Maintenance Notice" 
-                            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
-                        >
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-mono">
-                            Message Body
-                        </label>
-                        <textarea 
-                            id="broadcastContent" 
-                            rows="4" 
-                            required 
-                            oninput="updateDiscordEmbedPreview()"
-                            placeholder="Type announcement message contents..." 
-                            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 custom-scrollbar"
-                        ></textarea>
-                    </div>
-
-                    <div class="flex justify-end gap-2.5 pt-2">
-                        <button type="button" onclick="closeBroadcastModal()" class="px-4 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800 transition-all">
-                            Cancel
-                        </button>
-                        <button type="submit" id="broadcastSubmitBtn" class="btn-brand-glow text-white font-semibold px-5 py-2.5 rounded-xl text-xs shadow-lg shadow-brand-500/30">
-                            Send Broadcast
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Live Discord Embed Preview -->
-                <div class="space-y-2">
-                    <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Discord Embed Live Preview</span>
-                    <div class="p-4 rounded-2xl bg-[#313338] border border-[#232428] space-y-3 font-sans">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-sm">
-                                <i class="bi bi-robot"></i>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-xs font-bold text-white">SkillX</span>
-                                    <span class="bg-[#5865f2] text-white text-[8px] px-1 py-0.2 rounded font-bold uppercase">Bot</span>
-                                </div>
-                                <span class="text-[10px] text-slate-400">Today at 12:00 PM</span>
-                            </div>
-                        </div>
-
-                        <!-- Embed Box -->
-                        <div class="discord-embed-preview p-3.5 rounded-r-lg space-y-2">
-                            <h4 id="previewEmbedTitle" class="text-xs font-bold text-white">📢 Announcement Title</h4>
-                            <p id="previewEmbedMessage" class="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">Your message will appear here in Discord...</p>
-                            <div class="pt-2 border-t border-slate-700/40 text-[10px] text-slate-400 font-mono">
-                                Broadcasted via SkillX Web Console
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ========================================================= -->
-    <!-- QUICK COMMAND PALETTE MODAL (Ctrl + K) -->
-    <!-- ========================================================= -->
-    <div id="commandPaletteModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-start justify-center pt-20 p-4">
-        <div class="glass-panel rounded-3xl w-full max-w-lg p-5 shadow-2xl space-y-4 border border-slate-700 animate-fade-in">
-            <div class="relative">
-                <i class="bi bi-search absolute left-4 top-3 text-slate-400 text-sm"></i>
-                <input 
-                    type="text" 
-                    id="paletteInput" 
-                    oninput="filterPaletteOptions()"
-                    placeholder="Search commands or jump to tab... (ESC to close)" 
-                    class="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-11 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
-                />
-            </div>
-            
-            <div id="paletteResults" class="space-y-1.5 max-h-60 overflow-y-auto custom-scrollbar text-xs">
-                <button onclick="paletteAction('overview')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 flex items-center justify-between text-slate-200">
-                    <span class="flex items-center gap-2"><i class="bi bi-speedometer2 text-brand-400"></i> Jump to Overview & Telemetry</span>
-                    <kbd class="text-[10px] font-mono bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded text-slate-400">Tab 1</kbd>
-                </button>
-                <button onclick="paletteAction('servers')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 flex items-center justify-between text-slate-200">
-                    <span class="flex items-center gap-2"><i class="bi bi-hdd-network text-purple-400"></i> Open Server Explorer</span>
-                    <kbd class="text-[10px] font-mono bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded text-slate-400">Tab 2</kbd>
-                </button>
-                <button onclick="paletteAction('ai')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 flex items-center justify-between text-slate-200">
-                    <span class="flex items-center gap-2"><i class="bi bi-stars text-amber-400"></i> Launch AI Studio Playground</span>
-                    <kbd class="text-[10px] font-mono bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded text-slate-400">Tab 3</kbd>
-                </button>
-                <button onclick="paletteAction('controls')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 flex items-center justify-between text-slate-200">
-                    <span class="flex items-center gap-2"><i class="bi bi-sliders text-cyan-400"></i> Bot Presence & Activity</span>
-                    <kbd class="text-[10px] font-mono bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded text-slate-400">Tab 4</kbd>
-                </button>
-                <button onclick="paletteAction('broadcast')" class="w-full text-left p-3 rounded-xl hover:bg-slate-800 flex items-center justify-between text-slate-200">
-                    <span class="flex items-center gap-2"><i class="bi bi-megaphone-fill text-emerald-400"></i> New Guild Broadcast</span>
-                    <kbd class="text-[10px] font-mono bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded text-slate-400">Cmd+B</kbd>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================================= -->
-    <!-- INTERACTIVE JAVASCRIPT CONTROLLERS -->
-    <!-- ========================================================= -->
+    <!-- Scripts -->
     <script>
         const csrfToken = document.getElementById('csrfToken').value;
         let chartInstance = null;
         let latencyHistory = [];
         let labelsHistory = [];
-        let cachedGuilds = [];
-        let isAudioMuted = false;
 
-        // Interactive Mouse Spotlight for Glass Panels
-        document.querySelectorAll('.spotlight-card').forEach(panel => {
-            panel.addEventListener('mousemove', (e) => {
-                const rect = panel.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                panel.style.setProperty('--mouse-x', `${x}px`);
-                panel.style.setProperty('--mouse-y', `${y}px`);
-            });
-        });
-
-        // Ambient Dynamic Starfield / Particle Background
-        const canvas = document.getElementById('ambientCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-
-        function resizeCanvas() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.3;
-                this.vy = (Math.random() - 0.5) * 0.3;
-                this.radius = Math.random() * 1.5 + 0.5;
-                this.color = Math.random() > 0.5 ? 'rgba(88, 101, 242, ' : 'rgba(168, 85, 247, ';
-                this.alpha = Math.random() * 0.45 + 0.15;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                if (this.x < 0) this.x = width;
-                if (this.x > width) this.x = 0;
-                if (this.y < 0) this.y = height;
-                if (this.y > height) this.y = 0;
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color + this.alpha + ')';
-                ctx.fill();
-            }
-        }
-
-        const particleCount = Math.min(width > 768 ? 50 : 25, 70);
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
-
-        function renderCanvas() {
-            ctx.clearRect(0, 0, width, height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 110) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(88, 101, 242, ${0.12 * (1 - dist / 110)})`;
-                        ctx.lineWidth = 0.6;
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(renderCanvas);
-        }
-        renderCanvas();
-
-        // Web Audio Synthesizer for Interactive UI Feedback
-        let audioCtx = null;
-        function playTone(freq, type = 'sine', duration = 0.12, gainVal = 0.035) {
-            if (isAudioMuted) return;
-            try {
-                if (!audioCtx) {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    if (AudioContext) audioCtx = new AudioContext();
-                }
-                if (audioCtx && audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                if (!audioCtx) return;
-
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (e) {
-                // Silently skip
-            }
-        }
-
-        function toggleAudio() {
-            isAudioMuted = !isAudioMuted;
-            const icon = document.getElementById('soundIcon');
-            if (isAudioMuted) {
-                icon.className = 'bi bi-volume-mute text-base text-rose-400';
-                showToast('Audio feedback disabled', 'info');
-            } else {
-                icon.className = 'bi bi-volume-up text-base text-emerald-400';
-                playTone(660, 'sine', 0.1, 0.05);
-                showToast('Audio feedback enabled', 'info');
-            }
-        }
-
-        // Animated Smooth Number Counter (Count-Up)
-        function animateCounter(elementId, targetValue, suffix = '') {
-            const el = document.getElementById(elementId);
-            if (!el) return;
-            const startValue = parseInt(el.textContent.replace(/[^0-9]/g, '')) || 0;
-            if (startValue === targetValue) {
-                el.textContent = `${targetValue}${suffix}`;
-                return;
-            }
-            const duration = 600;
-            const startTime = performance.now();
-
-            function updateCounter(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                // Ease out quad
-                const easeProgress = 1 - (1 - progress) * (1 - progress);
-                const current = Math.floor(startValue + (targetValue - startValue) * easeProgress);
-                el.textContent = `${current}${suffix}`;
-                if (progress < 1) {
-                    requestAnimationFrame(updateCounter);
-                } else {
-                    el.textContent = `${targetValue}${suffix}`;
-                }
-            }
-            requestAnimationFrame(updateCounter);
-        }
-
-        // Live Activity Terminal Log Appender
-        function addTerminalLog(message, type = 'info') {
-            const container = document.getElementById('terminalLogContainer');
-            if (!container) return;
-            const time = new Date().toLocaleTimeString();
-            const div = document.createElement('div');
-            
-            const colorClass = type === 'success' ? 'text-emerald-400' :
-                               type === 'warn' ? 'text-amber-400' :
-                               type === 'error' ? 'text-rose-400' : 'text-slate-300';
-
-            div.className = `${colorClass} transition-opacity duration-300 flex items-start gap-2`;
-            div.innerHTML = `<span class="text-slate-500 font-mono text-[11px]">[${time}]</span> <span>${message}</span>`;
-            container.appendChild(div);
-
-            // Keep max 30 entries
-            while (container.children.length > 30) {
-                container.removeChild(container.firstChild);
-            }
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function clearActivityLog() {
-            const container = document.getElementById('terminalLogContainer');
-            if (container) {
-                container.innerHTML = `<div class="text-slate-500">[System] Activity log cleared by admin.</div>`;
-            }
-        }
-
-        // Toast Notification System
+        // Toast Helper
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
+            const bg = type === 'success' ? 'bg-emerald-500/95' : type === 'error' ? 'bg-rose-500/95' : 'bg-brand-500/95';
+            const icon = type === 'success' ? 'bi-check-circle-fill' : type === 'error' ? 'bi-exclamation-octagon-fill' : 'bi-info-circle-fill';
             
-            const bgClass = type === 'success' ? 'bg-emerald-500/90 border-emerald-400/30' :
-                            type === 'error' ? 'bg-rose-500/90 border-rose-400/30' :
-                            'bg-brand-500/90 border-brand-400/30';
-                            
-            const icon = type === 'success' ? 'bi-check-circle-fill' :
-                         type === 'error' ? 'bi-exclamation-octagon-fill' :
-                         'bi-info-circle-fill';
-            
-            toast.className = `${bgClass} backdrop-blur-xl border text-white text-xs px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 pointer-events-auto transition-all transform translate-y-3 opacity-0 duration-300 font-medium`;
-            toast.innerHTML = `<i class="bi ${icon} text-base"></i><span>${message}</span>`;
+            toast.className = `${bg} text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 pointer-events-auto transition-all transform translate-y-2 opacity-0 duration-300 border border-white/10`;
+            toast.innerHTML = `<i class="bi ${icon}"></i><span>${message}</span>`;
             container.appendChild(toast);
 
             setTimeout(() => {
-                toast.classList.remove('translate-y-3', 'opacity-0');
+                toast.classList.remove('translate-y-2', 'opacity-0');
             }, 10);
 
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-3');
-                setTimeout(() => toast.remove(), 350);
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
 
         // Tab Navigation
         function switchTab(tabId) {
-            playTone(500, 'sine', 0.08, 0.025);
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = 'tab-btn px-4 py-2.5 text-xs sm:text-sm font-medium rounded-xl flex items-center gap-2.5 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/60';
+                btn.className = 'tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap';
             });
 
-            const activeTab = document.getElementById(tabId);
-            if (activeTab) activeTab.classList.remove('hidden');
-
+            document.getElementById(tabId).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-${tabId}`);
             if (activeBtn) {
-                activeBtn.className = 'tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2.5 transition-all bg-brand-500 text-white shadow-lg shadow-brand-500/30';
+                activeBtn.className = 'tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all bg-brand-500/20 text-brand-400 border border-brand-500/30 whitespace-nowrap';
             }
 
             if (tabId === 'tab-servers') {
                 fetchGuilds();
+            } else if (tabId === 'tab-automod') {
+                fetchInfractions();
             }
         }
 
-        // Latency Chart Setup
+        // Sync Live Embed Preview
+        function updateEmbedPreview() {
+            const title = document.getElementById('broadcastTitle').value || '📢 Announcement Title';
+            const body = document.getElementById('broadcastContent').value || 'Your announcement message description will be rendered here with live markdown and colors.';
+            const colorHex = document.getElementById('broadcastColor').value;
+            const useEmbed = document.getElementById('broadcastUseEmbed').checked;
+            const card = document.getElementById('discordPreviewCard');
+
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewBody').textContent = body;
+            card.style.borderLeftColor = colorHex;
+
+            if (!useEmbed) {
+                card.style.borderLeft = 'none';
+                document.getElementById('previewTitle').style.display = 'none';
+            } else {
+                card.style.borderLeft = `4px solid ${colorHex}`;
+                document.getElementById('previewTitle').style.display = 'block';
+            }
+        }
+
+        function syncColorInput(val) {
+            if (/^#[0-9A-F]{6}$/i.test(val)) {
+                document.getElementById('broadcastColor').value = val;
+                updateEmbedPreview();
+            }
+        }
+
+        // Initialize Latency Chart
         function initChart() {
             const ctx = document.getElementById('latencyChart').getContext('2d');
-            
-            // Create rich gradient fill
-            const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-            gradient.addColorStop(0, 'rgba(88, 101, 242, 0.45)');
-            gradient.addColorStop(0.6, 'rgba(168, 85, 247, 0.15)');
-            gradient.addColorStop(1, 'rgba(88, 101, 242, 0.0)');
-
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labelsHistory,
                     datasets: [{
-                        label: 'Gateway Latency (ms)',
+                        label: 'Latency (ms)',
                         data: latencyHistory,
                         borderColor: '#5865F2',
-                        backgroundColor: gradient,
+                        backgroundColor: 'rgba(88, 101, 242, 0.12)',
                         borderWidth: 2.5,
-                        tension: 0.4,
+                        tension: 0.38,
                         fill: true,
                         pointRadius: 3,
-                        pointHoverRadius: 6,
-                        pointBackgroundColor: '#5865F2',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 1.5,
+                        pointBackgroundColor: '#5865F2'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: {
-                        duration: 750,
-                        easing: 'easeOutQuart'
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                            titleColor: '#e2e8f0',
-                            bodyColor: '#38bdf8',
-                            titleFont: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
-                            bodyFont: { family: 'JetBrains Mono', size: 12, weight: '700' },
-                            borderColor: 'rgba(88, 101, 242, 0.4)',
-                            borderWidth: 1,
-                            padding: 10,
-                            displayColors: false,
-                            callbacks: {
-                                label: (ctx) => `Roundtrip: ${ctx.parsed.y} ms`
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
-                        }
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#64748b', font: { size: 10 } } }
                     }
                 }
             });
         }
 
-        // Stats Polling & Telemetry Update
+        // Polling Stats & Logs
         async function fetchStats() {
             try {
                 const res = await fetch('/api/stats');
@@ -1313,22 +815,22 @@
                 }
                 const data = await res.json();
 
-                // Smooth Counter Updates
-                animateCounter('statGuildCount', data.guilds);
-                animateCounter('statUserCount', data.users);
-                animateCounter('statLatency', data.latency_ms, ' ms');
-                animateCounter('statAiMemory', data.ai_memory_contexts);
-
-                // Update Header
+                // Update Cards
+                document.getElementById('statGuildCount').textContent = data.guilds;
+                document.getElementById('statUserCount').textContent = data.users;
+                document.getElementById('statLatency').textContent = `${data.latency_ms} ms`;
                 document.getElementById('headerPing').textContent = `${data.latency_ms} ms`;
                 document.getElementById('headerUptime').textContent = data.uptime_str;
+                document.getElementById('statAiMemory').textContent = data.ai_memory_contexts;
+                document.getElementById('statInfractions').textContent = data.total_infractions;
                 document.getElementById('memoryCountBadge').textContent = `${data.ai_memory_contexts} active users`;
 
-                // Update System Specs
+                // Update System
                 document.getElementById('sysPython').textContent = `v${data.system.python}`;
                 document.getElementById('sysDiscordPy').textContent = `v${data.system.discord_py}`;
                 document.getElementById('sysMemory').textContent = `${data.system.memory_mb} MB`;
-                document.getElementById('sysCogs').textContent = `${data.system.cogs_count} Active`;
+                document.getElementById('headerMemory').textContent = `${data.system.memory_mb} MB`;
+                document.getElementById('statCogs').textContent = data.system.cogs_count;
 
                 // Update Chart
                 const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1340,133 +842,136 @@
                 }
                 if (chartInstance) chartInstance.update();
 
-                // Compute min, avg, max
-                if (latencyHistory.length > 0) {
-                    const minP = Math.min(...latencyHistory);
-                    const maxP = Math.max(...latencyHistory);
-                    const avgP = Math.round(latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length);
-                    document.getElementById('chartMinPing').textContent = `${minP} ms`;
-                    document.getElementById('chartAvgPing').textContent = `${avgP} ms`;
-                    document.getElementById('chartMaxPing').textContent = `${maxP} ms`;
-                }
-
-                // Add sample log occasionally
-                if (Math.random() > 0.6) {
-                    addTerminalLog(`Gateway Heartbeat ACK: ${data.latency_ms}ms latency recorded.`, 'info');
-                }
-
             } catch (err) {
                 console.warn('Stats poll failed:', err);
             }
         }
 
-        // Fetch Guilds Directory
+        async function fetchLogs() {
+            try {
+                const res = await fetch('/api/logs');
+                if (res.status === 401) return;
+                const logs = await res.json();
+                const container = document.getElementById('activityFeedList');
+
+                if (!logs || logs.length === 0) {
+                    container.innerHTML = '<div class="text-center text-slate-500 py-6">No recent events recorded.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                logs.forEach(log => {
+                    const el = document.createElement('div');
+                    el.className = 'flex items-start gap-2.5 p-2 rounded-lg bg-slate-950/40 border border-slate-800/60';
+                    const icon = log.type === 'auth' ? 'bi-shield-check text-blue-400' :
+                                 log.type === 'broadcast' ? 'bi-megaphone text-purple-400' :
+                                 log.type === 'ai' ? 'bi-cpu text-emerald-400' :
+                                 log.type === 'mod' ? 'bi-hammer text-rose-400' :
+                                 'bi-info-circle text-slate-400';
+                    el.innerHTML = `
+                        <i class="bi ${icon} mt-0.5"></i>
+                        <div class="flex-1">
+                            <div class="text-slate-200">${log.message}</div>
+                            <div class="text-[10px] text-slate-500 font-mono">${log.timestamp}</div>
+                        </div>
+                    `;
+                    container.appendChild(el);
+                });
+            } catch (err) {
+                console.warn('Logs poll failed:', err);
+            }
+        }
+
+        // Fetch Guilds
         async function fetchGuilds() {
             try {
                 const res = await fetch('/api/guilds');
                 if (res.status === 401) return;
-                cachedGuilds = await res.json();
-                renderGuildTable(cachedGuilds);
-                populateBroadcastDropdown(cachedGuilds);
+                const guilds = await res.json();
+                
+                const tbody = document.getElementById('guildTableBody');
+                const channelSelect = document.getElementById('broadcastChannelSelect');
+                const modGuildSelect = document.getElementById('webModGuildSelect');
+                
+                tbody.innerHTML = '';
+                channelSelect.innerHTML = '<option value="">Select target channel...</option>';
+                modGuildSelect.innerHTML = '<option value="">Select target guild...</option>';
+
+                document.getElementById('guildTableCountBadge').textContent = `${guilds.length} Servers`;
+
+                if (!guilds || guilds.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-6 text-center text-slate-500 text-xs">No connected guilds found.</td></tr>';
+                    return;
+                }
+
+                guilds.forEach(g => {
+                    const icon = g.icon || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/30 transition-colors';
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 flex items-center gap-3">
+                            <img src="${icon}" class="w-8 h-8 rounded-full border border-slate-700 object-cover" />
+                            <span class="font-medium text-white">${g.name}</span>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-xs text-slate-400">${g.id}</td>
+                        <td class="px-6 py-4 text-xs text-slate-300">${g.owner}</td>
+                        <td class="px-6 py-4 text-xs font-semibold text-white">${g.member_count}</td>
+                        <td class="px-6 py-4 text-xs text-slate-400">${g.text_channels ? g.text_channels.length : 0} channels</td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    // Add to mod guild select
+                    const optG = document.createElement('option');
+                    optG.value = g.id;
+                    optG.textContent = g.name;
+                    modGuildSelect.appendChild(optG);
+
+                    // Add channels to dropdown
+                    if (g.text_channels) {
+                        g.text_channels.forEach(ch => {
+                            if (ch.can_send) {
+                                const opt = document.createElement('option');
+                                opt.value = ch.id;
+                                opt.textContent = `${g.name} ❯ #${ch.name}`;
+                                channelSelect.appendChild(opt);
+                            }
+                        });
+                    }
+                });
             } catch (err) {
                 showToast('Failed to load server directory', 'error');
             }
         }
 
-        function renderGuildTable(guilds) {
-            const tbody = document.getElementById('guildTableBody');
-            tbody.innerHTML = '';
+        // Fetch Infractions
+        async function fetchInfractions() {
+            try {
+                const res = await fetch('/api/infractions');
+                if (res.status === 401) return;
+                const items = await res.json();
+                const tbody = document.getElementById('infractionsTableBody');
+                tbody.innerHTML = '';
 
-            if (!guilds || guilds.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 text-xs font-mono">No matching servers found.</td></tr>';
-                return;
-            }
-
-            guilds.forEach(g => {
-                const icon = g.icon || 'https://cdn.discordapp.com/embed/avatars/0.png';
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-800/40 transition-colors group';
-                tr.innerHTML = `
-                    <td class="px-6 py-4 flex items-center gap-3">
-                        <img src="${icon}" class="w-9 h-9 rounded-xl border border-slate-700/80 object-cover shadow-sm group-hover:scale-105 transition-transform" />
-                        <div>
-                            <span class="font-bold text-white block text-sm">${g.name}</span>
-                            <span class="text-[10px] text-slate-400 font-mono">Managed Server</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 font-mono text-xs text-slate-400">${g.id}</td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300 font-mono">
-                            <i class="bi bi-people text-brand-400"></i> ${g.member_count}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300 font-mono">
-                            <i class="bi bi-hash text-purple-400"></i> ${g.channels ? g.channels.length : 0} channels
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="openBroadcastForGuild('${g.id}')" class="text-xs bg-slate-800/80 hover:bg-brand-500 text-slate-300 hover:text-white px-3.5 py-1.5 rounded-xl border border-slate-700 hover:border-brand-500 transition-all shadow-sm">
-                            <i class="bi bi-megaphone-fill mr-1"></i> Broadcast
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function populateBroadcastDropdown(guilds) {
-            const channelSelect = document.getElementById('broadcastChannelSelect');
-            channelSelect.innerHTML = '<option value="">Select a channel...</option>';
-            if (!guilds) return;
-            guilds.forEach(g => {
-                if (g.channels) {
-                    g.channels.forEach(ch => {
-                        const opt = document.createElement('option');
-                        opt.value = ch.id;
-                        opt.textContent = `${g.name} ❯ #${ch.name}`;
-                        channelSelect.appendChild(opt);
-                    });
+                if (!items || items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-6 text-center text-slate-500 text-xs">No recorded infractions found. Server is clean!</td></tr>';
+                    return;
                 }
-            });
-        }
 
-        function filterGuilds() {
-            const query = document.getElementById('guildSearchInput').value.toLowerCase();
-            const filtered = cachedGuilds.filter(g => 
-                g.name.toLowerCase().includes(query) || g.id.includes(query)
-            );
-            renderGuildTable(filtered);
-        }
-
-        // Broadcast Modal & Discord Live Embed Preview
-        function openBroadcastModal() {
-            playTone(450, 'sine', 0.1, 0.03);
-            document.getElementById('broadcastModal').classList.remove('hidden');
-            updateDiscordEmbedPreview();
-        }
-
-        function closeBroadcastModal() {
-            document.getElementById('broadcastModal').classList.add('hidden');
-        }
-
-        function openBroadcastForGuild(guildId) {
-            openBroadcastModal();
-            // Preselect first channel of guild if possible
-            const guild = cachedGuilds.find(g => g.id === guildId);
-            if (guild && guild.channels && guild.channels.length > 0) {
-                document.getElementById('broadcastChannelSelect').value = guild.channels[0].id;
+                items.forEach(w => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/30 transition-colors';
+                    tr.innerHTML = `
+                        <td class="px-5 py-3 font-mono font-bold text-amber-400">#${w.case_id}</td>
+                        <td class="px-5 py-3 font-mono text-slate-300">${w.user_id}</td>
+                        <td class="px-5 py-3 text-slate-200">${w.reason}</td>
+                        <td class="px-5 py-3 font-mono text-slate-400">${w.moderator_id}</td>
+                        <td class="px-5 py-3 text-slate-400 font-mono text-[11px]">${w.timestamp ? w.timestamp.split('T')[0] : 'N/A'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                showToast('Failed to load infractions', 'error');
             }
-        }
-
-        function updateDiscordEmbedPreview() {
-            const title = document.getElementById('broadcastTitle').value.trim();
-            const msg = document.getElementById('broadcastContent').value.trim();
-            const previewTitle = document.getElementById('previewEmbedTitle');
-            const previewMsg = document.getElementById('previewEmbedMessage');
-
-            previewTitle.textContent = title ? `📢 ${title}` : '📢 Announcement Title';
-            previewMsg.textContent = msg || 'Your formatted announcement message will be rendered here...';
         }
 
         // Send Broadcast
@@ -1475,10 +980,12 @@
             const channelId = document.getElementById('broadcastChannelSelect').value;
             const title = document.getElementById('broadcastTitle').value;
             const message = document.getElementById('broadcastContent').value;
+            const colorHex = document.getElementById('broadcastColor').value;
+            const useEmbed = document.getElementById('broadcastUseEmbed').checked;
             const btn = document.getElementById('broadcastSubmitBtn');
 
             btn.disabled = true;
-            btn.textContent = 'Dispatching...';
+            btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i><span>Broadcasting...</span>';
 
             try {
                 const res = await fetch('/api/broadcast', {
@@ -1487,56 +994,44 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-Token': csrfToken
                     },
-                    body: JSON.stringify({ channel_id: channelId, title, message })
+                    body: JSON.stringify({
+                        channel_id: channelId,
+                        title,
+                        message,
+                        color: colorHex,
+                        use_embed: useEmbed
+                    })
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    playTone(880, 'sine', 0.25, 0.05);
-                    // Confetti celebration
-                    if (window.confetti) {
-                        confetti({
-                            particleCount: 70,
-                            spread: 60,
-                            origin: { y: 0.6 }
-                        });
-                    }
-                    showToast('Broadcast dispatched successfully to channel!', 'success');
-                    addTerminalLog(`[Broadcast] Message sent successfully to Channel ${channelId}`, 'success');
-                    closeBroadcastModal();
-                    document.getElementById('broadcastContent').value = '';
-                    document.getElementById('broadcastTitle').value = '';
+                    showToast('Broadcast dispatched successfully!', 'success');
+                    fetchLogs();
                 } else {
-                    playTone(240, 'sawtooth', 0.2, 0.05);
-                    showToast(data.error || 'Failed to send broadcast.', 'error');
+                    showToast(data.error || 'Failed to dispatch broadcast.', 'error');
                 }
             } catch (err) {
                 showToast('Communication error', 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Send Broadcast';
+                btn.innerHTML = '<i class="bi bi-send-fill"></i><span>Dispatch Announcement</span>';
             }
         }
 
-        // AI Testing Studio
-        function setPromptPreset(text) {
-            document.getElementById('aiPromptInput').value = text;
-            playTone(550, 'sine', 0.05, 0.02);
-        }
-
+        // AI Testing
         async function handleAiTest(e) {
             e.preventDefault();
             const prompt = document.getElementById('aiPromptInput').value;
+            const persona = document.getElementById('aiPersonaSelect').value;
+            const temp = parseFloat(document.getElementById('aiTemperature').value);
             const btn = document.getElementById('aiSubmitBtn');
             const btnText = document.getElementById('aiBtnText');
-            const btnIcon = document.getElementById('aiBtnIcon');
             const box = document.getElementById('aiResponseBox');
             const resText = document.getElementById('aiResponseText');
             const modelBadge = document.getElementById('aiModelBadge');
+            const elapsedBadge = document.getElementById('aiElapsedBadge');
 
             btn.disabled = true;
-            btnText.textContent = 'Generating with Fallback...';
-            btnIcon.className = 'bi bi-arrow-repeat animate-spin text-base';
-            playTone(480, 'sine', 0.1, 0.03);
+            btnText.textContent = 'Querying...';
 
             try {
                 const res = await fetch('/api/ai-test', {
@@ -1545,18 +1040,17 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-Token': csrfToken
                     },
-                    body: JSON.stringify({ prompt })
+                    body: JSON.stringify({ prompt, persona, temperature: temp })
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    playTone(720, 'sine', 0.2, 0.05);
                     box.classList.remove('hidden');
                     modelBadge.textContent = data.model;
+                    elapsedBadge.textContent = `${data.elapsed_ms}ms`;
                     resText.textContent = data.response;
-                    showToast(`Generated using ${data.model}`, 'success');
-                    addTerminalLog(`[AI Studio] Generated inference using ${data.model}`, 'success');
+                    showToast(`Completed with ${data.model} in ${data.elapsed_ms}ms`, 'success');
+                    fetchLogs();
                 } else {
-                    playTone(240, 'sawtooth', 0.2, 0.05);
                     showToast(data.error || 'AI generation failed', 'error');
                 }
             } catch (err) {
@@ -1564,15 +1058,61 @@
             } finally {
                 btn.disabled = false;
                 btnText.textContent = 'Execute Query';
-                btnIcon.className = 'bi bi-lightning-charge-fill';
             }
         }
 
-        function copyAiResponse() {
-            const text = document.getElementById('aiResponseText').textContent;
-            navigator.clipboard.writeText(text);
-            playTone(800, 'sine', 0.1, 0.04);
-            showToast('Response copied to clipboard!', 'info');
+        // Web Moderation
+        async function handleWebModAction(e) {
+            e.preventDefault();
+            const action = document.getElementById('webModAction').value;
+            const guildId = document.getElementById('webModGuildSelect').value;
+            const userId = document.getElementById('webModUserId').value;
+            const reason = document.getElementById('webModReason').value;
+
+            try {
+                const res = await fetch('/api/moderation/action', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({ action, guild_id: guildId, user_id: userId, reason })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(`Disciplinary action (${action}) executed!`, 'success');
+                    document.getElementById('webModUserId').value = '';
+                    fetchInfractions();
+                    fetchLogs();
+                } else {
+                    showToast(data.error || 'Moderation action failed.', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        // Reload Cog
+        async function handleReloadCog(extensionName) {
+            try {
+                const res = await fetch('/api/cogs/reload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({ extension: extensionName })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(`Reloaded ${extensionName}!`, 'success');
+                    fetchLogs();
+                } else {
+                    showToast(data.error || 'Failed to reload extension.', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
         }
 
         // Clear Memory
@@ -1585,10 +1125,9 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    playTone(660, 'sine', 0.15, 0.04);
-                    showToast('All conversational memories cleared!', 'success');
-                    addTerminalLog('[AI Memory] Wiped all conversational contexts.', 'warn');
+                    showToast(`Wiped ${data.cleared_count || 0} conversational memory session(s)!`, 'success');
                     fetchStats();
+                    fetchLogs();
                 } else {
                     showToast(data.error || 'Action failed', 'error');
                 }
@@ -1597,38 +1136,7 @@
             }
         }
 
-        // Update Presence & Live Preview
-        function updatePresencePreview() {
-            const status = document.getElementById('presenceStatusSelect').value;
-            const activityType = document.getElementById('presenceActivityType').value;
-            const text = document.getElementById('presenceText').value || '/help | @SkillX';
-
-            const dot = document.getElementById('previewStatusDot');
-            if (status === 'online') {
-                dot.className = 'absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-3 border-[#111214]';
-            } else if (status === 'idle') {
-                dot.className = 'absolute bottom-0 right-0 w-4 h-4 rounded-full bg-amber-500 border-3 border-[#111214]';
-            } else {
-                dot.className = 'absolute bottom-0 right-0 w-4 h-4 rounded-full bg-rose-500 border-3 border-[#111214]';
-            }
-
-            const iconMap = {
-                listening: 'bi bi-headphones text-brand-400',
-                playing: 'bi bi-controller text-purple-400',
-                watching: 'bi bi-display text-cyan-400',
-                competing: 'bi bi-trophy text-amber-400'
-            };
-            const labelMap = {
-                listening: 'Listening to',
-                playing: 'Playing',
-                watching: 'Watching',
-                competing: 'Competing in'
-            };
-
-            document.getElementById('previewActivityIcon').className = iconMap[activityType] || 'bi bi-activity';
-            document.getElementById('previewActivityText').textContent = `${labelMap[activityType] || 'Playing'} ${text}`;
-        }
-
+        // Update Presence
         async function handleUpdatePresence(e) {
             e.preventDefault();
             const status = document.getElementById('presenceStatusSelect').value;
@@ -1646,12 +1154,8 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    playTone(880, 'sine', 0.2, 0.05);
-                    if (window.confetti) {
-                        confetti({ particleCount: 50, spread: 45, origin: { y: 0.7 } });
-                    }
-                    showToast('Bot presence updated successfully on Discord!', 'success');
-                    addTerminalLog(`[Presence] Updated to "${status}" - ${activityType} ${text}`, 'success');
+                    showToast('Bot presence updated successfully!', 'success');
+                    fetchLogs();
                 } else {
                     showToast(data.error || 'Failed to update presence', 'error');
                 }
@@ -1660,38 +1164,8 @@
             }
         }
 
-        // Command Palette
-        function openCommandPalette() {
-            document.getElementById('commandPaletteModal').classList.remove('hidden');
-            document.getElementById('paletteInput').focus();
-        }
-
-        function closeCommandPalette() {
-            document.getElementById('commandPaletteModal').classList.add('hidden');
-        }
-
-        function paletteAction(action) {
-            closeCommandPalette();
-            if (action === 'overview') switchTab('tab-overview');
-            else if (action === 'servers') switchTab('tab-servers');
-            else if (action === 'ai') switchTab('tab-ai');
-            else if (action === 'controls') switchTab('tab-controls');
-            else if (action === 'broadcast') openBroadcastModal();
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault();
-                openCommandPalette();
-            } else if (e.key === 'Escape') {
-                closeCommandPalette();
-                closeBroadcastModal();
-            }
-        });
-
         // Logout
         async function handleLogout() {
-            playTone(350, 'sawtooth', 0.15, 0.04);
             await fetch('/api/logout', { method: 'POST' });
             window.location.href = '/login';
         }
@@ -1700,8 +1174,11 @@
         window.addEventListener('DOMContentLoaded', () => {
             initChart();
             fetchStats();
+            fetchLogs();
+            fetchGuilds();
+            updateEmbedPreview();
             setInterval(fetchStats, 4000);
-            updatePresencePreview();
+            setInterval(fetchLogs, 8000);
         });
     </script>
 </body>

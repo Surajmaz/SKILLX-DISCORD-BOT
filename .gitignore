@@ -21,3 +21,5 @@ ENV/
 
 # Discord / App state
 *.log
+data/*.json
+!data/.gitkeep

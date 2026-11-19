@@ -9,6 +9,33 @@ from google.genai import types
 logger = logging.getLogger("skillx.gemini")
 
 
+PERSONAS = {
+    "default": (
+        "You are SkillX, an intelligent, helpful, and courteous AI assistant in a Discord community. "
+        "Use clean Markdown styling (bolding, lists, and code blocks with syntax highlighting). "
+        "Keep answers informative yet concise for Discord chat."
+    ),
+    "developer": (
+        "You are SkillX Senior Dev, an elite software engineer and systems architect. "
+        "Provide idiomatic, secure, high-performance code solutions with clear explanations, "
+        "proper complexity analysis, and edge case coverage. Always format code with syntax fences."
+    ),
+    "tutor": (
+        "You are SkillX Tutor, a patient, encouraging, and clear educator. "
+        "Break down complex topics into intuitive step-by-step concepts, using analogies, examples, "
+        "and clear takeaways suited for learners."
+    ),
+    "creative": (
+        "You are SkillX Creative, a witty, imaginative, and engaging writer and conversationalist. "
+        "Craft rich, entertaining, and vibrant descriptions, ideas, and stories with dynamic personality."
+    ),
+    "concise": (
+        "You are SkillX Brief. Answer in as few words as possible without losing factual accuracy. "
+        "Zero filler, no conversational preambles, direct bullet points where applicable."
+    ),
+}
+
+
 class GeminiClient:
     """Manages resilient generation requests to Google Gemini across fallback model tiers."""
 
@@ -34,11 +61,7 @@ class GeminiClient:
             "gemini-3.8-flash",
         ]
 
-        self.system_instruction = (
-            "You are SkillX, an intelligent, helpful, and courteous AI assistant in a Discord community. "
-            "Use clean Markdown styling (bolding, lists, and code blocks with syntax highlighting). "
-            "Keep answers informative yet concise for Discord chat."
-        )
+        self.system_instruction = PERSONAS["default"]
 
         self.safety_settings = [
             types.SafetySetting(
@@ -95,7 +118,12 @@ class GeminiClient:
             return None
 
     async def generate_with_fallback(
-        self, prompt: str, history: Optional[list[dict]] = None
+        self,
+        prompt: str,
+        history: Optional[list[dict]] = None,
+        persona: str = "default",
+        custom_system_instruction: Optional[str] = None,
+        temperature: float = 0.7,
     ) -> tuple[Optional[str], str]:
         """
         Executes generation attempting each model in the fallback chain until success.
@@ -106,10 +134,13 @@ class GeminiClient:
         contents = list(history or [])
         contents.append({"role": "user", "parts": [{"text": prompt}]})
 
+        # Determine system prompt
+        active_instruction = custom_system_instruction or PERSONAS.get(persona.lower(), self.system_instruction)
+
         config = types.GenerateContentConfig(
-            system_instruction=self.system_instruction,
+            system_instruction=active_instruction,
             safety_settings=self.safety_settings,
-            temperature=0.7,
+            temperature=max(0.0, min(1.0, temperature)),
             max_output_tokens=2048,
         )
 
@@ -140,3 +171,35 @@ class GeminiClient:
 
         logger.error("All Gemini fallback models were exhausted.")
         return None, "exhausted"
+
+    async def review_code(self, code: str, language: str = "") -> tuple[Optional[str], str]:
+        """Performs specialized code review, security check, and architectural feedback."""
+        prompt = (
+            f"Please conduct an in-depth code review on the following {language} snippet:\n\n"
+            f"```{language}\n{code}\n```\n\n"
+            "Format your response cleanly with the following markdown headers:\n"
+            "1. **🔍 Analysis & Complexity**\n"
+            "2. **⚠️ Potential Bugs & Security Risks**\n"
+            "3. **⚡ Recommended Refactor (Optimized Code)**"
+        )
+        return await self.generate_with_fallback(
+            prompt=prompt,
+            persona="developer",
+            temperature=0.3,
+        )
+
+    async def summarize_text(self, text: str) -> tuple[Optional[str], str]:
+        """Generates a structured, concise executive summary of chat dialogue or article text."""
+        prompt = (
+            "Summarize the key points of the following Discord chat conversation log.\n"
+            "Organize your summary into:\n"
+            "• **Main Topics Discussed**\n"
+            "• **Key Decisions / Takeaways**\n"
+            "• **Action Items (if any)**\n\n"
+            f"Chat Log:\n{text}"
+        )
+        return await self.generate_with_fallback(
+            prompt=prompt,
+            persona="concise",
+            temperature=0.4,
+        )
