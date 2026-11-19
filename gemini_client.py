@@ -1,7 +1,8 @@
-"""Gemini API Client with asynchronous failover, retry logic, and safety parsing."""
+"""Gemini API Client with high-availability model fallback chain, auto-healing health tracking, and safety parsing."""
 
 import asyncio
 import logging
+import time
 from typing import Optional
 from google import genai
 from google.genai import types
@@ -35,9 +36,22 @@ PERSONAS = {
     ),
 }
 
+# Exhaustive model fallback chain spanning all verified GenAI text models
+DEFAULT_MODEL_CHAIN: list[str] = [
+    "gemini-3.5-flash-lite",  # Primary: highest availability, ultra-fast latency (~2-4s)
+    "gemini-3.1-flash-lite",  # High-reliability secondary flash-lite tier
+    "gemma-4-26b-a4b-it",     # High-throughput 26B instruction-tuned open model on GenAI
+    "gemma-4-31b-it",         # 31B instruction-tuned open model on GenAI
+    "gemini-3.8-flash",       # High intelligence 3.8 Flash model
+    "gemini-3.7-flash",       # High intelligence 3.7 Flash model
+    "gemini-3.6-flash",       # Gemini 3.6 Flash
+    "gemini-3.5-flash",       # Gemini 3.5 Flash
+    "gemini-4-hydrogen",      # Next-gen preview tier
+]
+
 
 class GeminiClient:
-    """Manages resilient generation requests to Google Gemini across fallback model tiers."""
+    """Manages resilient generation requests to Google Gemini across an exhaustive fallback model chain."""
 
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -53,15 +67,23 @@ class GeminiClient:
         except Exception:
             self.client = genai.Client(api_key=api_key)
 
-        # High-availability model fallback chain using active Gemini 3.x series
-        self.model_chain: list[str] = [
-            "gemini-3.5-flash-lite",
-            "gemini-3.6-flash",
-            "gemini-3.5-flash",
-            "gemini-3.8-flash",
-        ]
-
+        self.model_chain: list[str] = list(DEFAULT_MODEL_CHAIN)
         self.system_instruction = PERSONAS["default"]
+
+        # Health tracking & auto-demotion
+        # model_cooldowns: model_name -> unix timestamp until which model is deferred
+        self.model_cooldowns: dict[str, float] = {}
+        # model_stats: model_name -> {successes, failures, last_latency_ms, last_error, last_attempt}
+        self.model_stats: dict[str, dict] = {
+            m: {
+                "successes": 0,
+                "failures": 0,
+                "last_latency_ms": 0,
+                "last_error": "",
+                "last_attempt": 0.0,
+            }
+            for m in self.model_chain
+        }
 
         self.safety_settings = [
             types.SafetySetting(
@@ -79,19 +101,43 @@ class GeminiClient:
         ]
 
     def _classify_error(self, exc: Exception) -> str:
+        """Categorizes exception into standardized failure categories."""
+        if isinstance(exc, asyncio.TimeoutError):
+            return "TIMEOUT"
         s = str(exc).lower()
         if any(token in s for token in ("auth", "invalid api key", "api_key_invalid", "unauthorized")):
             return "AUTH_FAILURE"
         if any(token in s for token in ("quota", "resource_exhausted", "429", "rate limit")):
             return "QUOTA_EXCEEDED"
-        if any(token in s for token in ("503", "unavailable", "demand", "temporarily")):
+        if any(token in s for token in ("503", "unavailable", "demand", "temporarily", "overloaded")):
             return "SERVICE_UNAVAILABLE"
         if any(token in s for token in ("404", "not_found", "no longer available")):
             return "MODEL_DEPRECATED"
         return "GENERIC_ERROR"
 
+    def _get_prioritized_models(self) -> list[str]:
+        """
+        Dynamically prioritizes models: healthy models come first in their primary order.
+        Models currently in cooldown are deferred to the end, ordered by earliest cooldown expiry.
+        This guarantees zero downtime while ensuring we never stall on unhealthy models.
+        """
+        now = time.time()
+        healthy: list[str] = []
+        cooling_down: list[tuple[float, str]] = []
+
+        for m in self.model_chain:
+            expiry = self.model_cooldowns.get(m, 0.0)
+            if expiry <= now:
+                healthy.append(m)
+            else:
+                cooling_down.append((expiry, m))
+
+        # Sort cooling down by earliest expiry first
+        cooling_down.sort(key=lambda x: x[0])
+        return healthy + [m for _, m in cooling_down]
+
     def _extract_text_safely(self, response) -> Optional[str]:
-        """Safely extracts text parts from response without triggering internal exceptions."""
+        """Safely extracts text parts from response, filtering thoughts and handling safety finish reasons."""
         if not response:
             return None
 
@@ -104,18 +150,59 @@ class GeminiClient:
 
                 content = getattr(candidate, "content", None)
                 if content and getattr(content, "parts", None):
-                    text_parts = [
+                    # Filter out internal reasoning / thought parts if present (e.g. in Gemma models)
+                    non_thought_parts = [
+                        p.text for p in content.parts
+                        if getattr(p, "text", None) and not getattr(p, "thought", False)
+                    ]
+                    if non_thought_parts:
+                        return "".join(non_thought_parts)
+
+                    # If only thought parts are present, return the combined text
+                    all_text = [
                         p.text for p in content.parts
                         if getattr(p, "text", None)
                     ]
-                    if text_parts:
-                        return "".join(text_parts)
+                    if all_text:
+                        return "".join(all_text)
 
         # Fallback to response.text property
         try:
             return response.text
         except Exception:
             return None
+
+    def get_model_status(self) -> dict:
+        """Returns real-time health, cooldown, and performance diagnostics across all models."""
+        now = time.time()
+        diagnostics = []
+        for m in self.model_chain:
+            stats = self.model_stats.get(m, {})
+            expiry = self.model_cooldowns.get(m, 0.0)
+            is_cooling = expiry > now
+            cd_remaining = round(expiry - now) if is_cooling else 0
+
+            status = "ONLINE"
+            if is_cooling:
+                last_err = stats.get("last_error", "")
+                status = "RATE_LIMITED" if "429" in last_err or "QUOTA" in last_err else "COOLING_DOWN"
+
+            diagnostics.append({
+                "model": m,
+                "status": status,
+                "cooldown_remaining": cd_remaining,
+                "successes": stats.get("successes", 0),
+                "failures": stats.get("failures", 0),
+                "last_latency_ms": stats.get("last_latency_ms", 0),
+                "last_error": stats.get("last_error", ""),
+            })
+
+        healthy_count = sum(1 for d in diagnostics if d["status"] == "ONLINE")
+        return {
+            "total_models": len(self.model_chain),
+            "healthy_models": healthy_count,
+            "models": diagnostics,
+        }
 
     async def generate_with_fallback(
         self,
@@ -125,11 +212,11 @@ class GeminiClient:
         custom_system_instruction: Optional[str] = None,
         temperature: float = 0.7,
         max_output_tokens: int = 1024,
-        timeout_per_model: float = 7.0,
+        timeout_per_model: float = 12.0,
     ) -> tuple[Optional[str], str]:
         """
-        Executes generation attempting each model in the fallback chain until success.
-        Uses per-model timeouts and instant failover to minimize response latency.
+        Executes generation attempting models across the prioritized fallback chain.
+        Applies smart 1-shot retries for transient 503 spikes and automatic health-cooldown demotion.
 
         Returns:
             (generated_text, model_name_or_status)
@@ -137,7 +224,7 @@ class GeminiClient:
         contents = list(history or [])
         contents.append({"role": "user", "parts": [{"text": prompt}]})
 
-        # Determine system prompt
+        # Determine active system instruction
         active_instruction = custom_system_instruction or PERSONAS.get(persona.lower(), self.system_instruction)
 
         config = types.GenerateContentConfig(
@@ -147,50 +234,115 @@ class GeminiClient:
             max_output_tokens=max_output_tokens,
         )
 
-        for model_name in self.model_chain:
-            try:
-                # Use native async client with strict timeout to prevent stalled requests
-                coro = self.client.aio.models.generate_content(
-                    model=model_name,
-                    contents=contents,
-                    config=config,
-                )
-                response = await asyncio.wait_for(coro, timeout=timeout_per_model)
-                text = self._extract_text_safely(response)
-                if text:
-                    return text.strip(), model_name
+        prioritized_models = self._get_prioritized_models()
 
-            except asyncio.TimeoutError:
-                logger.warning(
-                    "Model %s timed out after %.1fs. Failing over immediately.",
-                    model_name,
-                    timeout_per_model,
-                )
-                continue
+        for model_name in prioritized_models:
+            stats = self.model_stats.setdefault(model_name, {
+                "successes": 0,
+                "failures": 0,
+                "last_latency_ms": 0,
+                "last_error": "",
+                "last_attempt": 0.0,
+            })
 
-            except Exception as exc:
-                classification = self._classify_error(exc)
-                logger.warning(
-                    "Model %s failed with %s: %s", model_name, classification, exc
-                )
+            # For each model, attempt up to 2 times (initial + 1 fast retry for transient 503 / timeout)
+            for attempt in range(2):
+                stats["last_attempt"] = time.time()
+                t0 = time.perf_counter()
 
-                if classification == "AUTH_FAILURE":
-                    logger.error("Invalid API credentials. Aborting model fallback.")
-                    return None, "auth_error"
+                try:
+                    coro = self.client.aio.models.generate_content(
+                        model=model_name,
+                        contents=contents,
+                        config=config,
+                    )
+                    response = await asyncio.wait_for(coro, timeout=timeout_per_model)
+                    text = self._extract_text_safely(response)
 
-                # Instant fallback to next model in chain
+                    if text:
+                        elapsed_ms = round((time.perf_counter() - t0) * 1000)
+                        # Success: clear any active cooldown and log performance
+                        self.model_cooldowns.pop(model_name, None)
+                        stats["successes"] += 1
+                        stats["last_latency_ms"] = elapsed_ms
+                        stats["last_error"] = ""
+                        return text.strip(), model_name
 
-        logger.error("All Gemini fallback models were exhausted.")
+                except Exception as exc:
+                    classification = self._classify_error(exc)
+                    stats["failures"] += 1
+                    stats["last_error"] = f"{classification}: {exc}"
+
+                    if classification == "AUTH_FAILURE":
+                        logger.error("Invalid API credentials. Aborting model fallback.")
+                        return None, "auth_error"
+
+                    if classification == "QUOTA_EXCEEDED":
+                        # Rate limit / daily quota hit: apply 5-minute cooldown and immediately switch model
+                        self.model_cooldowns[model_name] = time.time() + 300.0
+                        logger.warning(
+                            "Model %s exceeded quota (429). Placed in 5m cooldown. Switching model.",
+                            model_name,
+                        )
+                        break
+
+                    if classification == "MODEL_DEPRECATED":
+                        # Deprecated / 404 model: apply 24h cooldown
+                        self.model_cooldowns[model_name] = time.time() + 86400.0
+                        logger.warning("Model %s returned 404 Not Found. Demoting for 24h.", model_name)
+                        break
+
+                    if classification == "SERVICE_UNAVAILABLE":
+                        if attempt == 0:
+                            # Transient 503 demand spike: fast 350ms backoff and retry once before demoting
+                            logger.info(
+                                "Model %s returned 503. Retrying once after 350ms backoff...",
+                                model_name,
+                            )
+                            await asyncio.sleep(0.35)
+                            continue
+                        else:
+                            # 2nd attempt failed: place in 45s cooldown
+                            self.model_cooldowns[model_name] = time.time() + 45.0
+                            logger.warning(
+                                "Model %s 503 persisted after retry. Placed in 45s cooldown.",
+                                model_name,
+                            )
+                            break
+
+                    if classification == "TIMEOUT":
+                        if attempt == 0:
+                            logger.info(
+                                "Model %s timed out after %.1fs. Retrying once...",
+                                model_name,
+                                timeout_per_model,
+                            )
+                            await asyncio.sleep(0.25)
+                            continue
+                        else:
+                            self.model_cooldowns[model_name] = time.time() + 45.0
+                            logger.warning(
+                                "Model %s timed out twice. Placed in 45s cooldown.",
+                                model_name,
+                            )
+                            break
+
+                    # Generic error: place in 30s cooldown and try next model
+                    self.model_cooldowns[model_name] = time.time() + 30.0
+                    logger.warning("Model %s encountered %s: %s", model_name, classification, exc)
+                    break
+
+        logger.error("All Gemini fallback models were exhausted across all tiers.")
         return None, "exhausted"
 
     async def ping_ai(self) -> tuple[bool, int, str]:
-        """Measures roundtrip AI generation latency in milliseconds."""
+        """Measures roundtrip AI generation latency in milliseconds across the active fallback chain."""
         loop = asyncio.get_event_loop()
         t0 = loop.time()
         text, model = await self.generate_with_fallback(
             prompt="Hi",
             max_output_tokens=5,
-            timeout_per_model=3.0,
+            timeout_per_model=10.0,
         )
         elapsed_ms = round((loop.time() - t0) * 1000)
         return bool(text), elapsed_ms, model
@@ -209,6 +361,7 @@ class GeminiClient:
             prompt=prompt,
             persona="developer",
             temperature=0.3,
+            timeout_per_model=14.0,
         )
 
     async def summarize_text(self, text: str) -> tuple[Optional[str], str]:
@@ -225,4 +378,5 @@ class GeminiClient:
             prompt=prompt,
             persona="concise",
             temperature=0.4,
+            timeout_per_model=14.0,
         )

@@ -404,6 +404,75 @@ class AIChat(commands.Cog, name="AI Chat"):
         await ctx.reply(embed=embed, delete_after=10, mention_author=False)
 
     # ---------------------------------------------------------
+    # AI MODEL FLEET STATUS
+    # ---------------------------------------------------------
+
+    def _build_models_embed(self, user: Optional[discord.User] = None) -> discord.Embed:
+        status_data = self.gemini.get_model_status()
+        total = status_data["total_models"]
+        healthy = status_data["healthy_models"]
+
+        embed = base_embed(
+            title="🤖 SkillX Gemini AI Model Fleet",
+            description=(
+                f"**Architecture:** Multi-tier fallback chain with auto-healing\n"
+                f"**Fleet Health:** `{healthy}/{total} Models Healthy` • "
+                f"**Auto-Demotion:** `Active (Dynamic Cooldowns)`\n\n"
+                "If any model experiences demand spikes (503) or quota exhaustion (429), "
+                "SkillX automatically retries and fails over instantly to the next tier."
+            ),
+            color=0x2ECC71 if healthy >= (total // 2) else 0xE67E22,
+            user=user,
+            footer_text="SkillX High-Availability AI Core",
+        )
+
+        for m_info in status_data["models"]:
+            m_name = m_info["model"]
+            m_status = m_info["status"]
+            cd = m_info["cooldown_remaining"]
+            succ = m_info["successes"]
+            fail = m_info["failures"]
+            lat = m_info["last_latency_ms"]
+
+            if m_status == "ONLINE":
+                icon = "🟢"
+                state_str = "**Online**"
+                if lat > 0:
+                    state_str += f" (`{lat}ms`)"
+            elif m_status == "RATE_LIMITED":
+                icon = "🔴"
+                state_str = f"**Rate Limited** (Ready in {cd}s)"
+            else:
+                icon = "🟡"
+                state_str = f"**Cooling Down** (Ready in {cd}s)"
+
+            stats_str = f"Performance: `{succ} succ / {fail} fail`"
+            embed.add_field(
+                name=f"{icon} `{m_name}`",
+                value=f"{state_str}\n{stats_str}",
+                inline=True,
+            )
+
+        return embed
+
+    @app_commands.command(
+        name="aimodels",
+        description="Inspect live health, fallback chain, and latency of all Gemini AI models",
+    )
+    async def aimodels_slash(self, interaction: discord.Interaction):
+        embed = self._build_models_embed(interaction.user)
+        await interaction.response.send_message(embed=embed)
+
+    @commands.command(
+        name="aimodels",
+        aliases=["models", "aichain", "statusai"],
+        help="Inspect live health and fallback chain of all Gemini AI models.",
+    )
+    async def aimodels_prefix(self, ctx: commands.Context):
+        embed = self._build_models_embed(ctx.author)
+        await ctx.reply(embed=embed, mention_author=False)
+
+    # ---------------------------------------------------------
     # ON_MESSAGE CONVERSATIONAL LISTENER
     # ---------------------------------------------------------
 

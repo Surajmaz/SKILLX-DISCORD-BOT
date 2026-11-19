@@ -120,6 +120,77 @@ class TestGeminiPersonas(unittest.TestCase):
             self.assertGreater(len(prompt), 10)
 
 
+class TestGeminiResilience(unittest.TestCase):
+    def setUp(self):
+        from gemini_client import GeminiClient
+        self.client = GeminiClient("fake_test_key")
+
+    def test_model_chain_count_and_tiering(self):
+        from gemini_client import DEFAULT_MODEL_CHAIN
+
+        self.assertGreaterEqual(len(DEFAULT_MODEL_CHAIN), 9)
+        self.assertEqual(DEFAULT_MODEL_CHAIN[0], "gemini-3.5-flash-lite")
+        self.assertIn("gemma-4-26b-a4b-it", DEFAULT_MODEL_CHAIN)
+        self.assertIn("gemini-3.1-flash-lite", DEFAULT_MODEL_CHAIN)
+        self.assertIn("gemini-3.8-flash", DEFAULT_MODEL_CHAIN)
+
+    def test_error_classification(self):
+        import asyncio
+        self.assertEqual(self.client._classify_error(Exception("429 Resource has been exhausted")), "QUOTA_EXCEEDED")
+        self.assertEqual(self.client._classify_error(Exception("503 Service Unavailable: High demand spike")), "SERVICE_UNAVAILABLE")
+        self.assertEqual(self.client._classify_error(Exception("404 Model not_found")), "MODEL_DEPRECATED")
+        self.assertEqual(self.client._classify_error(Exception("API_KEY_INVALID: unauthorized")), "AUTH_FAILURE")
+        self.assertEqual(self.client._classify_error(asyncio.TimeoutError()), "TIMEOUT")
+        self.assertEqual(self.client._classify_error(Exception("Unknown network socket reset")), "GENERIC_ERROR")
+
+    def test_prioritization_and_cooldown_sorting(self):
+        import time
+        now = time.time()
+        # Put gemini-3.5-flash-lite in 100s cooldown, gemini-3.1-flash-lite in 20s cooldown
+        self.client.model_cooldowns["gemini-3.5-flash-lite"] = now + 100.0
+        self.client.model_cooldowns["gemini-3.1-flash-lite"] = now + 20.0
+
+        prioritized = self.client._get_prioritized_models()
+
+        # Healthy models must come before cooling down models
+        self.assertNotEqual(prioritized[0], "gemini-3.5-flash-lite")
+        self.assertNotEqual(prioritized[0], "gemini-3.1-flash-lite")
+        self.assertEqual(prioritized[0], "gemma-4-26b-a4b-it")
+
+        # Cooling down models should be sorted by earliest expiry
+        self.assertEqual(prioritized[-2], "gemini-3.1-flash-lite")
+        self.assertEqual(prioritized[-1], "gemini-3.5-flash-lite")
+
+    def test_safe_text_extraction_with_thoughts(self):
+        from unittest.mock import MagicMock
+
+        # Mock a response with thought parts (like Gemma models)
+        mock_resp = MagicMock()
+        mock_candidate = MagicMock()
+        mock_candidate.finish_reason = "STOP"
+
+        p_thought = MagicMock()
+        p_thought.thought = True
+        p_thought.text = "Internal reasoning: user wants answer."
+
+        p_answer = MagicMock()
+        p_answer.thought = False
+        p_answer.text = "The answer is 42."
+
+        mock_candidate.content.parts = [p_thought, p_answer]
+        mock_resp.candidates = [mock_candidate]
+
+        extracted = self.client._extract_text_safely(mock_resp)
+        self.assertEqual(extracted, "The answer is 42.")
+
+    def test_model_status_diagnostics(self):
+        status = self.client.get_model_status()
+        self.assertEqual(status["total_models"], len(self.client.model_chain))
+        self.assertGreaterEqual(status["healthy_models"], 0)
+        self.assertEqual(len(status["models"]), len(self.client.model_chain))
+
+
+
 class TestLevelingFormulas(unittest.TestCase):
     def test_xp_scaling(self):
         from cogs.leveling import xp_for_level, level_from_xp
