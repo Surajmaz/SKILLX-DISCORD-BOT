@@ -113,10 +113,10 @@ def _inject_headers(headers) -> None:
     headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-        "img-src 'self' data: https://cdn.discordapp.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+        "img-src 'self' data: https://cdn.discordapp.com https://images.unsplash.com; "
         "connect-src 'self'; "
-        "font-src 'self' https://cdn.jsdelivr.net; "
+        "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
         "frame-ancestors 'none';"
     )
 
