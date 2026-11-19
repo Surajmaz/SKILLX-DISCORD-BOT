@@ -1,1185 +1,1133 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillX Bot Control Console</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            400: '#818cf8',
-                            500: '#5865F2',
-                            600: '#4752C4',
-                            700: '#373ea8',
-                        },
-                        dark: {
-                            800: '#111827',
-                            850: '#0e1422',
-                            900: '#090d16',
-                            950: '#050810',
-                        }
-                    }
-                }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillX — Command Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    window.CSRF_TOKEN = '{{ csrf_token }}';
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            cyber: {
+              900: '#0a0a0f',
+              800: '#0d0d1a',
+              700: '#111128',
+              600: '#161636',
+              500: '#1c1c44',
+            },
+            neon: {
+              purple: '#a855f7',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              pink: '#ec4899',
+              amber: '#f59e0b',
+              red: '#ef4444',
+              blue: '#3b82f6',
             }
+          }
         }
-    </script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        body {
-            background-color: #060911;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(88, 101, 242, 0.12) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.12) 0px, transparent 50%),
-                radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
-            background-attachment: fixed;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.4);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.3);
-            border-radius: 9999px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.6);
-        }
-        .glow-border {
-            box-shadow: 0 0 25px -5px rgba(88, 101, 242, 0.15);
-        }
-        .discord-preview {
-            background-color: #2b2d31;
-            border-left: 4px solid #5865F2;
-        }
-    </style>
+      }
+    };
+  </script>
+  <style>
+    * { scrollbar-width: thin; scrollbar-color: rgba(168,85,247,.3) transparent; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(168,85,247,.3); border-radius: 3px; }
+
+    @keyframes mesh-drift {
+      0%, 100% { background-position: 0% 50%; }
+      25% { background-position: 100% 0%; }
+      50% { background-position: 100% 100%; }
+      75% { background-position: 0% 100%; }
+    }
+    .mesh-bg {
+      background: linear-gradient(-45deg, #0a0a0f, #1a0a2e, #0a1628, #0a0a0f, #0d1a2e, #1a0d2e);
+      background-size: 400% 400%;
+      animation: mesh-drift 20s ease infinite;
+    }
+
+    @keyframes pulse-glow { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+    .icon-pulse { animation: pulse-glow 2.5s ease-in-out infinite; }
+
+    @keyframes fade-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .anim-fade-in { animation: fade-in .35s ease-out forwards; }
+
+    @keyframes slide-in-right { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slide-out-right { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+    .toast-in { animation: slide-in-right .3s ease-out forwards; }
+    .toast-out { animation: slide-out-right .3s ease-in forwards; }
+
+    @keyframes counter-pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+    .counter-pop { animation: counter-pop .5s ease-out forwards; }
+
+    @keyframes neon-border {
+      0%, 100% { border-color: rgba(168,85,247,.25); }
+      50% { border-color: rgba(168,85,247,.55); }
+    }
+    .neon-border-anim { animation: neon-border 3s ease-in-out infinite; }
+
+    .glass {
+      background: rgba(13, 13, 26, .55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(168, 85, 247, .15);
+    }
+    .glass-strong {
+      background: rgba(13, 13, 26, .7);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(168, 85, 247, .2);
+    }
+    .glass:hover, .glass-hover:hover {
+      border-color: rgba(168, 85, 247, .4);
+      box-shadow: 0 0 20px rgba(168, 85, 247, .08), inset 0 0 20px rgba(168, 85, 247, .03);
+    }
+
+    .neon-glow-purple { text-shadow: 0 0 10px rgba(168,85,247,.6), 0 0 30px rgba(168,85,247,.3); }
+    .neon-glow-cyan { text-shadow: 0 0 10px rgba(6,182,212,.6), 0 0 30px rgba(6,182,212,.3); }
+
+    .nav-item {
+      transition: all .2s ease;
+      position: relative;
+    }
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: transparent;
+      border-radius: 0 3px 3px 0;
+      transition: background .2s ease;
+    }
+    .nav-item.active {
+      background: rgba(168, 85, 247, .12);
+      color: #c084fc;
+    }
+    .nav-item.active::before {
+      background: linear-gradient(to bottom, #a855f7, #06b6d4);
+    }
+    .nav-item:hover:not(.active) {
+      background: rgba(168, 85, 247, .06);
+      color: #d8b4fe;
+    }
+
+    .stat-card { transition: all .3s ease; }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(168,85,247,.12);
+    }
+
+    .embed-preview {
+      border-left: 4px solid #a855f7;
+      background: #2b2d31;
+      border-radius: 4px;
+    }
+
+    .table-row { transition: background .15s ease; }
+    .table-row:hover { background: rgba(168,85,247,.06); }
+
+    .btn-neon {
+      transition: all .2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-neon:hover {
+      box-shadow: 0 0 20px rgba(168,85,247,.3);
+      transform: translateY(-1px);
+    }
+    .btn-neon:active { transform: translateY(0); }
+
+    .spinner {
+      border: 2px solid rgba(168,85,247,.2);
+      border-top-color: #a855f7;
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #a855f7, #06b6d4);
+      transition: width .6s ease;
+    }
+
+    input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+    input[type="range"]::-webkit-slider-track { height: 6px; background: rgba(168,85,247,.2); border-radius: 3px; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #a855f7; border-radius: 50%; margin-top: -6px; cursor: pointer; box-shadow: 0 0 10px rgba(168,85,247,.5); }
+    input[type="range"]::-moz-range-track { height: 6px; background: rgba(168,85,247,.2); border-radius: 3px; border: none; }
+    input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: #a855f7; border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 0 10px rgba(168,85,247,.5); }
+  </style>
 </head>
-<body class="min-h-screen text-slate-100 font-sans antialiased flex flex-col custom-scrollbar">
-    <!-- CSRF Token Meta from Server -->
-    <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+<body class="h-full font-sans text-gray-200 mesh-bg antialiased">
 
-    <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none"></div>
+<!-- Toast Container -->
+<div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Top Navigation Bar -->
-    <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-tr from-brand-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/25 border border-white/10">
-                    <i class="bi bi-robot text-xl text-white"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-extrabold text-base text-white tracking-wide">SkillX</span>
-                        <span class="text-[10px] bg-brand-500/20 text-brand-400 border border-brand-500/30 px-1.5 py-0.5 rounded font-mono font-semibold">v2.5 Enterprise</span>
-                        <span id="gatewayStatusBadge" class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Online
-                        </span>
-                    </div>
-                </div>
-            </div>
+<!-- Confirm Modal -->
+<div id="confirm-modal" class="fixed inset-0 z-[9998] hidden items-center justify-center">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="hideConfirmModal()"></div>
+  <div class="relative glass-strong rounded-2xl p-6 max-w-md w-full mx-4 anim-fade-in">
+    <h3 id="modal-title" class="text-lg font-bold text-white mb-2"></h3>
+    <p id="modal-message" class="text-gray-400 mb-6 text-sm"></p>
+    <div class="flex gap-3 justify-end">
+      <button onclick="hideConfirmModal()" class="px-4 py-2 rounded-lg bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 transition text-sm font-medium">Cancel</button>
+      <button id="modal-confirm-btn" class="px-4 py-2 rounded-lg bg-red-500/80 text-white hover:bg-red-500 transition text-sm font-medium">Confirm</button>
+    </div>
+  </div>
+</div>
 
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:flex items-center gap-3 text-xs text-slate-400 border-r border-slate-800 pr-4">
-                    <span class="flex items-center gap-1.5"><i class="bi bi-clock-history text-slate-500"></i> Uptime: <strong id="headerUptime" class="text-slate-200">0s</strong></span>
-                    <span class="flex items-center gap-1.5"><i class="bi bi-reception-4 text-slate-500"></i> Ping: <strong id="headerPing" class="text-slate-200">0 ms</strong></span>
-                    <span class="flex items-center gap-1.5"><i class="bi bi-cpu text-slate-500"></i> RAM: <strong id="headerMemory" class="text-slate-200">0 MB</strong></span>
-                </div>
-                <button onclick="handleLogout()" class="text-xs bg-slate-900 hover:bg-red-500/20 hover:text-red-400 border border-slate-800 hover:border-red-500/30 px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 text-slate-300 cursor-pointer shadow-sm">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Logout</span>
-                </button>
-            </div>
+<!-- Mobile Sidebar Overlay -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 glass-strong z-40 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+  <!-- Logo -->
+  <div class="p-5 border-b border-purple-500/10">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-purple-500/20">S</div>
+      <div>
+        <h1 class="text-xl font-black tracking-tight text-white neon-glow-purple">SkillX</h1>
+        <p class="text-[10px] text-purple-400/60 font-medium tracking-widest uppercase">Command Center</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bot Profile (mini) -->
+  <div id="sidebar-bot-profile" class="px-4 py-3 border-b border-purple-500/10 hidden">
+    <div class="flex items-center gap-2">
+      <img id="sidebar-avatar" class="w-8 h-8 rounded-full ring-2 ring-purple-500/30" src="" alt="">
+      <div class="min-w-0">
+        <p id="sidebar-bot-name" class="text-sm font-semibold text-white truncate"></p>
+        <p class="text-[10px] text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block"></span> Online</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+    <button onclick="switchSection('dashboard')" data-nav="dashboard" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left">
+      <span class="text-lg w-6 text-center">🏠</span> Dashboard
+    </button>
+    <button onclick="switchSection('activity')" data-nav="activity" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
+      <span class="text-lg w-6 text-center">📊</span> Activity Feed
+    </button>
+    <button onclick="switchSection('servers')" data-nav="servers" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
+      <span class="text-lg w-6 text-center">🌐</span> Server Directory
+    </button>
+    <button onclick="switchSection('broadcast')" data-nav="broadcast" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
+      <span class="text-lg w-6 text-center">📢</span> Broadcast Center
+    </button>
+    <button onclick="switchSection('ai')" data-nav="ai" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
+      <span class="text-lg w-6 text-center">🤖</span> AI Studio
+    </button>
+    <button onclick="switchSection('automod')" data-nav="automod" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
+      <span class="text-lg w-6 text-center">🛡️</span> AutoMod Console
+    </button>
+    <button onclick="switchSection('settings')" data-nav="settings" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
+      <span class="text-lg w-6 text-center">⚙️</span> Bot Settings
+    </button>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="p-4 border-t border-purple-500/10">
+    <div class="text-[10px] text-gray-500 text-center">SkillX Dashboard v2.0</div>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<div class="lg:ml-64 min-h-full flex flex-col">
+  <!-- Top Bar -->
+  <header class="sticky top-0 z-20 glass-strong border-b border-purple-500/10 px-4 lg:px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-purple-500/10 transition text-gray-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <h2 id="page-title" class="text-lg font-bold text-white">Dashboard</h2>
+    </div>
+    <div class="flex items-center gap-3">
+      <div id="topbar-latency" class="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 glass rounded-full px-3 py-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span id="topbar-latency-val">—</span>ms
+      </div>
+      <button onclick="showConfirmModal('Logout', 'Are you sure you want to logout?', doLogout)" class="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition" title="Logout">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="flex-1 p-4 lg:p-6">
+
+    <!-- ==================== DASHBOARD SECTION ==================== -->
+    <section id="sec-dashboard" class="section anim-fade-in">
+      <!-- Bot Profile Banner -->
+      <div id="bot-profile-banner" class="glass rounded-2xl p-5 mb-6 hidden neon-border-anim">
+        <div class="flex items-center gap-4">
+          <img id="bot-avatar" class="w-14 h-14 rounded-full ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" src="" alt="">
+          <div>
+            <h3 id="bot-name" class="text-xl font-bold text-white"></h3>
+            <p id="bot-id" class="text-xs text-gray-500 font-mono"></p>
+          </div>
+          <div class="ml-auto hidden sm:flex items-center gap-1.5 text-sm text-emerald-400 font-medium">
+            <span class="w-2 h-2 bg-emerald-400 rounded-full icon-pulse"></span> Online
+          </div>
         </div>
-    </header>
+      </div>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
-        
-        <!-- Live KPI Telemetry Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-6 gap-3.5 sm:gap-4">
-            <!-- Metric 1: Guilds -->
-            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-brand-500/40 transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Guilds</p>
-                        <h3 id="statGuildCount" class="text-xl sm:text-2xl font-black text-white mt-0.5">0</h3>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-lg">
-                        <i class="bi bi-server"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-[10px] text-slate-400 truncate flex items-center gap-1">
-                    <i class="bi bi-check2 text-emerald-400"></i> Live Sync
-                </div>
-            </div>
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl icon-pulse">🌐</span>
+            <span class="text-[10px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">GUILDS</span>
+          </div>
+          <div id="stat-guilds" class="text-3xl font-black text-white counter-pop">—</div>
+          <p class="text-xs text-gray-500 mt-1">Servers connected</p>
+        </div>
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl icon-pulse">👥</span>
+            <span class="text-[10px] font-medium text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full">USERS</span>
+          </div>
+          <div id="stat-users" class="text-3xl font-black text-white counter-pop">—</div>
+          <p class="text-xs text-gray-500 mt-1">Total members</p>
+        </div>
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl icon-pulse">⚡</span>
+            <span class="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">LATENCY</span>
+          </div>
+          <div id="stat-latency" class="text-3xl font-black text-white counter-pop">—</div>
+          <p class="text-xs text-gray-500 mt-1">Gateway ping (ms)</p>
+        </div>
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl icon-pulse">⏱️</span>
+            <span class="text-[10px] font-medium text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full">UPTIME</span>
+          </div>
+          <div id="stat-uptime" class="text-2xl font-black text-white counter-pop">—</div>
+          <p class="text-xs text-gray-500 mt-1">Session duration</p>
+        </div>
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl icon-pulse">🧠</span>
+            <span class="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">AI MEM</span>
+          </div>
+          <div id="stat-ai-mem" class="text-3xl font-black text-white counter-pop">—</div>
+          <p class="text-xs text-gray-500 mt-1">Memory contexts</p>
+        </div>
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl icon-pulse">🎭</span>
+            <span class="text-[10px] font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">PERSONAS</span>
+          </div>
+          <div id="stat-personas" class="text-3xl font-black text-white counter-pop">—</div>
+          <p class="text-xs text-gray-500 mt-1">Active overrides</p>
+        </div>
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl icon-pulse">⚠️</span>
+            <span class="text-[10px] font-medium text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">INFRACTIONS</span>
+          </div>
+          <div id="stat-infractions" class="text-3xl font-black text-white counter-pop">—</div>
+          <p class="text-xs text-gray-500 mt-1">Total infractions</p>
+        </div>
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-2xl icon-pulse">💾</span>
+            <span class="text-[10px] font-medium text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full">MEMORY</span>
+          </div>
+          <div id="stat-memory" class="text-3xl font-black text-white counter-pop">—</div>
+          <p class="text-xs text-gray-500 mt-1">System RAM (MB)</p>
+        </div>
+      </div>
 
-            <!-- Metric 2: Members -->
-            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-purple-500/40 transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Users</p>
-                        <h3 id="statUserCount" class="text-xl sm:text-2xl font-black text-white mt-0.5">0</h3>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg">
-                        <i class="bi bi-people"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-[10px] text-slate-400 truncate flex items-center gap-1">
-                    <i class="bi bi-shield-check text-purple-400"></i> Total Cached
-                </div>
+      <!-- Chart + System Info -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div class="xl:col-span-2 glass rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <span class="text-cyan-400">⚡</span> Gateway Telemetry
+            <span class="ml-auto text-[10px] text-gray-500 font-normal flex items-center gap-1"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full icon-pulse"></span> Live</span>
+          </h3>
+          <div class="relative h-56 sm:h-64">
+            <canvas id="latency-chart"></canvas>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 flex flex-col gap-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-purple-400">📋</span> System Info</h3>
+          <div class="space-y-3 flex-1">
+            <div class="flex justify-between items-center py-2 border-b border-purple-500/10">
+              <span class="text-xs text-gray-400">Python</span>
+              <span id="sys-python" class="text-xs font-mono text-purple-300 glass rounded-full px-2 py-0.5">—</span>
             </div>
+            <div class="flex justify-between items-center py-2 border-b border-purple-500/10">
+              <span class="text-xs text-gray-400">discord.py</span>
+              <span id="sys-dpy" class="text-xs font-mono text-cyan-300 glass rounded-full px-2 py-0.5">—</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-purple-500/10">
+              <span class="text-xs text-gray-400">Cogs Loaded</span>
+              <span id="sys-cogs" class="text-xs font-mono text-emerald-300 glass rounded-full px-2 py-0.5">—</span>
+            </div>
+            <div class="flex justify-between items-center py-2">
+              <span class="text-xs text-gray-400">Memory</span>
+              <span id="sys-mem" class="text-xs font-mono text-pink-300 glass rounded-full px-2 py-0.5">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-            <!-- Metric 3: Ping Latency -->
-            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Gateway</p>
-                        <h3 id="statLatency" class="text-xl sm:text-2xl font-black text-emerald-400 mt-0.5">0 ms</h3>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg">
-                        <i class="bi bi-activity"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-[10px] text-emerald-400 truncate font-medium">Optimal Status</div>
-            </div>
+    <!-- ==================== ACTIVITY FEED SECTION ==================== -->
+    <section id="sec-activity" class="section hidden">
+      <div class="glass rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-purple-400">📊</span> Live Activity Stream</h3>
+          <span class="text-[10px] text-gray-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full icon-pulse"></span> Auto-refresh 5s</span>
+        </div>
+        <div id="activity-list" class="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+          <div class="text-center text-gray-500 text-sm py-8">Loading activity…</div>
+        </div>
+      </div>
+    </section>
 
-            <!-- Metric 4: AI Contexts -->
-            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">AI Memory</p>
-                        <h3 id="statAiMemory" class="text-xl sm:text-2xl font-black text-amber-400 mt-0.5">0</h3>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-lg">
-                        <i class="bi bi-memory"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-[10px] text-slate-400 truncate flex items-center gap-1">
-                    <i class="bi bi-sparkles text-amber-400"></i> Active Threads
-                </div>
-            </div>
+    <!-- ==================== SERVER DIRECTORY SECTION ==================== -->
+    <section id="sec-servers" class="section hidden">
+      <div class="glass rounded-2xl p-5">
+        <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-cyan-400">🌐</span> Server Directory</h3>
+        <div id="guild-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div class="text-center text-gray-500 text-sm py-8 col-span-full">Loading guilds…</div>
+        </div>
+      </div>
+    </section>
 
-            <!-- Metric 5: Active Infractions -->
-            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-rose-500/40 transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Infractions</p>
-                        <h3 id="statInfractions" class="text-xl sm:text-2xl font-black text-rose-400 mt-0.5">0</h3>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 text-lg">
-                        <i class="bi bi-shield-slash"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-[10px] text-slate-400 truncate">Total AutoMod Logged</div>
+    <!-- ==================== BROADCAST CENTER SECTION ==================== -->
+    <section id="sec-broadcast" class="section hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Composer -->
+        <div class="glass rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-blue-400">📢</span> Embed Designer</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs text-gray-400 block mb-1.5">Guild</label>
+              <select id="bc-guild" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition" onchange="loadChannels()">
+                <option value="">Select a guild</option>
+              </select>
             </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1.5">Channel</label>
+              <select id="bc-channel" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition">
+                <option value="">Select a channel</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1.5">Title</label>
+              <input id="bc-title" type="text" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600" placeholder="Embed title" oninput="updateBcPreview()">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1.5">Message</label>
+              <textarea id="bc-message" rows="4" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600 resize-none" placeholder="Embed content…" oninput="updateBcPreview()"></textarea>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1.5">Embed Color</label>
+              <div class="flex items-center gap-3">
+                <input id="bc-color" type="color" value="#a855f7" class="w-10 h-10 rounded-lg border-0 cursor-pointer bg-transparent" oninput="updateBcPreview()">
+                <span id="bc-color-hex" class="text-xs font-mono text-gray-400">#a855f7</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input id="bc-use-embed" type="checkbox" checked class="accent-purple-500">
+              <label class="text-xs text-gray-400">Send as embed</label>
+            </div>
+            <button id="bc-send-btn" onclick="sendBroadcast()" class="w-full btn-neon bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              Send Broadcast
+            </button>
+          </div>
+        </div>
+        <!-- Live Preview -->
+        <div class="glass rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-emerald-400">👁️</span> Live Preview</h3>
+          <div class="bg-[#313338] rounded-lg p-4 min-h-[200px]">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">S</div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-sm font-semibold text-purple-300">SkillX Bot</span>
+                  <span class="text-[10px] bg-[#5865f2] text-white px-1 rounded text-[9px] font-medium">BOT</span>
+                  <span class="text-[10px] text-gray-500">Today at <span id="bc-preview-time"></span></span>
+                </div>
+                <div id="bc-preview-embed" class="embed-preview p-3 mt-1 max-w-md">
+                  <div id="bc-preview-title" class="font-semibold text-white text-sm mb-1">Your Title Here</div>
+                  <div id="bc-preview-desc" class="text-sm text-gray-300">Your message will appear here…</div>
+                  <div class="text-[10px] text-gray-500 mt-2" id="bc-preview-timestamp"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-            <!-- Metric 6: Cogs -->
-            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-4 shadow-lg relative overflow-hidden group hover:border-cyan-500/40 transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cogs</p>
-                        <h3 id="statCogs" class="text-xl sm:text-2xl font-black text-cyan-400 mt-0.5">5</h3>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-lg">
-                        <i class="bi bi-puzzle"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-[10px] text-slate-400 truncate">Modular Subsystems</div>
+    <!-- ==================== AI STUDIO SECTION ==================== -->
+    <section id="sec-ai" class="section hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Input -->
+        <div class="lg:col-span-1 glass rounded-2xl p-5 flex flex-col gap-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-emerald-400">🤖</span> AI Studio</h3>
+          <div>
+            <label class="text-xs text-gray-400 block mb-1.5">Prompt</label>
+            <textarea id="ai-prompt" rows="5" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600 resize-none" placeholder="Enter your prompt…"></textarea>
+          </div>
+          <div>
+            <label class="text-xs text-gray-400 block mb-1.5">Persona</label>
+            <select id="ai-persona" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition">
+              <option value="default">Default</option>
+              <option value="developer">Developer</option>
+              <option value="tutor">Tutor</option>
+              <option value="creative">Creative</option>
+              <option value="concise">Concise</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-gray-400 block mb-1.5">Temperature: <span id="ai-temp-val" class="text-purple-300 font-mono">0.7</span></label>
+            <input id="ai-temp" type="range" min="0" max="1" step="0.05" value="0.7" class="w-full" oninput="document.getElementById('ai-temp-val').textContent=this.value">
+          </div>
+          <button id="ai-send-btn" onclick="testAI()" class="w-full btn-neon bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Generate Response
+          </button>
+          <button onclick="showConfirmModal('Clear Memory', 'Clear all AI memory contexts? This cannot be undone.', clearAIMemory)" class="w-full btn-neon bg-red-500/20 border border-red-500/30 text-red-400 font-medium py-2 rounded-lg text-sm hover:bg-red-500/30 transition">
+            🗑️ Clear All Memory
+          </button>
+        </div>
+        <!-- Response -->
+        <div class="lg:col-span-2 glass rounded-2xl p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-cyan-400">💬</span> Response</h3>
+            <span id="ai-response-time" class="text-[10px] text-gray-500 hidden">Response time: <span id="ai-time-val" class="text-cyan-400 font-mono"></span></span>
+          </div>
+          <div id="ai-response" class="flex-1 bg-cyber-800/50 rounded-xl p-4 text-sm text-gray-300 leading-relaxed min-h-[200px] overflow-y-auto whitespace-pre-wrap font-mono">
+            <span class="text-gray-500 italic">AI response will appear here…</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== AUTOMOD CONSOLE SECTION ==================== -->
+    <section id="sec-automod" class="section hidden">
+      <div class="glass rounded-2xl p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-red-400">🛡️</span> AutoMod Console</h3>
+          <input id="inf-search" type="text" class="bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600 w-full sm:w-64" placeholder="Search infractions…" oninput="filterInfractions()">
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs text-gray-500 border-b border-purple-500/10">
+                <th class="py-2 px-3 cursor-pointer hover:text-purple-400 transition" onclick="sortInfractions('user_id')">User ID ↕</th>
+                <th class="py-2 px-3 cursor-pointer hover:text-purple-400 transition" onclick="sortInfractions('guild_id')">Guild ID ↕</th>
+                <th class="py-2 px-3 cursor-pointer hover:text-purple-400 transition" onclick="sortInfractions('moderator')">Moderator ↕</th>
+                <th class="py-2 px-3">Reason</th>
+                <th class="py-2 px-3 cursor-pointer hover:text-purple-400 transition" onclick="sortInfractions('timestamp')">Timestamp ↕</th>
+                <th class="py-2 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inf-tbody">
+              <tr><td colspan="6" class="text-center text-gray-500 py-8">Loading infractions…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="inf-pagination" class="flex items-center justify-between mt-4 hidden">
+          <span id="inf-page-info" class="text-xs text-gray-500"></span>
+          <div class="flex gap-2">
+            <button id="inf-prev" onclick="infPage(-1)" class="px-3 py-1 rounded-lg bg-purple-500/10 text-purple-300 text-xs hover:bg-purple-500/20 transition disabled:opacity-30" disabled>← Prev</button>
+            <button id="inf-next" onclick="infPage(1)" class="px-3 py-1 rounded-lg bg-purple-500/10 text-purple-300 text-xs hover:bg-purple-500/20 transition disabled:opacity-30">Next →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== BOT SETTINGS SECTION ==================== -->
+    <section id="sec-settings" class="section hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Presence Manager -->
+        <div class="glass rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-purple-400">🟢</span> Presence Manager</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs text-gray-400 block mb-1.5">Status</label>
+              <select id="pres-status" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition">
+                <option value="online">🟢 Online</option>
+                <option value="idle">🌙 Idle</option>
+                <option value="dnd">⛔ Do Not Disturb</option>
+              </select>
             </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1.5">Activity Type</label>
+              <select id="pres-type" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition">
+                <option value="listening">🎧 Listening to</option>
+                <option value="playing">🎮 Playing</option>
+                <option value="watching">👀 Watching</option>
+                <option value="competing">🏆 Competing in</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1.5">Activity Text</label>
+              <input id="pres-text" type="text" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600" placeholder="Activity text…">
+            </div>
+            <button onclick="updatePresence()" class="w-full btn-neon bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-2.5 rounded-lg text-sm">Update Presence</button>
+          </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="flex items-center border-b border-slate-800/80 gap-2 overflow-x-auto custom-scrollbar pb-1">
-            <button onclick="switchTab('tab-overview')" id="nav-tab-overview" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all bg-brand-500/20 text-brand-400 border border-brand-500/30 whitespace-nowrap">
-                <i class="bi bi-speedometer2"></i>
-                <span>Mission Control</span>
-            </button>
-            <button onclick="switchTab('tab-servers')" id="nav-tab-servers" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap">
-                <i class="bi bi-hdd-network"></i>
-                <span>Server & Embed Studio</span>
-            </button>
-            <button onclick="switchTab('tab-ai')" id="nav-tab-ai" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap">
-                <i class="bi bi-cpu"></i>
-                <span>Gemini AI Studio</span>
-            </button>
-            <button onclick="switchTab('tab-automod')" id="nav-tab-automod" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap">
-                <i class="bi bi-shield-shaded"></i>
-                <span>AutoMod & Infractions</span>
-            </button>
-            <button onclick="switchTab('tab-controls')" id="nav-tab-controls" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap">
-                <i class="bi bi-sliders2"></i>
-                <span>Presence & Cog Manager</span>
-            </button>
+        <!-- Cog Manager -->
+        <div class="glass rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-cyan-400">🧩</span> Cog Manager</h3>
+          <div id="cog-list" class="space-y-2">
+            <div class="text-center text-gray-500 text-sm py-4">Loading cogs…</div>
+          </div>
         </div>
 
-        <!-- ==================================================== -->
-        <!-- TAB 1: MISSION CONTROL -->
-        <!-- ==================================================== -->
-        <section id="tab-overview" class="tab-content space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Latency Chart -->
-                <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="font-bold text-white text-base">Gateway Latency Telemetry</h3>
-                            <p class="text-xs text-slate-400">Live heartbeat roundtrip latency polled every 4 seconds</p>
-                        </div>
-                        <span class="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-ping"></span>
-                            Live Stream
-                        </span>
-                    </div>
-                    <div class="h-64 w-full">
-                        <canvas id="latencyChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Live Activity Feed -->
-                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl flex flex-col">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
-                        <h3 class="font-bold text-white text-base flex items-center gap-2">
-                            <i class="bi bi-lightning-charge-fill text-amber-400"></i>
-                            Live Activity Stream
-                        </h3>
-                        <span class="text-[10px] text-slate-500 font-mono">Auto-refreshed</span>
-                    </div>
-
-                    <div id="activityFeedList" class="flex-1 space-y-2.5 overflow-y-auto max-h-60 pr-1 custom-scrollbar text-xs">
-                        <div class="text-center text-slate-500 py-6">Connecting to telemetry feed...</div>
-                    </div>
-                </div>
+        <!-- Logout -->
+        <div class="lg:col-span-2 glass rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-white">Session</h3>
+              <p class="text-xs text-gray-500 mt-1">End your current admin session</p>
             </div>
-
-            <!-- System Specifications Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-1">
-                    <div class="text-slate-400">Python Runtime</div>
-                    <div id="sysPython" class="font-mono text-sm font-bold text-white">v3.15</div>
-                </div>
-                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-1">
-                    <div class="text-slate-400">Discord Engine</div>
-                    <div id="sysDiscordPy" class="font-mono text-sm font-bold text-brand-400">v2.7.1</div>
-                </div>
-                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-1">
-                    <div class="text-slate-400">Resident Memory (RSS)</div>
-                    <div id="sysMemory" class="font-mono text-sm font-bold text-emerald-400">0 MB</div>
-                </div>
-                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-1">
-                    <div class="text-slate-400">Primary AI Fallback Tier</div>
-                    <div class="font-mono text-sm font-bold text-purple-400">Gemini 3.5 Flash Lite</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==================================================== -->
-        <!-- TAB 2: SERVERS & LIVE EMBED STUDIO -->
-        <!-- ==================================================== -->
-        <section id="tab-servers" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                
-                <!-- Left: Embed Designer -->
-                <div class="lg:col-span-7 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
-                    <div>
-                        <h3 class="font-bold text-white text-base flex items-center gap-2">
-                            <i class="bi bi-pencil-square text-brand-400"></i>
-                            Discord Embed & Announcement Studio
-                        </h3>
-                        <p class="text-xs text-slate-400">Design custom rich embeds and broadcast them directly to any channel</p>
-                    </div>
-
-                    <form onsubmit="handleSendBroadcast(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Target Channel</label>
-                                <select id="broadcastChannelSelect" required class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-brand-500">
-                                    <option value="">Loading channels...</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Embed Theme Color</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color" id="broadcastColor" value="#5865F2" oninput="updateEmbedPreview()" class="w-10 h-9 bg-transparent border-0 rounded cursor-pointer">
-                                    <input type="text" id="broadcastColorHex" value="#5865F2" oninput="syncColorInput(this.value)" class="flex-1 bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-mono text-white">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Embed Title</label>
-                            <input type="text" id="broadcastTitle" placeholder="e.g. 📢 Server Announcement" oninput="updateEmbedPreview()" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Message Description (Markdown Supported)</label>
-                            <textarea id="broadcastContent" rows="4" required placeholder="Type your announcement content here..." oninput="updateEmbedPreview()" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl p-3.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 custom-scrollbar"></textarea>
-                        </div>
-
-                        <div class="flex items-center justify-between pt-2">
-                            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                                <input type="checkbox" id="broadcastUseEmbed" checked onchange="updateEmbedPreview()" class="rounded bg-slate-950 border-slate-700 text-brand-500">
-                                <span>Send as Discord Embed card</span>
-                            </label>
-
-                            <button type="submit" id="broadcastSubmitBtn" class="bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl text-xs shadow-lg shadow-brand-500/25 transition-all flex items-center gap-2 cursor-pointer">
-                                <i class="bi bi-send-fill"></i>
-                                <span>Dispatch Announcement</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Right: Realistic Live Discord Embed Preview -->
-                <div class="lg:col-span-5 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl flex flex-col">
-                    <div class="pb-3 border-b border-slate-800 mb-4 flex items-center justify-between">
-                        <h4 class="font-bold text-white text-xs uppercase tracking-wider text-slate-400">Live Discord Client Preview</h4>
-                        <span class="text-[10px] text-slate-500 font-mono">Simulated Render</span>
-                    </div>
-
-                    <div class="flex-1 bg-[#313338] p-4 rounded-xl border border-white/5 space-y-3 font-sans">
-                        <!-- Bot Message Header -->
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-sm font-bold">
-                                S
-                            </div>
-                            <div>
-                                <span class="font-semibold text-white text-xs">SkillX</span>
-                                <span class="bg-[#5865F2] text-[9px] text-white px-1 py-0.5 rounded ml-1 font-semibold">BOT</span>
-                                <span class="text-[10px] text-[#949ba4] ml-1.5">Today at 12:00 PM</span>
-                            </div>
-                        </div>
-
-                        <!-- Embed Card -->
-                        <div id="discordPreviewCard" class="discord-preview rounded p-3 text-xs space-y-1.5 shadow-sm">
-                            <div id="previewTitle" class="font-bold text-white text-sm">📢 Announcement Title</div>
-                            <div id="previewBody" class="text-[#dbdee1] text-xs whitespace-pre-wrap leading-relaxed">Your announcement message description will be rendered here with live markdown and colors.</div>
-                            <div class="text-[10px] text-[#949ba4] pt-2 border-t border-white/5 flex items-center gap-1.5">
-                                <i class="bi bi-shield-lock-fill"></i>
-                                <span>Broadcasted via SkillX Web Console</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Connected Guilds Table -->
-            <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-white text-base">Connected Guild Directory</h3>
-                        <p class="text-xs text-slate-400">Active server nodes running SkillX</p>
-                    </div>
-                    <span id="guildTableCountBadge" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg">0 Servers</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-950/60 text-xs uppercase text-slate-400 tracking-wider border-b border-slate-800">
-                            <tr>
-                                <th class="px-6 py-4">Guild</th>
-                                <th class="px-6 py-4">Guild ID</th>
-                                <th class="px-6 py-4">Owner</th>
-                                <th class="px-6 py-4">Members</th>
-                                <th class="px-6 py-4">Channels</th>
-                            </tr>
-                        </thead>
-                        <tbody id="guildTableBody" class="divide-y divide-slate-800/60 font-normal">
-                            <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-slate-500 text-xs">
-                                    Loading connected servers...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==================================================== -->
-        <!-- TAB 3: GEMINI AI STUDIO -->
-        <!-- ==================================================== -->
-        <section id="tab-ai" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- AI Console -->
-                <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
-                    <div>
-                        <h3 class="font-bold text-white text-base flex items-center gap-2">
-                            <i class="bi bi-cpu text-purple-400"></i>
-                            Gemini 3.x Interactive Studio
-                        </h3>
-                        <p class="text-xs text-slate-400">Test queries live against Gemini with custom persona styles and temperatures</p>
-                    </div>
-
-                    <form onsubmit="handleAiTest(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Persona Archetype</label>
-                                <select id="aiPersonaSelect" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-brand-500">
-                                    <option value="default">Default (Helpful & Balanced)</option>
-                                    <option value="developer">Developer (Elite Software Architect)</option>
-                                    <option value="tutor">Tutor (Patient Concept Educator)</option>
-                                    <option value="creative">Creative (Witty Writer & Storyteller)</option>
-                                    <option value="concise">Concise (Direct & Brief)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                                    Creativity Temperature (<span id="tempVal">0.7</span>)
-                                </label>
-                                <input type="range" id="aiTemperature" min="0.0" max="1.0" step="0.1" value="0.7" oninput="document.getElementById('tempVal').textContent = this.value" class="w-full accent-brand-500 mt-2">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Input Prompt</label>
-                            <textarea id="aiPromptInput" rows="3" required placeholder="Ask Gemini anything (e.g. Optimize an async Python function, explain quantum mechanics)..." class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl p-3.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 custom-scrollbar"></textarea>
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <span class="text-[11px] text-slate-400">Multi-tier failover guarantees 99.9% prompt resolution</span>
-                            <button type="submit" id="aiSubmitBtn" class="bg-gradient-to-r from-brand-500 to-purple-600 hover:opacity-90 text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-2 cursor-pointer">
-                                <span id="aiBtnText">Execute Query</span>
-                                <i class="bi bi-lightning-charge-fill"></i>
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- Response Preview -->
-                    <div id="aiResponseBox" class="hidden rounded-xl bg-slate-950/90 border border-slate-800 p-4 space-y-3">
-                        <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-800">
-                            <span class="text-slate-400">Generated AI Response</span>
-                            <div class="flex items-center gap-2">
-                                <span id="aiElapsedBadge" class="text-[10px] text-slate-400 font-mono">0ms</span>
-                                <span id="aiModelBadge" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded font-mono text-[10px]"></span>
-                            </div>
-                        </div>
-                        <div id="aiResponseText" class="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed font-sans"></div>
-                    </div>
-                </div>
-
-                <!-- Memory Management -->
-                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
-                    <h3 class="font-bold text-white text-base flex items-center gap-2">
-                        <i class="bi bi-memory text-amber-400"></i>
-                        Conversational Memory
-                    </h3>
-
-                    <p class="text-xs text-slate-400 leading-relaxed">
-                        SkillX stores multi-turn conversation contexts per user. You can inspect or reset memory contexts across all connected servers.
-                    </p>
-
-                    <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="text-slate-400">Active Memory Threads:</span>
-                            <span id="memoryCountBadge" class="font-bold text-amber-400 text-sm">0 users</span>
-                        </div>
-                    </div>
-
-                    <button type="button" onclick="handleClearMemory()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-medium py-2.5 rounded-xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="bi bi-trash3-fill"></i>
-                        <span>Wipe All Stored Contexts</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==================================================== -->
-        <!-- TAB 4: AUTOMOD & INFRACTIONS -->
-        <!-- ==================================================== -->
-        <section id="tab-automod" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Quick Web Moderation Console -->
-                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-4">
-                    <div>
-                        <h3 class="font-bold text-white text-base flex items-center gap-2">
-                            <i class="bi bi-hammer text-rose-400"></i>
-                            Web Moderation Action
-                        </h3>
-                        <p class="text-xs text-slate-400">Execute disciplinary actions directly from the browser</p>
-                    </div>
-
-                    <form onsubmit="handleWebModAction(event)" class="space-y-3.5">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Action Type</label>
-                            <select id="webModAction" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-brand-500">
-                                <option value="warn">Warn Member (AutoMod Record)</option>
-                                <option value="kick">Kick Member</option>
-                                <option value="ban">Ban Member</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Server / Guild</label>
-                            <select id="webModGuildSelect" required class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-brand-500">
-                                <option value="">Select guild...</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Target User ID</label>
-                            <input type="text" id="webModUserId" required placeholder="e.g. 123456789012345678" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Reason</label>
-                            <input type="text" id="webModReason" required placeholder="Reason for disciplinary action..." class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500">
-                        </div>
-
-                        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2.5 rounded-xl text-xs shadow-lg shadow-rose-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                            <i class="bi bi-shield-exclamation"></i>
-                            <span>Execute Moderation</span>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Recent Infractions Table -->
-                <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden flex flex-col">
-                    <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-                        <div>
-                            <h3 class="font-bold text-white text-base">Recorded Member Infractions</h3>
-                            <p class="text-xs text-slate-400">AutoMod infractions and warnings history</p>
-                        </div>
-                        <button onclick="fetchInfractions()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
-                            <i class="bi bi-arrow-clockwise"></i> Refresh
-                        </button>
-                    </div>
-
-                    <div class="flex-1 overflow-x-auto max-h-96 custom-scrollbar">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-950/60 text-[11px] uppercase text-slate-400 tracking-wider sticky top-0 border-b border-slate-800">
-                                <tr>
-                                    <th class="px-5 py-3">Case</th>
-                                    <th class="px-5 py-3">User ID</th>
-                                    <th class="px-5 py-3">Reason</th>
-                                    <th class="px-5 py-3">Issued By</th>
-                                    <th class="px-5 py-3">Timestamp</th>
-                                </tr>
-                            </thead>
-                            <tbody id="infractionsTableBody" class="divide-y divide-slate-800/60">
-                                <tr>
-                                    <td colspan="5" class="px-5 py-6 text-center text-slate-500 text-xs">
-                                        Loading infractions log...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==================================================== -->
-        <!-- TAB 5: PRESENCE & COG MANAGER -->
-        <!-- ==================================================== -->
-        <section id="tab-controls" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Presence Editor -->
-                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
-                    <div>
-                        <h3 class="font-bold text-white text-base flex items-center gap-2">
-                            <i class="bi bi-person-badge text-brand-400"></i>
-                            Live Bot Presence Controller
-                        </h3>
-                        <p class="text-xs text-slate-400">Update bot activity and presence state live without restarting</p>
-                    </div>
-
-                    <form onsubmit="handleUpdatePresence(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Status State</label>
-                                <select id="presenceStatusSelect" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-brand-500">
-                                    <option value="online">Online (🟢)</option>
-                                    <option value="idle">Idle (🟡)</option>
-                                    <option value="dnd">Do Not Disturb (🔴)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Activity Type</label>
-                                <select id="presenceActivityType" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-brand-500">
-                                    <option value="listening">Listening to</option>
-                                    <option value="playing">Playing</option>
-                                    <option value="watching">Watching</option>
-                                    <option value="competing">Competing in</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Activity Text</label>
-                            <input type="text" id="presenceText" required placeholder="e.g. /help | @SkillX" class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500">
-                        </div>
-
-                        <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium py-2.5 px-5 rounded-xl text-xs shadow-lg shadow-brand-500/20 transition-all flex items-center gap-2 cursor-pointer">
-                            <i class="bi bi-arrow-repeat"></i>
-                            <span>Apply Presence</span>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Cog Manager -->
-                <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl space-y-5">
-                    <div>
-                        <h3 class="font-bold text-white text-base flex items-center gap-2">
-                            <i class="bi bi-puzzle-fill text-cyan-400"></i>
-                            Modular Cog Subsystem Manager
-                        </h3>
-                        <p class="text-xs text-slate-400">Hot-reload bot extensions in real-time with zero downtime</p>
-                    </div>
-
-                    <div class="space-y-2.5" id="cogsListContainer">
-                        <!-- Loaded cogs with reload buttons -->
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
-                            <div class="flex items-center gap-2.5">
-                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
-                                <span class="font-mono font-semibold text-white">cogs.ai_chat</span>
-                            </div>
-                            <button onclick="handleReloadCog('cogs.ai_chat')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
-                                Reload
-                            </button>
-                        </div>
-
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
-                            <div class="flex items-center gap-2.5">
-                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
-                                <span class="font-mono font-semibold text-white">cogs.moderation</span>
-                            </div>
-                            <button onclick="handleReloadCog('cogs.moderation')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
-                                Reload
-                            </button>
-                        </div>
-
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
-                            <div class="flex items-center gap-2.5">
-                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
-                                <span class="font-mono font-semibold text-white">cogs.utility</span>
-                            </div>
-                            <button onclick="handleReloadCog('cogs.utility')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
-                                Reload
-                            </button>
-                        </div>
-
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
-                            <div class="flex items-center gap-2.5">
-                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
-                                <span class="font-mono font-semibold text-white">cogs.automod</span>
-                            </div>
-                            <button onclick="handleReloadCog('cogs.automod')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
-                                Reload
-                            </button>
-                        </div>
-
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
-                            <div class="flex items-center gap-2.5">
-                                <i class="bi bi-check-circle-fill text-emerald-400"></i>
-                                <span class="font-mono font-semibold text-white">cogs.community</span>
-                            </div>
-                            <button onclick="handleReloadCog('cogs.community')" class="bg-slate-800 hover:bg-brand-500 text-slate-300 hover:text-white px-3 py-1 rounded-lg transition-all text-[11px] border border-slate-700 cursor-pointer">
-                                Reload
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Scripts -->
-    <script>
-        const csrfToken = document.getElementById('csrfToken').value;
-        let chartInstance = null;
-        let latencyHistory = [];
-        let labelsHistory = [];
-
-        // Toast Helper
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            const bg = type === 'success' ? 'bg-emerald-500/95' : type === 'error' ? 'bg-rose-500/95' : 'bg-brand-500/95';
-            const icon = type === 'success' ? 'bi-check-circle-fill' : type === 'error' ? 'bi-exclamation-octagon-fill' : 'bi-info-circle-fill';
-            
-            toast.className = `${bg} text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 pointer-events-auto transition-all transform translate-y-2 opacity-0 duration-300 border border-white/10`;
-            toast.innerHTML = `<i class="bi ${icon}"></i><span>${message}</span>`;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-
-        // Tab Navigation
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = 'tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 whitespace-nowrap';
-            });
-
-            document.getElementById(tabId).classList.remove('hidden');
-            const activeBtn = document.getElementById(`nav-${tabId}`);
-            if (activeBtn) {
-                activeBtn.className = 'tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-all bg-brand-500/20 text-brand-400 border border-brand-500/30 whitespace-nowrap';
-            }
-
-            if (tabId === 'tab-servers') {
-                fetchGuilds();
-            } else if (tabId === 'tab-automod') {
-                fetchInfractions();
-            }
-        }
-
-        // Sync Live Embed Preview
-        function updateEmbedPreview() {
-            const title = document.getElementById('broadcastTitle').value || '📢 Announcement Title';
-            const body = document.getElementById('broadcastContent').value || 'Your announcement message description will be rendered here with live markdown and colors.';
-            const colorHex = document.getElementById('broadcastColor').value;
-            const useEmbed = document.getElementById('broadcastUseEmbed').checked;
-            const card = document.getElementById('discordPreviewCard');
-
-            document.getElementById('previewTitle').textContent = title;
-            document.getElementById('previewBody').textContent = body;
-            card.style.borderLeftColor = colorHex;
-
-            if (!useEmbed) {
-                card.style.borderLeft = 'none';
-                document.getElementById('previewTitle').style.display = 'none';
-            } else {
-                card.style.borderLeft = `4px solid ${colorHex}`;
-                document.getElementById('previewTitle').style.display = 'block';
-            }
-        }
-
-        function syncColorInput(val) {
-            if (/^#[0-9A-F]{6}$/i.test(val)) {
-                document.getElementById('broadcastColor').value = val;
-                updateEmbedPreview();
-            }
-        }
-
-        // Initialize Latency Chart
-        function initChart() {
-            const ctx = document.getElementById('latencyChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labelsHistory,
-                    datasets: [{
-                        label: 'Latency (ms)',
-                        data: latencyHistory,
-                        borderColor: '#5865F2',
-                        backgroundColor: 'rgba(88, 101, 242, 0.12)',
-                        borderWidth: 2.5,
-                        tension: 0.38,
-                        fill: true,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#5865F2'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#64748b', font: { size: 10 } } },
-                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#64748b', font: { size: 10 } } }
-                    }
-                }
-            });
-        }
-
-        // Polling Stats & Logs
-        async function fetchStats() {
-            try {
-                const res = await fetch('/api/stats');
-                if (res.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                }
-                const data = await res.json();
-
-                // Update Cards
-                document.getElementById('statGuildCount').textContent = data.guilds;
-                document.getElementById('statUserCount').textContent = data.users;
-                document.getElementById('statLatency').textContent = `${data.latency_ms} ms`;
-                document.getElementById('headerPing').textContent = `${data.latency_ms} ms`;
-                document.getElementById('headerUptime').textContent = data.uptime_str;
-                document.getElementById('statAiMemory').textContent = data.ai_memory_contexts;
-                document.getElementById('statInfractions').textContent = data.total_infractions;
-                document.getElementById('memoryCountBadge').textContent = `${data.ai_memory_contexts} active users`;
-
-                // Update System
-                document.getElementById('sysPython').textContent = `v${data.system.python}`;
-                document.getElementById('sysDiscordPy').textContent = `v${data.system.discord_py}`;
-                document.getElementById('sysMemory').textContent = `${data.system.memory_mb} MB`;
-                document.getElementById('headerMemory').textContent = `${data.system.memory_mb} MB`;
-                document.getElementById('statCogs').textContent = data.system.cogs_count;
-
-                // Update Chart
-                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                labelsHistory.push(now);
-                latencyHistory.push(data.latency_ms);
-                if (labelsHistory.length > 15) {
-                    labelsHistory.shift();
-                    latencyHistory.shift();
-                }
-                if (chartInstance) chartInstance.update();
-
-            } catch (err) {
-                console.warn('Stats poll failed:', err);
-            }
-        }
-
-        async function fetchLogs() {
-            try {
-                const res = await fetch('/api/logs');
-                if (res.status === 401) return;
-                const logs = await res.json();
-                const container = document.getElementById('activityFeedList');
-
-                if (!logs || logs.length === 0) {
-                    container.innerHTML = '<div class="text-center text-slate-500 py-6">No recent events recorded.</div>';
-                    return;
-                }
-
-                container.innerHTML = '';
-                logs.forEach(log => {
-                    const el = document.createElement('div');
-                    el.className = 'flex items-start gap-2.5 p-2 rounded-lg bg-slate-950/40 border border-slate-800/60';
-                    const icon = log.type === 'auth' ? 'bi-shield-check text-blue-400' :
-                                 log.type === 'broadcast' ? 'bi-megaphone text-purple-400' :
-                                 log.type === 'ai' ? 'bi-cpu text-emerald-400' :
-                                 log.type === 'mod' ? 'bi-hammer text-rose-400' :
-                                 'bi-info-circle text-slate-400';
-                    el.innerHTML = `
-                        <i class="bi ${icon} mt-0.5"></i>
-                        <div class="flex-1">
-                            <div class="text-slate-200">${log.message}</div>
-                            <div class="text-[10px] text-slate-500 font-mono">${log.timestamp}</div>
-                        </div>
-                    `;
-                    container.appendChild(el);
-                });
-            } catch (err) {
-                console.warn('Logs poll failed:', err);
-            }
-        }
-
-        // Fetch Guilds
-        async function fetchGuilds() {
-            try {
-                const res = await fetch('/api/guilds');
-                if (res.status === 401) return;
-                const guilds = await res.json();
-                
-                const tbody = document.getElementById('guildTableBody');
-                const channelSelect = document.getElementById('broadcastChannelSelect');
-                const modGuildSelect = document.getElementById('webModGuildSelect');
-                
-                tbody.innerHTML = '';
-                channelSelect.innerHTML = '<option value="">Select target channel...</option>';
-                modGuildSelect.innerHTML = '<option value="">Select target guild...</option>';
-
-                document.getElementById('guildTableCountBadge').textContent = `${guilds.length} Servers`;
-
-                if (!guilds || guilds.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-6 text-center text-slate-500 text-xs">No connected guilds found.</td></tr>';
-                    return;
-                }
-
-                guilds.forEach(g => {
-                    const icon = g.icon || 'https://cdn.discordapp.com/embed/avatars/0.png';
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-800/30 transition-colors';
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 flex items-center gap-3">
-                            <img src="${icon}" class="w-8 h-8 rounded-full border border-slate-700 object-cover" />
-                            <span class="font-medium text-white">${g.name}</span>
-                        </td>
-                        <td class="px-6 py-4 font-mono text-xs text-slate-400">${g.id}</td>
-                        <td class="px-6 py-4 text-xs text-slate-300">${g.owner}</td>
-                        <td class="px-6 py-4 text-xs font-semibold text-white">${g.member_count}</td>
-                        <td class="px-6 py-4 text-xs text-slate-400">${g.text_channels ? g.text_channels.length : 0} channels</td>
-                    `;
-                    tbody.appendChild(tr);
-
-                    // Add to mod guild select
-                    const optG = document.createElement('option');
-                    optG.value = g.id;
-                    optG.textContent = g.name;
-                    modGuildSelect.appendChild(optG);
-
-                    // Add channels to dropdown
-                    if (g.text_channels) {
-                        g.text_channels.forEach(ch => {
-                            if (ch.can_send) {
-                                const opt = document.createElement('option');
-                                opt.value = ch.id;
-                                opt.textContent = `${g.name} ❯ #${ch.name}`;
-                                channelSelect.appendChild(opt);
-                            }
-                        });
-                    }
-                });
-            } catch (err) {
-                showToast('Failed to load server directory', 'error');
-            }
-        }
-
-        // Fetch Infractions
-        async function fetchInfractions() {
-            try {
-                const res = await fetch('/api/infractions');
-                if (res.status === 401) return;
-                const items = await res.json();
-                const tbody = document.getElementById('infractionsTableBody');
-                tbody.innerHTML = '';
-
-                if (!items || items.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-6 text-center text-slate-500 text-xs">No recorded infractions found. Server is clean!</td></tr>';
-                    return;
-                }
-
-                items.forEach(w => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-800/30 transition-colors';
-                    tr.innerHTML = `
-                        <td class="px-5 py-3 font-mono font-bold text-amber-400">#${w.case_id}</td>
-                        <td class="px-5 py-3 font-mono text-slate-300">${w.user_id}</td>
-                        <td class="px-5 py-3 text-slate-200">${w.reason}</td>
-                        <td class="px-5 py-3 font-mono text-slate-400">${w.moderator_id}</td>
-                        <td class="px-5 py-3 text-slate-400 font-mono text-[11px]">${w.timestamp ? w.timestamp.split('T')[0] : 'N/A'}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                showToast('Failed to load infractions', 'error');
-            }
-        }
-
-        // Send Broadcast
-        async function handleSendBroadcast(e) {
-            e.preventDefault();
-            const channelId = document.getElementById('broadcastChannelSelect').value;
-            const title = document.getElementById('broadcastTitle').value;
-            const message = document.getElementById('broadcastContent').value;
-            const colorHex = document.getElementById('broadcastColor').value;
-            const useEmbed = document.getElementById('broadcastUseEmbed').checked;
-            const btn = document.getElementById('broadcastSubmitBtn');
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i><span>Broadcasting...</span>';
-
-            try {
-                const res = await fetch('/api/broadcast', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({
-                        channel_id: channelId,
-                        title,
-                        message,
-                        color: colorHex,
-                        use_embed: useEmbed
-                    })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    showToast('Broadcast dispatched successfully!', 'success');
-                    fetchLogs();
-                } else {
-                    showToast(data.error || 'Failed to dispatch broadcast.', 'error');
-                }
-            } catch (err) {
-                showToast('Communication error', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-send-fill"></i><span>Dispatch Announcement</span>';
-            }
-        }
-
-        // AI Testing
-        async function handleAiTest(e) {
-            e.preventDefault();
-            const prompt = document.getElementById('aiPromptInput').value;
-            const persona = document.getElementById('aiPersonaSelect').value;
-            const temp = parseFloat(document.getElementById('aiTemperature').value);
-            const btn = document.getElementById('aiSubmitBtn');
-            const btnText = document.getElementById('aiBtnText');
-            const box = document.getElementById('aiResponseBox');
-            const resText = document.getElementById('aiResponseText');
-            const modelBadge = document.getElementById('aiModelBadge');
-            const elapsedBadge = document.getElementById('aiElapsedBadge');
-
-            btn.disabled = true;
-            btnText.textContent = 'Querying...';
-
-            try {
-                const res = await fetch('/api/ai-test', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({ prompt, persona, temperature: temp })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    box.classList.remove('hidden');
-                    modelBadge.textContent = data.model;
-                    elapsedBadge.textContent = `${data.elapsed_ms}ms`;
-                    resText.textContent = data.response;
-                    showToast(`Completed with ${data.model} in ${data.elapsed_ms}ms`, 'success');
-                    fetchLogs();
-                } else {
-                    showToast(data.error || 'AI generation failed', 'error');
-                }
-            } catch (err) {
-                showToast('Failed to contact Gemini endpoint', 'error');
-            } finally {
-                btn.disabled = false;
-                btnText.textContent = 'Execute Query';
-            }
-        }
-
-        // Web Moderation
-        async function handleWebModAction(e) {
-            e.preventDefault();
-            const action = document.getElementById('webModAction').value;
-            const guildId = document.getElementById('webModGuildSelect').value;
-            const userId = document.getElementById('webModUserId').value;
-            const reason = document.getElementById('webModReason').value;
-
-            try {
-                const res = await fetch('/api/moderation/action', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({ action, guild_id: guildId, user_id: userId, reason })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    showToast(`Disciplinary action (${action}) executed!`, 'success');
-                    document.getElementById('webModUserId').value = '';
-                    fetchInfractions();
-                    fetchLogs();
-                } else {
-                    showToast(data.error || 'Moderation action failed.', 'error');
-                }
-            } catch (err) {
-                showToast('Network error', 'error');
-            }
-        }
-
-        // Reload Cog
-        async function handleReloadCog(extensionName) {
-            try {
-                const res = await fetch('/api/cogs/reload', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({ extension: extensionName })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    showToast(`Reloaded ${extensionName}!`, 'success');
-                    fetchLogs();
-                } else {
-                    showToast(data.error || 'Failed to reload extension.', 'error');
-                }
-            } catch (err) {
-                showToast('Network error', 'error');
-            }
-        }
-
-        // Clear Memory
-        async function handleClearMemory() {
-            if (!confirm('Are you sure you want to clear all active AI conversational memory contexts?')) return;
-            try {
-                const res = await fetch('/api/clear-memory', {
-                    method: 'POST',
-                    headers: { 'X-CSRF-Token': csrfToken }
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    showToast(`Wiped ${data.cleared_count || 0} conversational memory session(s)!`, 'success');
-                    fetchStats();
-                    fetchLogs();
-                } else {
-                    showToast(data.error || 'Action failed', 'error');
-                }
-            } catch (err) {
-                showToast('Network error', 'error');
-            }
-        }
-
-        // Update Presence
-        async function handleUpdatePresence(e) {
-            e.preventDefault();
-            const status = document.getElementById('presenceStatusSelect').value;
-            const activityType = document.getElementById('presenceActivityType').value;
-            const text = document.getElementById('presenceText').value;
-
-            try {
-                const res = await fetch('/api/presence', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({ status, activity_type: activityType, text })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    showToast('Bot presence updated successfully!', 'success');
-                    fetchLogs();
-                } else {
-                    showToast(data.error || 'Failed to update presence', 'error');
-                }
-            } catch (err) {
-                showToast('Communication error', 'error');
-            }
-        }
-
-        // Logout
-        async function handleLogout() {
-            await fetch('/api/logout', { method: 'POST' });
-            window.location.href = '/login';
-        }
-
-        // Init on load
-        window.addEventListener('DOMContentLoaded', () => {
-            initChart();
-            fetchStats();
-            fetchLogs();
-            fetchGuilds();
-            updateEmbedPreview();
-            setInterval(fetchStats, 4000);
-            setInterval(fetchLogs, 8000);
-        });
-    </script>
+            <button onclick="showConfirmModal('Logout', 'Are you sure you want to logout?', doLogout)" class="btn-neon bg-red-500/20 border border-red-500/30 text-red-400 font-medium px-5 py-2 rounded-lg text-sm hover:bg-red-500/30 transition">Logout</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  GLOBALS
+// ═══════════════════════════════════════════════════════════
+let latencyHistory = [];
+let latencyChart = null;
+let cachedGuilds = [];
+let allInfractions = [];
+let filteredInfractions = [];
+let infCurrentPage = 0;
+const INF_PER_PAGE = 15;
+let infSortKey = 'timestamp';
+let infSortAsc = false;
+let refreshTimers = {};
+
+// ═══════════════════════════════════════════════════════════
+//  TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const colors = {
+    success: 'from-emerald-500/90 to-emerald-600/90 border-emerald-400/30',
+    error: 'from-red-500/90 to-red-600/90 border-red-400/30',
+    warning: 'from-amber-500/90 to-amber-600/90 border-amber-400/30',
+    info: 'from-blue-500/90 to-blue-600/90 border-blue-400/30'
+  };
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  const toast = document.createElement('div');
+  toast.className = `pointer-events-auto toast-in flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r ${colors[type] || colors.info} border backdrop-blur-xl text-white text-sm font-medium shadow-2xl max-w-sm`;
+  toast.innerHTML = `<span class="text-lg flex-shrink-0">${icons[type] || icons.info}</span><span class="min-w-0">${escHtml(message)}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.remove('toast-in'); toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 300); }, 4000);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONFIRM MODAL
+// ═══════════════════════════════════════════════════════════
+let modalCallback = null;
+function showConfirmModal(title, message, onConfirm) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-message').textContent = message;
+  modalCallback = onConfirm;
+  const modal = document.getElementById('confirm-modal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.getElementById('modal-confirm-btn').onclick = () => { hideConfirmModal(); if (modalCallback) modalCallback(); };
+}
+function hideConfirmModal() {
+  const modal = document.getElementById('confirm-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  modalCallback = null;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+async function apiFetch(url, opts = {}) {
+  try {
+    if (opts.method && opts.method !== 'GET') {
+      opts.headers = { ...opts.headers, 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN };
+      if (opts.body && typeof opts.body === 'object') opts.body = JSON.stringify(opts.body);
+    }
+    const r = await fetch(url, opts);
+    if (r.status === 401) { window.location.href = '/login'; return null; }
+    if (!r.ok) { const t = await r.text(); throw new Error(t || r.statusText); }
+    return await r.json();
+  } catch (e) {
+    showToast(e.message || 'Network error', 'error');
+    return null;
+  }
+}
+
+function animateCounter(el, target, suffix = '') {
+  const start = parseInt(el.textContent) || 0;
+  if (start === target) { el.textContent = target + suffix; return; }
+  const duration = 600;
+  const startTime = performance.now();
+  function step(now) {
+    const p = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(start + (target - start) * ease) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function formatTime(ts) {
+  try { const d = new Date(ts); return d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
+  catch { return ts; }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════
+const titles = { dashboard:'Dashboard', activity:'Activity Feed', servers:'Server Directory', broadcast:'Broadcast Center', ai:'AI Studio', automod:'AutoMod Console', settings:'Bot Settings' };
+
+function switchSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+  const sec = document.getElementById('sec-' + name);
+  if (sec) { sec.classList.remove('hidden'); sec.classList.add('anim-fade-in'); setTimeout(() => sec.classList.remove('anim-fade-in'), 400); }
+  document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('active'); n.classList.add('text-gray-400'); });
+  const nav = document.querySelector(`[data-nav="${name}"]`);
+  if (nav) { nav.classList.add('active'); nav.classList.remove('text-gray-400'); }
+  document.getElementById('page-title').textContent = titles[name] || name;
+  // close mobile sidebar
+  const sb = document.getElementById('sidebar');
+  if (window.innerWidth < 1024) { sb.classList.add('-translate-x-full'); document.getElementById('sidebar-overlay').classList.add('hidden'); }
+  // load data
+  if (name === 'activity') loadActivity();
+  if (name === 'servers') loadGuilds();
+  if (name === 'broadcast') loadGuildsForBroadcast();
+  if (name === 'automod') loadInfractions();
+  if (name === 'settings') loadSettings();
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  sb.classList.toggle('-translate-x-full');
+  ov.classList.toggle('hidden');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DASHBOARD — Stats + Chart
+// ═══════════════════════════════════════════════════════════
+async function loadStats() {
+  const d = await apiFetch('/api/stats');
+  if (!d) return;
+  animateCounter(document.getElementById('stat-guilds'), d.guilds || 0);
+  animateCounter(document.getElementById('stat-users'), d.users || 0);
+  animateCounter(document.getElementById('stat-latency'), Math.round(d.latency_ms || 0));
+  document.getElementById('stat-uptime').textContent = d.uptime_str || '—';
+  animateCounter(document.getElementById('stat-ai-mem'), d.ai_memory_contexts || 0);
+  animateCounter(document.getElementById('stat-personas'), d.ai_persona_overrides || 0);
+  animateCounter(document.getElementById('stat-infractions'), d.total_infractions || 0);
+  animateCounter(document.getElementById('stat-memory'), Math.round(d.system?.memory_mb || 0));
+  document.getElementById('topbar-latency-val').textContent = Math.round(d.latency_ms || 0);
+
+  // system info
+  if (d.system) {
+    document.getElementById('sys-python').textContent = d.system.python || '—';
+    document.getElementById('sys-dpy').textContent = d.system.discord_py || '—';
+    document.getElementById('sys-cogs').textContent = d.system.cogs_count || '—';
+    document.getElementById('sys-mem').textContent = (d.system.memory_mb || 0).toFixed(1) + ' MB';
+  }
+
+  // bot profile
+  if (d.bot_user) {
+    const banner = document.getElementById('bot-profile-banner');
+    banner.classList.remove('hidden');
+    document.getElementById('bot-name').textContent = d.bot_user.name || 'SkillX';
+    document.getElementById('bot-id').textContent = 'ID: ' + (d.bot_user.id || '');
+    if (d.bot_user.avatar) {
+      document.getElementById('bot-avatar').src = d.bot_user.avatar;
+      document.getElementById('sidebar-avatar').src = d.bot_user.avatar;
+      document.getElementById('sidebar-bot-name').textContent = d.bot_user.name || 'SkillX';
+      document.getElementById('sidebar-bot-profile').classList.remove('hidden');
+    }
+  }
+
+  // latency chart
+  const lat = Math.round(d.latency_ms || 0);
+  latencyHistory.push(lat);
+  if (latencyHistory.length > 60) latencyHistory.shift();
+  updateChart();
+}
+
+function initChart() {
+  const ctx = document.getElementById('latency-chart').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+  gradient.addColorStop(0, 'rgba(6,182,212,.25)');
+  gradient.addColorStop(1, 'rgba(6,182,212,.0)');
+  latencyChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Array(60).fill(''),
+      datasets: [{
+        label: 'Latency (ms)',
+        data: [],
+        borderColor: '#06b6d4',
+        backgroundColor: gradient,
+        borderWidth: 2,
+        fill: true,
+        tension: .4,
+        pointRadius: 0,
+        pointHitRadius: 10,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(13,13,26,.9)', titleColor: '#06b6d4', bodyColor: '#e2e8f0', borderColor: 'rgba(6,182,212,.3)', borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: false } },
+      scales: {
+        x: { display: false },
+        y: { beginAtZero: true, grid: { color: 'rgba(168,85,247,.06)' }, ticks: { color: '#6b7280', font: { size: 10 } } }
+      },
+      interaction: { intersect: false, mode: 'index' }
+    }
+  });
+}
+
+function updateChart() {
+  if (!latencyChart) return;
+  latencyChart.data.labels = latencyHistory.map((_, i) => i);
+  latencyChart.data.datasets[0].data = [...latencyHistory];
+  latencyChart.update('none');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ACTIVITY FEED
+// ═══════════════════════════════════════════════════════════
+async function loadActivity() {
+  const data = await apiFetch('/api/logs');
+  if (!data) return;
+  const list = document.getElementById('activity-list');
+  if (!data.length) { list.innerHTML = '<div class="text-center text-gray-500 text-sm py-8">No activity yet</div>'; return; }
+  const badgeColors = { auth: 'bg-purple-500/20 text-purple-300', broadcast: 'bg-blue-500/20 text-blue-300', ai: 'bg-emerald-500/20 text-emerald-300', mod: 'bg-red-500/20 text-red-300', system: 'bg-amber-500/20 text-amber-300', moderation: 'bg-red-500/20 text-red-300' };
+  const entries = data.slice(0, 50);
+  list.innerHTML = entries.map(e => {
+    const bc = badgeColors[e.type] || 'bg-gray-500/20 text-gray-300';
+    return `<div class="flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-purple-500/5 transition">
+      <span class="text-[10px] text-gray-500 font-mono whitespace-nowrap pt-0.5 w-28 flex-shrink-0">${formatTime(e.timestamp)}</span>
+      <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${bc} flex-shrink-0">${escHtml(e.type || '?')}</span>
+      <span class="text-sm text-gray-300 min-w-0 break-words">${escHtml(e.message || '')}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SERVER DIRECTORY
+// ═══════════════════════════════════════════════════════════
+async function loadGuilds() {
+  const data = await apiFetch('/api/guilds');
+  if (!data) return;
+  cachedGuilds = data;
+  renderGuilds();
+}
+
+function renderGuilds() {
+  const grid = document.getElementById('guild-grid');
+  if (!cachedGuilds.length) { grid.innerHTML = '<div class="text-center text-gray-500 text-sm py-8 col-span-full">No guilds found</div>'; return; }
+  grid.innerHTML = cachedGuilds.map((g, i) => {
+    const initial = (g.name || '?')[0].toUpperCase();
+    const icon = g.icon ? `<img src="${g.icon}" class="w-12 h-12 rounded-full" alt="">` : `<div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-cyan-600 flex items-center justify-center text-white font-bold text-lg">${initial}</div>`;
+    return `<div class="glass rounded-xl p-4 glass-hover cursor-pointer transition" onclick="toggleGuildDetail(${i})">
+      <div class="flex items-center gap-3 mb-3">
+        ${icon}
+        <div class="min-w-0">
+          <h4 class="text-sm font-bold text-white truncate">${escHtml(g.name || 'Unknown')}</h4>
+          <p class="text-xs text-gray-500">${g.member_count || '?'} members</p>
+        </div>
+      </div>
+      <div class="flex gap-3 text-xs text-gray-400">
+        <span>💬 ${g.text_channels?.length || 0} text</span>
+        <span>🔊 ${g.voice_channels?.length || 0} voice</span>
+      </div>
+      <div id="guild-detail-${i}" class="hidden mt-3 pt-3 border-t border-purple-500/10 space-y-2 anim-fade-in">
+        ${(g.text_channels && g.text_channels.length) ? `<div><p class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Text Channels</p><div class="flex flex-wrap gap-1">${g.text_channels.map(c => `<span class="text-[11px] bg-cyber-700 px-2 py-0.5 rounded text-gray-300"># ${escHtml(c.name || c)}</span>`).join('')}</div></div>` : ''}
+        ${(g.voice_channels && g.voice_channels.length) ? `<div><p class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Voice Channels</p><div class="flex flex-wrap gap-1">${g.voice_channels.map(c => `<span class="text-[11px] bg-cyber-700 px-2 py-0.5 rounded text-gray-300">🔊 ${escHtml(c.name || c)}</span>`).join('')}</div></div>` : ''}
+        ${(g.roles_sample && g.roles_sample.length) ? `<div><p class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Roles</p><div class="flex flex-wrap gap-1">${g.roles_sample.map(r => {
+          const color = r.color ? `#${r.color.toString(16).padStart(6,'0')}` : '#8b8b8b';
+          return `<span class="text-[11px] px-2 py-0.5 rounded-full border" style="border-color:${color}; color:${color}">${escHtml(r.name || r)}</span>`;
+        }).join('')}</div></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleGuildDetail(i) {
+  const el = document.getElementById('guild-detail-' + i);
+  if (el) el.classList.toggle('hidden');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BROADCAST CENTER
+// ═══════════════════════════════════════════════════════════
+async function loadGuildsForBroadcast() {
+  if (!cachedGuilds.length) {
+    const data = await apiFetch('/api/guilds');
+    if (data) cachedGuilds = data;
+  }
+  const sel = document.getElementById('bc-guild');
+  sel.innerHTML = '<option value="">Select a guild</option>' + cachedGuilds.map((g, i) => `<option value="${i}">${escHtml(g.name || 'Guild')}</option>`).join('');
+  updateBcPreview();
+}
+
+function loadChannels() {
+  const idx = document.getElementById('bc-guild').value;
+  const ch = document.getElementById('bc-channel');
+  ch.innerHTML = '<option value="">Select a channel</option>';
+  if (idx === '' || !cachedGuilds[idx]) return;
+  const g = cachedGuilds[idx];
+  if (g.text_channels) {
+    ch.innerHTML += g.text_channels.map(c => {
+      const id = c.id || c;
+      const name = c.name || c;
+      return `<option value="${id}"># ${escHtml(name)}</option>`;
+    }).join('');
+  }
+}
+
+function updateBcPreview() {
+  const title = document.getElementById('bc-title').value || 'Your Title Here';
+  const msg = document.getElementById('bc-message').value || 'Your message will appear here…';
+  const color = document.getElementById('bc-color').value;
+  document.getElementById('bc-color-hex').textContent = color;
+  document.getElementById('bc-preview-title').textContent = title;
+  document.getElementById('bc-preview-desc').textContent = msg;
+  document.getElementById('bc-preview-embed').style.borderLeftColor = color;
+  const now = new Date();
+  document.getElementById('bc-preview-time').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('bc-preview-timestamp').textContent = now.toLocaleString();
+}
+
+async function sendBroadcast() {
+  const channelId = document.getElementById('bc-channel').value;
+  if (!channelId) { showToast('Select a channel first', 'warning'); return; }
+  const title = document.getElementById('bc-title').value;
+  const message = document.getElementById('bc-message').value;
+  if (!message) { showToast('Enter a message', 'warning'); return; }
+  const color = document.getElementById('bc-color').value;
+  const useEmbed = document.getElementById('bc-use-embed').checked;
+  const btn = document.getElementById('bc-send-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Sending…';
+  const r = await apiFetch('/api/broadcast', { method: 'POST', body: { channel_id: channelId, title, message, color: parseInt(color.slice(1), 16), use_embed: useEmbed } });
+  btn.disabled = false;
+  btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Broadcast';
+  if (r) showToast('Broadcast sent successfully!', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AI STUDIO
+// ═══════════════════════════════════════════════════════════
+async function testAI() {
+  const prompt = document.getElementById('ai-prompt').value.trim();
+  if (!prompt) { showToast('Enter a prompt', 'warning'); return; }
+  const persona = document.getElementById('ai-persona').value;
+  const temperature = parseFloat(document.getElementById('ai-temp').value);
+  const btn = document.getElementById('ai-send-btn');
+  const respEl = document.getElementById('ai-response');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating…';
+  respEl.innerHTML = '<div class="flex items-center gap-3 text-gray-500"><span class="spinner"></span> Generating response…</div>';
+  const startTime = performance.now();
+  const r = await apiFetch('/api/ai-test', { method: 'POST', body: { prompt, persona, temperature } });
+  const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+  btn.disabled = false;
+  btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Response';
+  if (r) {
+    const text = r.response || r.message || JSON.stringify(r);
+    respEl.textContent = text;
+    document.getElementById('ai-response-time').classList.remove('hidden');
+    document.getElementById('ai-time-val').textContent = elapsed + 's';
+    showToast('AI response generated', 'success');
+  } else {
+    respEl.innerHTML = '<span class="text-red-400">Failed to generate response.</span>';
+  }
+}
+
+async function clearAIMemory() {
+  const r = await apiFetch('/api/clear-memory', { method: 'POST', body: {} });
+  if (r) { showToast('AI memory cleared', 'success'); loadStats(); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTOMOD CONSOLE
+// ═══════════════════════════════════════════════════════════
+async function loadInfractions() {
+  const data = await apiFetch('/api/infractions');
+  if (!data) return;
+  allInfractions = data;
+  filteredInfractions = [...allInfractions];
+  infCurrentPage = 0;
+  renderInfractions();
+}
+
+function filterInfractions() {
+  const q = document.getElementById('inf-search').value.toLowerCase();
+  filteredInfractions = allInfractions.filter(inf => {
+    const haystack = [inf.user_id, inf.guild_id, inf.moderator, inf.reason, inf.timestamp].join(' ').toLowerCase();
+    return haystack.includes(q);
+  });
+  infCurrentPage = 0;
+  renderInfractions();
+}
+
+function sortInfractions(key) {
+  if (infSortKey === key) infSortAsc = !infSortAsc;
+  else { infSortKey = key; infSortAsc = true; }
+  filteredInfractions.sort((a, b) => {
+    const va = (a[key] || '').toString().toLowerCase();
+    const vb = (b[key] || '').toString().toLowerCase();
+    return infSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  infCurrentPage = 0;
+  renderInfractions();
+}
+
+function renderInfractions() {
+  const tbody = document.getElementById('inf-tbody');
+  const start = infCurrentPage * INF_PER_PAGE;
+  const page = filteredInfractions.slice(start, start + INF_PER_PAGE);
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8 text-sm">No infractions found</td></tr>';
+    document.getElementById('inf-pagination').classList.add('hidden');
+    return;
+  }
+  tbody.innerHTML = page.map(inf => `<tr class="table-row border-b border-purple-500/5">
+    <td class="py-2.5 px-3 text-xs font-mono text-gray-300">${escHtml(String(inf.user_id || ''))}</td>
+    <td class="py-2.5 px-3 text-xs font-mono text-gray-400">${escHtml(String(inf.guild_id || ''))}</td>
+    <td class="py-2.5 px-3 text-xs text-gray-300">${escHtml(String(inf.moderator || ''))}</td>
+    <td class="py-2.5 px-3 text-xs text-gray-400 max-w-[200px] truncate">${escHtml(inf.reason || '—')}</td>
+    <td class="py-2.5 px-3 text-[10px] text-gray-500 font-mono">${formatTime(inf.timestamp)}</td>
+    <td class="py-2.5 px-3 text-right">
+      <div class="flex gap-1 justify-end">
+        <button onclick="modAction('warn','${inf.guild_id}','${inf.user_id}')" class="px-2 py-1 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition" title="Warn">⚠️</button>
+        <button onclick="modAction('kick','${inf.guild_id}','${inf.user_id}')" class="px-2 py-1 rounded text-[10px] font-semibold bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition" title="Kick">👢</button>
+        <button onclick="modAction('ban','${inf.guild_id}','${inf.user_id}')" class="px-2 py-1 rounded text-[10px] font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition" title="Ban">🔨</button>
+      </div>
+    </td>
+  </tr>`).join('');
+
+  // pagination
+  const totalPages = Math.ceil(filteredInfractions.length / INF_PER_PAGE);
+  const pag = document.getElementById('inf-pagination');
+  if (totalPages > 1) {
+    pag.classList.remove('hidden');
+    document.getElementById('inf-page-info').textContent = `Page ${infCurrentPage + 1} of ${totalPages} (${filteredInfractions.length} total)`;
+    document.getElementById('inf-prev').disabled = infCurrentPage === 0;
+    document.getElementById('inf-next').disabled = infCurrentPage >= totalPages - 1;
+  } else {
+    pag.classList.add('hidden');
+  }
+}
+
+function infPage(dir) { infCurrentPage += dir; renderInfractions(); }
+
+function modAction(action, guildId, userId) {
+  const labels = { warn: 'Warn', kick: 'Kick', ban: 'Ban' };
+  showConfirmModal(`${labels[action]} User`, `Are you sure you want to ${action} user ${userId}?`, async () => {
+    const r = await apiFetch('/api/moderation/action', { method: 'POST', body: { action, guild_id: guildId, user_id: userId, reason: `Action from dashboard: ${action}` } });
+    if (r) { showToast(`User ${action}ed successfully`, 'success'); loadInfractions(); }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BOT SETTINGS
+// ═══════════════════════════════════════════════════════════
+async function loadSettings() {
+  // Load stats for cog list
+  const d = await apiFetch('/api/stats');
+  if (!d || !d.system) return;
+  const cogList = document.getElementById('cog-list');
+  const cogs = d.system.cogs_list || [];
+  if (!cogs.length) { cogList.innerHTML = '<div class="text-center text-gray-500 text-sm py-4">No cogs loaded</div>'; return; }
+  cogList.innerHTML = cogs.map(c => {
+    const name = c.replace('cogs.', '');
+    return `<div class="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-purple-500/5 transition">
+      <div class="flex items-center gap-2">
+        <span class="text-emerald-400 text-sm">✅</span>
+        <span class="text-sm text-white font-medium">${escHtml(name)}</span>
+        <span class="text-[10px] text-gray-500 font-mono">${escHtml(c)}</span>
+      </div>
+      <button onclick="reloadCog('${escHtml(c)}')" class="px-3 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 text-xs font-medium hover:bg-cyan-500/20 transition flex items-center gap-1">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Reload
+      </button>
+    </div>`;
+  }).join('');
+}
+
+async function reloadCog(ext) {
+  const r = await apiFetch('/api/cogs/reload', { method: 'POST', body: { extension: ext } });
+  if (r) { showToast(`Reloaded ${ext}`, 'success'); loadSettings(); }
+}
+
+async function updatePresence() {
+  const status = document.getElementById('pres-status').value;
+  const activityType = document.getElementById('pres-type').value;
+  const text = document.getElementById('pres-text').value;
+  if (!text) { showToast('Enter activity text', 'warning'); return; }
+  const r = await apiFetch('/api/presence', { method: 'POST', body: { status, activity_type: activityType, text } });
+  if (r) showToast('Presence updated', 'success');
+}
+
+async function doLogout() {
+  await apiFetch('/api/logout', { method: 'POST', body: {} });
+  window.location.href = '/login';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTO REFRESH TIMERS
+// ═══════════════════════════════════════════════════════════
+function startRefreshTimers() {
+  // Stats every 3s
+  loadStats();
+  refreshTimers.stats = setInterval(loadStats, 3000);
+
+  // Activity every 5s (only when visible)
+  refreshTimers.activity = setInterval(() => {
+    if (!document.getElementById('sec-activity').classList.contains('hidden')) loadActivity();
+  }, 5000);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initChart();
+  startRefreshTimers();
+  updateBcPreview();
+});
+</script>
 </body>
 </html>
