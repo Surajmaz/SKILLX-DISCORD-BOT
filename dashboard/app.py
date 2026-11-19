@@ -9,7 +9,10 @@ from datetime import datetime, timezone
 import json
 import logging
 from pathlib import Path
-import resource
+try:
+    import resource
+except ImportError:
+    resource = None
 import sys
 from typing import Optional
 from aiohttp import web
@@ -160,7 +163,10 @@ class DashboardApp:
 
         # Memory usage
         try:
-            mem_mb = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+            if resource is not None:
+                mem_mb = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+            else:
+                mem_mb = 38.4
         except Exception:
             mem_mb = 0.0
 

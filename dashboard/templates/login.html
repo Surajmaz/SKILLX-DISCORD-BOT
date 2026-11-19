@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillX Dashboard | Login</title>
+    <title>SkillX Console | Secure Access</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -11,10 +15,42 @@
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
                     colors: {
                         brand: {
+                            400: '#7983f5',
                             500: '#5865F2',
                             600: '#4752C4',
+                            700: '#3c45a5',
+                        },
+                        cyber: {
+                            purple: '#a855f7',
+                            cyan: '#06b6d4',
+                            emerald: '#10b981',
+                            amber: '#f59e0b'
+                        }
+                    },
+                    animation: {
+                        'float': 'floating 4s ease-in-out infinite',
+                        'pulse-slow': 'pulseGlow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'shimmer': 'shimmer 2.5s infinite linear',
+                        'spin-slow': 'spin 14s linear infinite',
+                    },
+                    keyframes: {
+                        floating: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+                            '50%': { opacity: '0.7', transform: 'scale(1.08)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' },
                         }
                     }
                 }
@@ -23,76 +59,375 @@
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
+        :root {
+            --glow-color: rgba(88, 101, 242, 0.35);
+        }
+        * {
+            box-sizing: border-box;
+        }
         body {
-            background-color: #0b0f19;
+            background-color: #070a13;
+            overflow-x: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        /* Dynamic Cyber Grid */
+        .cyber-grid {
+            background-size: 40px 40px;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(88, 101, 242, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(155, 89, 182, 0.15) 0px, transparent 50%);
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 70%, transparent 100%);
+        }
+
+        /* Glassmorphism Card with Gradient Border */
+        .glass-card {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.75) 0%, rgba(13, 18, 30, 0.85) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 20px 50px -10px rgba(0, 0, 0, 0.8),
+                0 0 40px -10px var(--glow-color);
+            position: relative;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 1.5rem;
+            padding: 1.5px;
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.6), rgba(168, 85, 247, 0.2), rgba(6, 182, 212, 0.5));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Spotlight hover effect */
+        .spotlight-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .spotlight-card::after {
+            content: '';
+            position: absolute;
+            top: var(--mouse-y, -1000px);
+            left: var(--mouse-x, -1000px);
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(88, 101, 242, 0.15), transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        .spotlight-card:hover::after {
+            opacity: 1;
+        }
+
+        /* Input styling */
+        .cyber-input {
+            background: rgba(10, 14, 26, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .cyber-input:focus {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: #5865F2;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.35);
+        }
+
+        /* Button Glow & Shimmer */
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #5865F2 0%, #7033ff 100%);
+            box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(88, 101, 242, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+        .btn-glow:active {
+            transform: translateY(1px);
+        }
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transform: skewX(-20deg);
+        }
+        .btn-glow:hover::after {
+            animation: btnShine 1.5s infinite;
+        }
+        @keyframes btnShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Shake animation for error */
+        .shake-animation {
+            animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+            40%, 60% { transform: translate3d(3px, 0, 0); }
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 text-slate-100 font-sans antialiased">
-    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 shadow-2xl rounded-2xl p-8 relative overflow-hidden">
-        <!-- Glow accent -->
-        <div class="absolute -top-12 -left-12 w-32 h-32 bg-brand-500/20 rounded-full blur-2xl"></div>
-        <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl"></div>
+<body class="min-h-screen flex items-center justify-center p-4 text-slate-100 font-sans antialiased relative selection:bg-brand-500 selection:text-white">
+    
+    <!-- Animated Interactive Particle Canvas -->
+    <canvas id="ambientCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+    
+    <!-- Cyber Grid Overlay -->
+    <div class="fixed inset-0 cyber-grid pointer-events-none z-0"></div>
 
-        <div class="relative z-10 text-center mb-8">
-            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-tr from-brand-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 border border-white/10">
-                <i class="bi bi-robot text-3xl text-white"></i>
+    <!-- Ambient Glowing Nebulas -->
+    <div class="fixed -top-40 -left-40 w-96 h-96 bg-brand-500/20 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
+    <div class="fixed -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" style="animation-delay: 3s;"></div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[160px] pointer-events-none"></div>
+
+    <!-- Login Container -->
+    <div class="w-full max-w-md glass-card spotlight-card rounded-3xl p-8 sm:p-10 z-10 relative">
+        
+        <!-- Top Status Indicator Pill -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 rounded-full px-3 py-1 shadow-inner">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-[11px] font-mono tracking-wider font-semibold text-slate-300 uppercase">Gateway Active</span>
             </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white">SkillX Management Console</h1>
-            <p class="text-sm text-slate-400 mt-1">Authenticate to access bot diagnostics and controls</p>
+            
+            <div class="flex items-center gap-1.5 text-xs text-slate-400 font-mono">
+                <i class="bi bi-shield-lock-fill text-brand-400"></i>
+                <span class="text-[11px]">HMAC-SHA256</span>
+            </div>
         </div>
 
-        <form id="loginForm" class="space-y-5 relative z-10" onsubmit="handleLogin(event)">
+        <!-- Header / Logo -->
+        <div class="text-center mb-8 relative">
+            <div class="relative w-20 h-20 mx-auto mb-4 animate-float">
+                <!-- Rotating Halo -->
+                <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-brand-500 via-purple-500 to-cyan-400 blur-md opacity-60 animate-spin-slow"></div>
+                <!-- Main Icon Box -->
+                <div class="relative w-20 h-20 bg-slate-900/90 rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl">
+                    <i class="bi bi-robot text-4xl text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-brand-400"></i>
+                </div>
+                <!-- Mini Discord status badge -->
+                <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-950 border-2 border-slate-900 flex items-center justify-center shadow-md">
+                    <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                </div>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
+                <span>SkillX</span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">Console</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-2 font-normal">
+                Autonomous Discord Intelligence & Telemetry Platform
+            </p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="space-y-5" onsubmit="handleLogin(event)">
             <div>
-                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Master Access Key
-                </label>
-                <div class="relative">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
+                        Master Access Key
+                    </label>
+                    <span id="keyIndicator" class="text-[10px] text-slate-500 font-mono">Encrypted Input</span>
+                </div>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-400 transition-colors">
+                        <i class="bi bi-key-fill text-base"></i>
+                    </div>
                     <input 
                         type="password" 
                         id="passwordInput" 
                         required 
-                        placeholder="Enter dashboard password..." 
+                        placeholder="Enter master admin key..." 
                         autocomplete="current-password"
-                        class="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all pr-12"
+                        class="cyber-input w-full rounded-2xl pl-10 pr-12 py-3.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all font-mono"
                     />
                     <button 
                         type="button" 
                         onclick="toggleVisibility()" 
-                        class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-200 transition-colors"
+                        class="absolute right-3.5 top-3.5 text-slate-400 hover:text-white transition-colors p-1"
                         tabindex="-1"
                         aria-label="Toggle password visibility"
                     >
-                        <i id="eyeIcon" class="bi bi-eye"></i>
+                        <i id="eyeIcon" class="bi bi-eye text-base"></i>
                     </button>
                 </div>
             </div>
 
-            <div id="errorAlert" class="hidden bg-red-500/10 border border-red-500/30 rounded-xl p-3.5 text-xs text-red-400 flex items-center gap-2.5">
-                <i class="bi bi-exclamation-triangle-fill text-sm"></i>
-                <span id="errorMessage">Invalid password</span>
+            <!-- Error Banner -->
+            <div id="errorAlert" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 text-xs text-rose-300 flex items-center gap-3 backdrop-blur-md">
+                <i class="bi bi-exclamation-triangle-fill text-rose-400 text-lg flex-shrink-0"></i>
+                <span id="errorMessage" class="font-medium leading-relaxed">Invalid master password</span>
             </div>
 
+            <!-- Submit Button -->
             <button 
                 type="submit" 
                 id="submitBtn"
-                class="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.99] text-white font-medium py-3 rounded-xl shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                class="btn-glow w-full text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 cursor-pointer text-sm tracking-wide transition-all shadow-xl"
             >
-                <span id="btnText">Access Console</span>
-                <i id="btnIcon" class="bi bi-arrow-right"></i>
+                <span id="btnText">Unlock Control Console</span>
+                <i id="btnIcon" class="bi bi-arrow-right-short text-xl transition-transform group-hover:translate-x-1"></i>
             </button>
         </form>
 
-        <div class="mt-8 pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
-            Protected by HMAC authentication & timing-safe verification
+        <!-- Feature Pills -->
+        <div class="mt-8 pt-6 border-t border-slate-800/80 grid grid-cols-3 gap-2 text-center text-[10px] text-slate-400 font-mono">
+            <div class="p-2 rounded-xl bg-slate-900/40 border border-slate-800/60 flex flex-col items-center gap-1">
+                <i class="bi bi-cpu text-brand-400 text-sm"></i>
+                <span>Gemini 3.5</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-900/40 border border-slate-800/60 flex flex-col items-center gap-1">
+                <i class="bi bi-lightning-charge text-amber-400 text-sm"></i>
+                <span>Sub-50ms Ping</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-900/40 border border-slate-800/60 flex flex-col items-center gap-1">
+                <i class="bi bi-shield-check text-emerald-400 text-sm"></i>
+                <span>Timing Safe</span>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <span class="text-[11px] text-slate-500">Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">Enter ↵</kbd> to authenticate</span>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
+        // Interactive Mouse Spotlight
+        const card = document.querySelector('.spotlight-card');
+        document.addEventListener('mousemove', (e) => {
+            if (!card) return;
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+        });
+
+        // Ambient Particle Network Canvas
+        const canvas = document.getElementById('ambientCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.radius = Math.random() * 1.6 + 0.6;
+                this.color = Math.random() > 0.5 ? 'rgba(88, 101, 242, ' : 'rgba(168, 85, 247, ';
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + this.alpha + ')';
+                ctx.fill();
+            }
+        }
+
+        const particleCount = Math.min(width > 768 ? 60 : 30, 80);
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function renderCanvas() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Connect nearby particles
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(88, 101, 242, ${0.15 * (1 - dist / 120)})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(renderCanvas);
+        }
+        renderCanvas();
+
+        // Web Audio Synthesizer for Interactive UI Feedback
+        let audioCtx = null;
+        function playTone(freq, type = 'sine', duration = 0.12, gainVal = 0.04) {
+            try {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) audioCtx = new AudioContext();
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                if (!audioCtx) return;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                // Silently skip if user has disabled audio
+            }
+        }
+
+        // Toggle password visibility
         function toggleVisibility() {
+            playTone(600, 'triangle', 0.08, 0.03);
             const input = document.getElementById('passwordInput');
             const icon = document.getElementById('eyeIcon');
             if (input.type === 'password') {
@@ -104,6 +439,7 @@
             }
         }
 
+        // Handle Login
         async function handleLogin(e) {
             e.preventDefault();
             const password = document.getElementById('passwordInput').value;
@@ -111,10 +447,14 @@
             const errorMessage = document.getElementById('errorMessage');
             const submitBtn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            const formCard = document.querySelector('.glass-card');
 
             errorAlert.classList.add('hidden');
             submitBtn.disabled = true;
-            btnText.textContent = 'Verifying...';
+            btnText.textContent = 'Verifying Credentials...';
+            btnIcon.className = 'bi bi-arrow-repeat text-lg animate-spin';
+            playTone(520, 'sine', 0.1, 0.04);
 
             try {
                 const res = await fetch('/api/login', {
@@ -125,17 +465,32 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    window.location.href = '/';
+                    playTone(880, 'sine', 0.25, 0.06);
+                    btnText.textContent = 'Access Granted!';
+                    btnIcon.className = 'bi bi-check2-circle text-lg text-emerald-300';
+                    submitBtn.classList.remove('bg-gradient-to-r');
+                    submitBtn.classList.add('bg-emerald-600');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 400);
                 } else {
+                    playTone(220, 'sawtooth', 0.25, 0.05);
                     errorMessage.textContent = data.error || 'Authentication rejected.';
                     errorAlert.classList.remove('hidden');
+                    formCard.classList.remove('shake-animation');
+                    void formCard.offsetWidth; // Trigger reflow
+                    formCard.classList.add('shake-animation');
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Unlock Control Console';
+                    btnIcon.className = 'bi bi-arrow-right-short text-xl';
                 }
             } catch (err) {
-                errorMessage.textContent = 'Network communication failure. Please check server status.';
+                playTone(180, 'sawtooth', 0.3, 0.05);
+                errorMessage.textContent = 'Network communication failure. Please verify server status.';
                 errorAlert.classList.remove('hidden');
-            } finally {
                 submitBtn.disabled = false;
-                btnText.textContent = 'Access Console';
+                btnText.textContent = 'Unlock Control Console';
+                btnIcon.className = 'bi bi-arrow-right-short text-xl';
             }
         }
     </script>
