@@ -75,6 +75,19 @@ class TestDashboardSecurity(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(stats["latency_ms"], 45)
                 self.assertIn("system", stats)
 
+            # 5. Fetch cogs directory
+            async with session.get(f"{self.base_url}/api/cogs") as resp:
+                self.assertEqual(resp.status, 200)
+                cogs = await resp.json()
+                self.assertIsInstance(cogs, list)
+                self.assertGreater(len(cogs), 0)
+
+            # 6. Fetch leaderboard
+            async with session.get(f"{self.base_url}/api/leaderboard") as resp:
+                self.assertEqual(resp.status, 200)
+                lb = await resp.json()
+                self.assertIsInstance(lb, list)
+
     async def test_brute_force_rate_limiting(self):
         async with aiohttp.ClientSession() as session:
             for _ in range(5):

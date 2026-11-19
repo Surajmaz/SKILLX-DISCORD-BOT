@@ -39,13 +39,57 @@ A state-of-the-art, prefix-less, AI-powered Discord bot and interactive web dash
 - **Timed Reminders (`/remind`)**: Smart async timer alerts with friendly DM/channel notifications.
 - **High-Res Avatar Viewer (`/avatar`)**: Fetches full-resolution member and server avatars with direct download links.
 
-### 🔨 5. Comprehensive Moderation Suite
+### 🎮 5. Fun, Games & Social Tools
+- **Interactive Button Trivia (`/trivia`)**: Multi-category trivia engine (science, history, pop culture, tech) with A/B/C/D Discord buttons, timeout reveals, and score tracking.
+- **Classic Games & Predictions**:
+  - `/8ball`: 20+ authentic witty Magic 8-ball fortune predictions.
+  - `/coinflip`: Heads/tails simulation with coin flips.
+  - `/dice`: Customizable polyhedral dice roller (d4, d6, d8, d10, d12, d20, d100).
+  - `/rps`: Rock-Paper-Scissors with animated emoji showdowns.
+- **Social & Humor**:
+  - `/joke` & `/fact`: Large banks of witty jokes and curated educational facts.
+  - `/rate`: 0-to-10 rating engine with dynamic tier remarks.
+  - `/ship`: Love compatibility calculator with animated Unicode heart progress bars.
+  - `/roast` & `/compliment`: Clean lighthearted roasts and genuine compliments.
+  - `/mock` & `/reverse`: SpOnGeBoB text converter and string inverter.
+
+### 📈 6. Leveling, XP & Server Progression
+- **Automated XP Engine**: Grants 15–25 XP per message with 60-second cooldown protection against chat spam.
+- **Quadratic Leveling Formula**: `Level N = 5*N² + 50*N + 100` XP curve.
+- **Rank Inspection (`/rank`)**: Visual Unicode progress bar card (`▓░`) showing level, total XP, next level target, and guild leaderboard rank.
+- **Competitive Leaderboard (`/leaderboard`)**: Top 10 server member ranking with 🥇, 🥈, and 🥉 status podiums.
+- **Staff XP Controls**: Administrative `/setxp` and `/resetxp` tools with guild permission guards.
+
+### 🎫 7. Support Ticket Desk
+- **Interactive Panel Setup (`/ticket-setup`)**: Deploys a persistent channel embed with a "🎫 Open Ticket" Discord button.
+- **Private Channel Generation**: Instantly provisions `ticket-{user}-{id}` with isolated view permissions for the opener and staff.
+- **Transcript Archiving**: Compiles the last 100 ticket messages into a clean text archive, DMs it to the ticket author, and initiates channel deletion.
+- **Ticket Member Management**: Dynamic `/ticket-add` and `/ticket-remove` commands.
+
+### 👋 8. Welcome, Farewells & AutoRole
+- **Automated Greetings**: Green-accented (`0x57F287`) embed with user avatar thumbnail, account creation age, and member count footer.
+- **Customizable Placeholders**: Full support for `{user}`, `{user.mention}`, `{server}`, and `{member_count}` in `/setwelcome` and `/setgoodbye`.
+- **Instant Test Previews**: `/testwelcome` and `/testgoodbye` simulation commands.
+- **Join AutoRole (`/autorole`)**: Automatically assigns a default member role upon server entry with role hierarchy checks.
+
+### 📋 9. Server Event Audit Logging
+- **Dedicated Audit Channel (`/setlogchannel`)**: Live tracking of important server activities.
+- **Comprehensive Event Interceptors**:
+  - 🗑️ Message Deletions (content, author, channel; ignores bots)
+  - ✏️ Message Edits (before / after diff view)
+  - 📥 Member Joins (with new-account creation age warning)
+  - 📤 Member Departures (with list of previously held roles)
+  - 🔨 Member Bans & Unbans (with audit log reason resolution)
+  - 🔊 Voice State Updates (channel join, leave, and switch tracking)
+  - 🛡️ Role & Nickname Changes
+
+### 🔨 10. Comprehensive Moderation Suite
 - **Hierarchy Protection**: Safeguards bot owners, moderators, and prevents self-moderation.
 - **Interactive Confirmations**: Two-factor UI buttons (`ConfirmView`) for destructive actions (`/kick`, `/ban`).
 - **Native Member Timeouts**: Timeout enforcement (`/timeout`) from 1 minute up to 28 days.
 - **Non-Destructive Purge**: Bulk message pruning (`/purge`) preserving pinned announcements.
 
-### 📊 6. Utilities & System Diagnostics
+### 📊 11. Utilities & System Diagnostics
 - **Dual-Latency Ping (`/ping`)**: Real-time breakdown of WebSocket Gateway and REST API roundtrip with health indicators.
 - **Metadata Cards (`/serverinfo`, `/userinfo`, `/botinfo`)**: Beautiful embeds displaying member roles, verification levels, and system resource specs.
 
@@ -55,13 +99,13 @@ A state-of-the-art, prefix-less, AI-powered Discord bot and interactive web dash
 
 A built-in management console running asynchronously on port 8080:
 
-- **6 Real-Time KPI Cards**: Live server count, total members, gateway latency, bot uptime, AI memory contexts, and infractions.
+- **8 Real-Time KPI Cards**: Live server count, total members, gateway latency, bot uptime, AI memory contexts, active personas, infractions, and system RAM usage.
 - **Gateway Telemetry Chart**: Live rolling 60-second Chart.js latency visualizer with auto-polling.
 - **Live Activity Stream**: Real-time event log recording Discord interactions, moderation events, and AI requests.
 - **Interactive Discord Embed Designer**: Visual side-by-side live Discord embed previewer with broadcast delivery to any server channel.
 - **In-Browser Gemini AI Studio**: Test AI prompts, change models, tweak temperature, and switch personas directly in your browser.
 - **AutoMod Web Console**: Searchable infraction logs with instant one-click web Kick, Ban, and Warn triggers.
-- **Live Presence & Cog Manager**: Hot-reload bot extensions without restarting, and change bot status/activity on the fly.
+- **Live Presence & Cog Hot-Reload**: Hot-reload all 10 bot extensions without restarting, and change bot status/activity on the fly.
 - **Cyber-Aesthetic Login Portal**: Mouse spotlight glow, dynamic canvas particle network, and Web Audio feedback.
 - **Enterprise-Grade Security**:
   - HMAC SHA-256 signed session cookies.
@@ -140,8 +184,13 @@ python3 -m unittest discover -s . -p "test_*.py"
 │   ├── ai_chat.py       # Conversational AI, personas, code review & summarizer
 │   ├── automod.py       # Anti-spam, invite filter, warn tracking, lock & slowmode
 │   ├── community.py     # Live button polls, giveaways, reminders & avatar inspection
+│   ├── fun.py           # Interactive button trivia, 8ball, coinflip, dice, jokes & roasts
+│   ├── leveling.py      # XP calculation, rank cards, and guild leaderboards
+│   ├── logging_cog.py   # Audit channel logging for messages, members, and voice
 │   ├── moderation.py    # Kick, ban, timeout, and purge commands with safety checks
-│   └── utility.py       # Ping, serverinfo, userinfo, and botinfo
+│   ├── tickets.py       # Private channel support tickets with button panel & transcript DM
+│   ├── utility.py       # Ping, serverinfo, userinfo, and botinfo
+│   └── welcome.py       # Dynamic welcome/goodbye embeds and join autoroles
 ├── dashboard/
 │   ├── app.py           # Aiohttp web server, REST APIs & live event logger
 │   ├── security.py      # HMAC sessions, CSRF, rate limiting & security headers

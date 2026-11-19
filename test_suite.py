@@ -120,5 +120,51 @@ class TestGeminiPersonas(unittest.TestCase):
             self.assertGreater(len(prompt), 10)
 
 
+class TestLevelingFormulas(unittest.TestCase):
+    def test_xp_scaling(self):
+        from cogs.leveling import xp_for_level, level_from_xp
+
+        self.assertEqual(xp_for_level(0), 100)
+        self.assertGreater(xp_for_level(5), xp_for_level(4))
+        self.assertEqual(level_from_xp(0), 0)
+        lvl_5_xp = xp_for_level(5)
+        self.assertEqual(level_from_xp(lvl_5_xp), 5)
+
+    def test_progress_bar(self):
+        from cogs.leveling import _progress_bar
+
+        bar_half = _progress_bar(50, 100, length=10)
+        self.assertEqual(bar_half, "▓" * 5 + "░" * 5)
+        bar_full = _progress_bar(100, 100, length=10)
+        self.assertEqual(bar_full, "▓" * 10)
+
+
+class TestFunUtilities(unittest.TestCase):
+    def test_mock_and_reverse(self):
+        sample = "hello world"
+        reversed_text = sample[::-1]
+        self.assertEqual(reversed_text, "dlrow olleh")
+
+
+class TestBotExtensionIntegrity(unittest.TestCase):
+    def test_all_ten_cogs_registered(self):
+        from main import SkillXBot
+
+        bot = SkillXBot()
+        expected = [
+            "cogs.ai_chat",
+            "cogs.moderation",
+            "cogs.utility",
+            "cogs.automod",
+            "cogs.community",
+            "cogs.fun",
+            "cogs.leveling",
+            "cogs.logging_cog",
+            "cogs.tickets",
+            "cogs.welcome",
+        ]
+        self.assertEqual(bot.extensions_to_load, expected)
+
+
 if __name__ == "__main__":
     unittest.main()

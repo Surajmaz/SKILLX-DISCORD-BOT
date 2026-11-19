@@ -54,6 +54,8 @@ class DashboardApp:
         self.app.router.add_get("/api/guilds", self.handle_api_guilds)
         self.app.router.add_get("/api/logs", self.handle_api_logs)
         self.app.router.add_get("/api/infractions", self.handle_api_infractions)
+        self.app.router.add_get("/api/leaderboard", self.handle_api_leaderboard)
+        self.app.router.add_get("/api/cogs", self.handle_api_cogs)
         self.app.router.add_post("/api/broadcast", self.handle_api_broadcast)
         self.app.router.add_post("/api/ai-test", self.handle_api_ai_test)
         self.app.router.add_post("/api/clear-memory", self.handle_api_clear_memory)
@@ -181,6 +183,17 @@ class DashboardApp:
         if automod_cog and hasattr(automod_cog, "infractions"):
             total_warns = sum(len(w) for w in automod_cog.infractions.values())
 
+        # Leveling stats
+        leveling_cog = self.bot.get_cog("Leveling")
+        total_ranked_users = len(leveling_cog.data) if leveling_cog and hasattr(leveling_cog, "data") else 0
+
+        # Tickets stats
+        tickets_cog = self.bot.get_cog("Tickets")
+        total_tickets = 0
+        if tickets_cog and hasattr(tickets_cog, "config"):
+            for gcfg in tickets_cog.config.values():
+                total_tickets += gcfg.get("ticket_counter", 0)
+
         # Gateway ping
         ws_latency = round(self.bot.latency * 1000) if self.bot.latency is not None else 0
 
@@ -217,6 +230,8 @@ class DashboardApp:
             "ai_memory_contexts": ai_memory_count,
             "ai_persona_overrides": ai_persona_count,
             "total_infractions": total_warns,
+            "total_ranked_users": total_ranked_users,
+            "total_tickets": total_tickets,
             "bot_user": bot_user_data,
             "system": {
                 "python": py_ver,
@@ -473,6 +488,63 @@ class DashboardApp:
         except Exception as exc:
             return web.json_response({"error": str(exc)}, status=500)
 
+    async def handle_api_leaderboard(self, request: web.Request) -> web.Response:
+        is_auth, _ = self._authenticate_request(request)
+        if not is_auth:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+
+        leveling_cog = self.bot.get_cog("Leveling")
+        if not leveling_cog or not hasattr(leveling_cog, "data"):
+            return web.json_response([])
+
+        entries = []
+        for key, info in leveling_cog.data.items():
+            try:
+                guild_id_str, user_id_str = key.split("_", 1)
+            except ValueError:
+                continue
+            entries.append({
+                "guild_id": guild_id_str,
+                "user_id": user_id_str,
+                "xp": info.get("xp", 0),
+                "level": info.get("level", 0),
+            })
+
+        entries.sort(key=lambda x: x["xp"], reverse=True)
+        return web.json_response(entries[:50])
+
+    async def handle_api_cogs(self, request: web.Request) -> web.Response:
+        is_auth, _ = self._authenticate_request(request)
+        if not is_auth:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+
+        cog_info = []
+        all_known = [
+            ("AI Chat", "cogs.ai_chat", "Conversational Gemini 3.x, personas, code review & chat recaps"),
+            ("Moderation", "cogs.moderation", "Server safety, kick, ban, timeout, and message purging"),
+            ("Utility", "cogs.utility", "Ping diagnostics, serverinfo, userinfo, and system status"),
+            ("AutoMod", "cogs.automod", "Anti-spam, invite filters, mass-mentions, warnings, and locks"),
+            ("Community", "cogs.community", "Interactive button polls, giveaways, reminders, and avatar inspection"),
+            ("Fun", "cogs.fun", "8ball, coinflip, dice, trivia, jokes, roasts, and interactive games"),
+            ("Leveling", "cogs.leveling", "XP rewards, leveling formula, rank cards, and global leaderboards"),
+            ("Server Logs", "cogs.logging_cog", "Audit channel event logging for messages, members, and voice"),
+            ("Tickets", "cogs.tickets", "Channel-based private support ticket creation and transcripts"),
+            ("Welcome", "cogs.welcome", "Automated member welcome cards, farewells, and join autoroles"),
+        ]
+
+        for name, ext, desc in all_known:
+            cog = self.bot.get_cog(name)
+            cmd_count = len(cog.get_commands()) if cog else 0
+            cog_info.append({
+                "name": name,
+                "extension": ext,
+                "description": desc,
+                "loaded": cog is not None,
+                "commands_count": cmd_count,
+            })
+
+        return web.json_response(cog_info)
+
     async def handle_api_reload_cog(self, request: web.Request) -> web.Response:
         is_auth, token = self._authenticate_request(request)
         if not is_auth or not self._verify_csrf(request, token):
@@ -490,6 +562,11 @@ class DashboardApp:
             "cogs.utility",
             "cogs.automod",
             "cogs.community",
+            "cogs.fun",
+            "cogs.leveling",
+            "cogs.logging_cog",
+            "cogs.tickets",
+            "cogs.welcome",
         }
         if cog_ext not in allowed_extensions:
             return web.json_response({"error": f"Extension '{cog_ext}' not permitted."}, status=400)

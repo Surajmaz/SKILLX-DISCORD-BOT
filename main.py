@@ -139,6 +139,11 @@ class SkillXBot(commands.Bot):
             "cogs.utility",
             "cogs.automod",
             "cogs.community",
+            "cogs.fun",
+            "cogs.leveling",
+            "cogs.logging_cog",
+            "cogs.tickets",
+            "cogs.welcome",
         ]
         self.dashboard_runner = None
 

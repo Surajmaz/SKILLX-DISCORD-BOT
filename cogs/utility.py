@@ -240,6 +240,31 @@ class Utility(commands.Cog, name="Utility"):
             inline=False,
         )
         embed.add_field(
+            name="🎮 Fun & Mini-Games",
+            value="`/trivia` • `/8ball` • `/coinflip` • `/dice` • `/rps` • `/joke` • `/fact` • `/rate` • `/ship` • `/roast` • `/compliment` • `/mock` • `/reverse`\n*Interactive button trivia, dice, roasts, jokes, and games*",
+            inline=False,
+        )
+        embed.add_field(
+            name="📈 Leveling & XP",
+            value="`/rank` • `/leaderboard` • `/setxp` • `/resetxp`\n*XP progression, visual rank cards, and competitive leaderboards*",
+            inline=False,
+        )
+        embed.add_field(
+            name="🎫 Support Tickets",
+            value="`/ticket-setup` • `/ticket-add` • `/ticket-remove`\n*Channel-based private ticket system with transcript exports*",
+            inline=False,
+        )
+        embed.add_field(
+            name="👋 Welcome & AutoRole",
+            value="`/setwelcome` • `/setgoodbye` • `/testwelcome` • `/autorole`\n*Automated join greetings, farewell embeds, and role assignment*",
+            inline=False,
+        )
+        embed.add_field(
+            name="📋 Server Audit Logs",
+            value="`/setlogchannel` • `/clearlogchannel`\n*Automatic channel logging for deletes, edits, joins, bans, and voice activity*",
+            inline=False,
+        )
+        embed.add_field(
             name="🔧 Utilities & System",
             value="`/ping` • `/serverinfo` • `/userinfo` • `/botinfo` • `/help`\n*Diagnostics, latency graphs, and profile inspection*",
             inline=False,
