@@ -56,8 +56,8 @@ class GeminiClient:
         # High-availability model fallback chain using active Gemini 3.x series
         self.model_chain: list[str] = [
             "gemini-3.5-flash-lite",
+            "gemini-3.6-flash",
             "gemini-3.5-flash",
-            "gemini-3.1-flash-lite",
             "gemini-3.8-flash",
         ]
 
@@ -124,9 +124,12 @@ class GeminiClient:
         persona: str = "default",
         custom_system_instruction: Optional[str] = None,
         temperature: float = 0.7,
+        max_output_tokens: int = 1024,
+        timeout_per_model: float = 7.0,
     ) -> tuple[Optional[str], str]:
         """
         Executes generation attempting each model in the fallback chain until success.
+        Uses per-model timeouts and instant failover to minimize response latency.
 
         Returns:
             (generated_text, model_name_or_status)
@@ -141,20 +144,29 @@ class GeminiClient:
             system_instruction=active_instruction,
             safety_settings=self.safety_settings,
             temperature=max(0.0, min(1.0, temperature)),
-            max_output_tokens=2048,
+            max_output_tokens=max_output_tokens,
         )
 
         for model_name in self.model_chain:
             try:
-                # Use native async client
-                response = await self.client.aio.models.generate_content(
+                # Use native async client with strict timeout to prevent stalled requests
+                coro = self.client.aio.models.generate_content(
                     model=model_name,
                     contents=contents,
                     config=config,
                 )
+                response = await asyncio.wait_for(coro, timeout=timeout_per_model)
                 text = self._extract_text_safely(response)
                 if text:
                     return text.strip(), model_name
+
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "Model %s timed out after %.1fs. Failing over immediately.",
+                    model_name,
+                    timeout_per_model,
+                )
+                continue
 
             except Exception as exc:
                 classification = self._classify_error(exc)
@@ -166,11 +178,22 @@ class GeminiClient:
                     logger.error("Invalid API credentials. Aborting model fallback.")
                     return None, "auth_error"
 
-                # Wait slightly before attempting next fallback model
-                await asyncio.sleep(0.5)
+                # Instant fallback to next model in chain
 
         logger.error("All Gemini fallback models were exhausted.")
         return None, "exhausted"
+
+    async def ping_ai(self) -> tuple[bool, int, str]:
+        """Measures roundtrip AI generation latency in milliseconds."""
+        loop = asyncio.get_event_loop()
+        t0 = loop.time()
+        text, model = await self.generate_with_fallback(
+            prompt="Hi",
+            max_output_tokens=5,
+            timeout_per_model=3.0,
+        )
+        elapsed_ms = round((loop.time() - t0) * 1000)
+        return bool(text), elapsed_ms, model
 
     async def review_code(self, code: str, language: str = "") -> tuple[Optional[str], str]:
         """Performs specialized code review, security check, and architectural feedback."""

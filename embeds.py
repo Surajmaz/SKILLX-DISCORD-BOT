@@ -45,11 +45,16 @@ def ai_response_embed(
     user: Optional[Union[discord.User, discord.Member]] = None,
     model_used: str = "Gemini",
     page_info: Optional[str] = None,
+    elapsed_ms: Optional[int] = None,
 ) -> discord.Embed:
-    """Builds an aesthetically pleasing AI response card."""
-    footer = f"Model: {model_used} • SkillX AI"
+    """Builds an aesthetically pleasing AI response card with latency metrics."""
+    parts = [f"Model: {model_used}"]
+    if elapsed_ms is not None:
+        parts.append(f"{elapsed_ms}ms")
+    parts.append("SkillX AI")
     if page_info:
-        footer += f" • {page_info}"
+        parts.append(page_info)
+    footer = " • ".join(parts)
 
     embed = base_embed(
         title="🤖 AI Response",

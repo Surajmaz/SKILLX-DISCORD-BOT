@@ -64,6 +64,7 @@ class PaginatedResponseView(discord.ui.View):
         prompt: str,
         model: str,
         timeout: float = 180.0,
+        elapsed_ms: Optional[int] = None,
     ):
         super().__init__(timeout=timeout)
         self.pages = pages
@@ -71,6 +72,7 @@ class PaginatedResponseView(discord.ui.View):
         self.author_id = author_id
         self.prompt = prompt
         self.model = model
+        self.elapsed_ms = elapsed_ms
         self.message: Optional[Union[discord.Message, discord.WebhookMessage]] = None
         self._update_buttons()
 
@@ -86,6 +88,7 @@ class PaginatedResponseView(discord.ui.View):
             response=self.pages[self.current_page],
             model_used=self.model,
             page_info=page_info,
+            elapsed_ms=self.elapsed_ms,
         )
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:

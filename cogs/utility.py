@@ -23,25 +23,38 @@ class Utility(commands.Cog, name="Utility"):
     # PING / DIAGNOSTICS
     # ---------------------------------------------------------
 
-    def _build_ping_embed(self, ws_latency_ms: int, roundtrip_ms: Optional[int] = None) -> discord.Embed:
-        if ws_latency_ms < 100:
-            status = "🟢 Optimal"
+    def _build_ping_embed(
+        self,
+        ws_latency_ms: int,
+        roundtrip_ms: Optional[int] = None,
+        ai_latency_ms: Optional[int] = None,
+        ai_model: Optional[str] = None,
+    ) -> discord.Embed:
+        # Realistic geographic routing thresholds (Discord gateways are located in US-East/US-West)
+        if ws_latency_ms < 150:
+            status = "🟢 Optimal (Regional Route)"
             color = 0x2ECC71
-        elif ws_latency_ms < 200:
-            status = "🟡 Moderate"
+        elif ws_latency_ms < 380:
+            status = "🟢 Healthy (Cross-Continental)"
+            color = 0x2ECC71
+        elif ws_latency_ms < 600:
+            status = "🟡 Moderate Latency"
             color = 0xF1C40F
         else:
-            status = "🔴 Degraded"
+            status = "🔴 High Latency"
             color = 0xE74C3C
 
         embed = base_embed(
-            title="🏓 Network Latency",
+            title="🏓 Network & System Latency",
             color=color,
-            footer_text=f"Status: {status} • SkillX Diagnostics",
+            footer_text=f"Health: {status} • SkillX Diagnostics",
         )
-        embed.add_field(name="Gateway (WebSocket)", value=f"`{ws_latency_ms} ms`", inline=True)
+        embed.add_field(name="🌐 Gateway (WebSocket)", value=f"`{ws_latency_ms} ms`", inline=True)
         if roundtrip_ms is not None:
-            embed.add_field(name="REST API Roundtrip", value=f"`{roundtrip_ms} ms`", inline=True)
+            embed.add_field(name="⚡ REST API Roundtrip", value=f"`{roundtrip_ms} ms`", inline=True)
+        if ai_latency_ms is not None:
+            tag = f" ({ai_model})" if ai_model else ""
+            embed.add_field(name="🤖 Gemini AI Latency", value=f"`{ai_latency_ms} ms`{tag}", inline=True)
 
         return embed
 
@@ -68,6 +81,53 @@ class Utility(commands.Cog, name="Utility"):
 
         embed = self._build_ping_embed(ws_ms, api_ms)
         await msg.edit(embed=embed)
+
+    @app_commands.command(name="aiping", description="Benchmark Google Gemini AI generation latency")
+    async def aiping_slash(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
+        ai_cog = self.bot.get_cog("AI Chat")
+        if not ai_cog or not hasattr(ai_cog, "gemini"):
+            await interaction.followup.send(embed=error_embed("AI Offline", "AI subsystem is not loaded."))
+            return
+
+        ok, elapsed_ms, model = await ai_cog.gemini.ping_ai()
+        if not ok:
+            await interaction.followup.send(embed=error_embed("AI Ping Failed", "All Gemini models are momentarily busy."))
+            return
+
+        embed = base_embed(
+            title="⚡ Gemini AI Latency Benchmark",
+            color=0x2ECC71 if elapsed_ms < 3000 else 0xF1C40F,
+            footer_text="SkillX AI Diagnostics",
+        )
+        embed.add_field(name="⏱️ Generation Latency", value=f"`{elapsed_ms} ms`", inline=True)
+        embed.add_field(name="🤖 Active Model", value=f"`{model}`", inline=True)
+        embed.add_field(name="🌐 Gateway Status", value=f"`{round(self.bot.latency * 1000)} ms`", inline=True)
+        await interaction.followup.send(embed=embed)
+
+    @commands.command(name="aiping", aliases=["aipi"], help="Benchmark Gemini AI response generation latency.")
+    async def aiping_prefix(self, ctx: commands.Context):
+        ai_cog = self.bot.get_cog("AI Chat")
+        if not ai_cog or not hasattr(ai_cog, "gemini"):
+            await ctx.reply(embed=error_embed("AI Offline", "AI subsystem is not loaded."), mention_author=False)
+            return
+
+        async with ctx.typing():
+            ok, elapsed_ms, model = await ai_cog.gemini.ping_ai()
+
+        if not ok:
+            await ctx.reply(embed=error_embed("AI Ping Failed", "All Gemini models busy."), mention_author=False)
+            return
+
+        embed = base_embed(
+            title="⚡ Gemini AI Latency Benchmark",
+            color=0x2ECC71 if elapsed_ms < 3000 else 0xF1C40F,
+            footer_text="SkillX AI Diagnostics",
+        )
+        embed.add_field(name="⏱️ Generation Latency", value=f"`{elapsed_ms} ms`", inline=True)
+        embed.add_field(name="🤖 Active Model", value=f"`{model}`", inline=True)
+        embed.add_field(name="🌐 Gateway Status", value=f"`{round(self.bot.latency * 1000)} ms`", inline=True)
+        await ctx.reply(embed=embed, mention_author=False)
 
     # ---------------------------------------------------------
     # SERVER INFO

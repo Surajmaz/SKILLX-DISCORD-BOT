@@ -1,6 +1,7 @@
 """AI Chat Cog: Harnesses Google Gemini with rate limiting, memory, and multi-page UI."""
 
 import logging
+import time
 from typing import Optional
 import discord
 from discord import app_commands
@@ -31,6 +32,8 @@ class AIChat(commands.Cog, name="AI Chat"):
         self.memory: dict[int, list[dict]] = {}
         # User customized persona: user_id -> persona name
         self.user_personas: dict[int, str] = {}
+        # Low-latency response cache: (normalized_prompt, persona) -> (response, model, timestamp)
+        self.response_cache: dict[tuple[str, str], tuple[str, str, float]] = {}
 
     async def cog_app_command_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
@@ -82,12 +85,30 @@ class AIChat(commands.Cog, name="AI Chat"):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
 
-        # 3. Model Generation
+        # 3. Model Generation with Fast Cache
+        t0 = time.perf_counter()
         history = self.memory.get(interaction.user.id, [])
         persona = self.user_personas.get(interaction.user.id, "default")
-        response_text, model_used = await self.gemini.generate_with_fallback(
-            clean_prompt, history, persona=persona
-        )
+
+        cache_key = (clean_prompt.lower(), persona)
+        if not history and cache_key in self.response_cache:
+            c_text, c_model, c_time = self.response_cache[cache_key]
+            if time.time() - c_time < 300:
+                response_text, model_used = c_text, f"{c_model} (cached)"
+            else:
+                self.response_cache.pop(cache_key, None)
+                response_text, model_used = None, ""
+        else:
+            response_text, model_used = None, ""
+
+        if not response_text:
+            response_text, model_used = await self.gemini.generate_with_fallback(
+                clean_prompt, history, persona=persona
+            )
+            if response_text and not history:
+                self.response_cache[cache_key] = (response_text, model_used, time.time())
+
+        elapsed_ms = round((time.perf_counter() - t0) * 1000)
 
         if not response_text:
             if model_used == "auth_error":
@@ -100,11 +121,11 @@ class AIChat(commands.Cog, name="AI Chat"):
         # 4. Response Dispatching & Pagination
         pages = split_response_into_pages(response_text)
         if len(pages) > 1:
-            view = PaginatedResponseView(pages, interaction.user.id, clean_prompt, model_used)
+            view = PaginatedResponseView(pages, interaction.user.id, clean_prompt, model_used, elapsed_ms=elapsed_ms)
             msg = await interaction.followup.send(embed=view.build_embed(), view=view)
             view.message = msg
         else:
-            embed = ai_response_embed(clean_prompt, response_text, interaction.user, model_used)
+            embed = ai_response_embed(clean_prompt, response_text, interaction.user, model_used, elapsed_ms=elapsed_ms)
             await interaction.followup.send(embed=embed)
 
         # 5. Save History (keep last 12 turns = 6 interactions)
@@ -139,13 +160,31 @@ class AIChat(commands.Cog, name="AI Chat"):
             await ctx.reply(embed=embed, delete_after=10, mention_author=False)
             return
 
-        # 3. Model Generation with native Discord typing indicator
-        async with ctx.typing():
-            history = self.memory.get(ctx.author.id, [])
-            persona = self.user_personas.get(ctx.author.id, "default")
-            response_text, model_used = await self.gemini.generate_with_fallback(
-                clean_prompt, history, persona=persona
-            )
+        # 3. Model Generation with Fast Cache
+        t0 = time.perf_counter()
+        history = self.memory.get(ctx.author.id, [])
+        persona = self.user_personas.get(ctx.author.id, "default")
+
+        cache_key = (clean_prompt.lower(), persona)
+        if not history and cache_key in self.response_cache:
+            c_text, c_model, c_time = self.response_cache[cache_key]
+            if time.time() - c_time < 300:
+                response_text, model_used = c_text, f"{c_model} (cached)"
+            else:
+                self.response_cache.pop(cache_key, None)
+                response_text, model_used = None, ""
+        else:
+            response_text, model_used = None, ""
+
+        if not response_text:
+            async with ctx.typing():
+                response_text, model_used = await self.gemini.generate_with_fallback(
+                    clean_prompt, history, persona=persona
+                )
+                if response_text and not history:
+                    self.response_cache[cache_key] = (response_text, model_used, time.time())
+
+        elapsed_ms = round((time.perf_counter() - t0) * 1000)
 
         if not response_text:
             if model_used == "auth_error":
@@ -162,11 +201,11 @@ class AIChat(commands.Cog, name="AI Chat"):
         # 4. Response Dispatching & Pagination
         pages = split_response_into_pages(response_text)
         if len(pages) > 1:
-            view = PaginatedResponseView(pages, ctx.author.id, clean_prompt, model_used)
+            view = PaginatedResponseView(pages, ctx.author.id, clean_prompt, model_used, elapsed_ms=elapsed_ms)
             msg = await ctx.reply(embed=view.build_embed(), view=view, mention_author=False)
             view.message = msg
         else:
-            embed = ai_response_embed(clean_prompt, response_text, ctx.author, model_used)
+            embed = ai_response_embed(clean_prompt, response_text, ctx.author, model_used, elapsed_ms=elapsed_ms)
             await ctx.reply(embed=embed, mention_author=False)
 
         # 5. Save History
@@ -443,13 +482,31 @@ class AIChat(commands.Cog, name="AI Chat"):
             await message.reply(embed=embed, delete_after=10, mention_author=False)
             return
 
-        # AI Generation with typing indicator and user persona
-        async with message.channel.typing():
-            history = self.memory.get(message.author.id, [])
-            persona = self.user_personas.get(message.author.id, "default")
-            response_text, model_used = await self.gemini.generate_with_fallback(
-                sanitized_prompt, history, persona=persona
-            )
+        # AI Generation with Fast Cache & timing
+        t0 = time.perf_counter()
+        history = self.memory.get(message.author.id, [])
+        persona = self.user_personas.get(message.author.id, "default")
+
+        cache_key = (sanitized_prompt.lower(), persona)
+        if not history and cache_key in self.response_cache:
+            c_text, c_model, c_time = self.response_cache[cache_key]
+            if time.time() - c_time < 300:
+                response_text, model_used = c_text, f"{c_model} (cached)"
+            else:
+                self.response_cache.pop(cache_key, None)
+                response_text, model_used = None, ""
+        else:
+            response_text, model_used = None, ""
+
+        if not response_text:
+            async with message.channel.typing():
+                response_text, model_used = await self.gemini.generate_with_fallback(
+                    sanitized_prompt, history, persona=persona
+                )
+                if response_text and not history:
+                    self.response_cache[cache_key] = (response_text, model_used, time.time())
+
+        elapsed_ms = round((time.perf_counter() - t0) * 1000)
 
         if not response_text:
             desc = "All Gemini models are momentarily busy. Please try again shortly."
@@ -463,11 +520,11 @@ class AIChat(commands.Cog, name="AI Chat"):
         # Response Dispatching & Pagination
         pages = split_response_into_pages(response_text)
         if len(pages) > 1:
-            view = PaginatedResponseView(pages, message.author.id, sanitized_prompt, model_used)
+            view = PaginatedResponseView(pages, message.author.id, sanitized_prompt, model_used, elapsed_ms=elapsed_ms)
             msg = await message.reply(embed=view.build_embed(), view=view, mention_author=False)
             view.message = msg
         else:
-            embed = ai_response_embed(sanitized_prompt, response_text, message.author, model_used)
+            embed = ai_response_embed(sanitized_prompt, response_text, message.author, model_used, elapsed_ms=elapsed_ms)
             await message.reply(embed=embed, mention_author=False)
 
         # Threaded history
