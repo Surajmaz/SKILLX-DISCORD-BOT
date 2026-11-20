@@ -3,34 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkillX Bot Control Console</title>
+  <title>SkillX Bot Control Console | Supreme Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script>
     window.CSRF_TOKEN = '{{ csrf_token }}';
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
           colors: {
             cyber: {
+              950: '#060609',
               900: '#0a0a0f',
+              850: '#0b0b14',
               800: '#0d0d1a',
+              750: '#0f0f22',
               700: '#111128',
               600: '#161636',
               500: '#1c1c44',
-            },
-            neon: {
-              purple: '#a855f7',
-              cyan: '#06b6d4',
-              emerald: '#10b981',
-              pink: '#ec4899',
-              amber: '#f59e0b',
-              red: '#ef4444',
-              blue: '#3b82f6',
             }
           }
         }
@@ -38,10 +35,77 @@
     };
   </script>
   <style>
-    * { scrollbar-width: thin; scrollbar-color: rgba(168,85,247,.3) transparent; }
+    :root {
+      --accent: #a855f7;
+      --accent-rgb: 168, 85, 247;
+      --accent-subtle: rgba(168, 85, 247, 0.15);
+      --accent-hover: rgba(168, 85, 247, 0.25);
+      --accent-glow: 0 0 25px rgba(168, 85, 247, 0.35);
+      --secondary: #06b6d4;
+      --secondary-rgb: 6, 182, 212;
+      --bg-mesh: linear-gradient(-45deg, #0a0a0f, #1a0a2e, #0a1628, #0a0a0f, #0d1a2e, #1a0d2e);
+    }
+
+    body.theme-emerald {
+      --accent: #10b981;
+      --accent-rgb: 16, 185, 129;
+      --accent-subtle: rgba(16, 185, 129, 0.15);
+      --accent-hover: rgba(16, 185, 129, 0.25);
+      --accent-glow: 0 0 25px rgba(16, 185, 129, 0.35);
+      --secondary: #06b6d4;
+      --secondary-rgb: 6, 182, 212;
+      --bg-mesh: linear-gradient(-45deg, #040d08, #061f12, #05161a, #040d08, #081d14, #03120b);
+    }
+
+    body.theme-crimson {
+      --accent: #ef4444;
+      --accent-rgb: 239, 68, 68;
+      --accent-subtle: rgba(239, 68, 68, 0.15);
+      --accent-hover: rgba(239, 68, 68, 0.25);
+      --accent-glow: 0 0 25px rgba(239, 68, 68, 0.35);
+      --secondary: #ec4899;
+      --secondary-rgb: 236, 72, 153;
+      --bg-mesh: linear-gradient(-45deg, #0f0505, #22080a, #1a0614, #0f0505, #1e090c, #16060b);
+    }
+
+    body.theme-frost {
+      --accent: #38bdf8;
+      --accent-rgb: 56, 189, 248;
+      --accent-subtle: rgba(56, 189, 248, 0.15);
+      --accent-hover: rgba(56, 189, 248, 0.25);
+      --accent-glow: 0 0 25px rgba(56, 189, 248, 0.35);
+      --secondary: #6366f1;
+      --secondary-rgb: 99, 102, 241;
+      --bg-mesh: linear-gradient(-45deg, #040914, #081a33, #0b152d, #040914, #0b1c38, #050d1e);
+    }
+
+    body.theme-amber {
+      --accent: #f59e0b;
+      --accent-rgb: 245, 158, 11;
+      --accent-subtle: rgba(245, 158, 11, 0.15);
+      --accent-hover: rgba(245, 158, 11, 0.25);
+      --accent-glow: 0 0 25px rgba(245, 158, 11, 0.35);
+      --secondary: #f97316;
+      --secondary-rgb: 249, 115, 22;
+      --bg-mesh: linear-gradient(-45deg, #0f0b04, #261906, #1c1407, #0f0b04, #211505, #140e04);
+    }
+
+    body.theme-oled {
+      --accent: #c084fc;
+      --accent-rgb: 192, 132, 252;
+      --accent-subtle: rgba(255, 255, 255, 0.08);
+      --accent-hover: rgba(255, 255, 255, 0.15);
+      --accent-glow: 0 0 25px rgba(255, 255, 255, 0.2);
+      --secondary: #e2e8f0;
+      --secondary-rgb: 226, 232, 240;
+      --bg-mesh: #000000;
+    }
+
+    * { scrollbar-width: thin; scrollbar-color: var(--accent-subtle) transparent; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(168,85,247,.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--accent-subtle); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
     @keyframes mesh-drift {
       0%, 100% { background-position: 0% 50%; }
@@ -50,53 +114,49 @@
       75% { background-position: 0% 100%; }
     }
     .mesh-bg {
-      background: linear-gradient(-45deg, #0a0a0f, #1a0a2e, #0a1628, #0a0a0f, #0d1a2e, #1a0d2e);
+      background: var(--bg-mesh);
       background-size: 400% 400%;
-      animation: mesh-drift 20s ease infinite;
+      animation: mesh-drift 22s ease infinite;
     }
 
-    @keyframes pulse-glow { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+    @keyframes pulse-glow { 0%, 100% { opacity: .6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
     .icon-pulse { animation: pulse-glow 2.5s ease-in-out infinite; }
 
-    @keyframes fade-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    .anim-fade-in { animation: fade-in .35s ease-out forwards; }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .anim-fade-in { animation: fade-in .25s ease-out forwards; }
 
-    @keyframes slide-in-right { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes slide-out-right { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
-    .toast-in { animation: slide-in-right .3s ease-out forwards; }
-    .toast-out { animation: slide-out-right .3s ease-in forwards; }
-
-    @keyframes counter-pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
-    .counter-pop { animation: counter-pop .5s ease-out forwards; }
-
-    @keyframes neon-border {
-      0%, 100% { border-color: rgba(168,85,247,.25); }
-      50% { border-color: rgba(168,85,247,.55); }
-    }
-    .neon-border-anim { animation: neon-border 3s ease-in-out infinite; }
+    @keyframes counter-pop { 0% { transform: scale(.9); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
+    .counter-pop { animation: counter-pop .4s ease-out forwards; }
 
     .glass {
-      background: rgba(13, 13, 26, .55);
+      background: rgba(13, 13, 26, .58);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(168, 85, 247, .15);
+      border: 1px solid rgba(var(--accent-rgb), .16);
     }
     .glass-strong {
-      background: rgba(13, 13, 26, .7);
+      background: rgba(13, 13, 26, .78);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(168, 85, 247, .2);
+      border: 1px solid rgba(var(--accent-rgb), .22);
     }
     .glass:hover, .glass-hover:hover {
-      border-color: rgba(168, 85, 247, .4);
-      box-shadow: 0 0 20px rgba(168, 85, 247, .08), inset 0 0 20px rgba(168, 85, 247, .03);
+      border-color: rgba(var(--accent-rgb), .45);
+      box-shadow: var(--accent-glow);
     }
 
-    .neon-glow-purple { text-shadow: 0 0 10px rgba(168,85,247,.6), 0 0 30px rgba(168,85,247,.3); }
-    .neon-glow-cyan { text-shadow: 0 0 10px rgba(6,182,212,.6), 0 0 30px rgba(6,182,212,.3); }
+    .neon-text {
+      text-shadow: 0 0 12px rgba(var(--accent-rgb), .6), 0 0 25px rgba(var(--accent-rgb), .3);
+    }
+    .accent-bg {
+      background: var(--accent);
+    }
+    .accent-text {
+      color: var(--accent);
+    }
 
     .nav-item {
-      transition: all .2s ease;
+      transition: all .18s cubic-bezier(.4, 0, .2, 1);
       position: relative;
     }
     .nav-item::before {
@@ -109,31 +169,23 @@
       transition: background .2s ease;
     }
     .nav-item.active {
-      background: rgba(168, 85, 247, .12);
-      color: #c084fc;
+      background: var(--accent-subtle);
+      color: #ffffff;
+      font-weight: 600;
     }
     .nav-item.active::before {
-      background: linear-gradient(to bottom, #a855f7, #06b6d4);
+      background: linear-gradient(to bottom, var(--accent), var(--secondary));
     }
     .nav-item:hover:not(.active) {
-      background: rgba(168, 85, 247, .06);
-      color: #d8b4fe;
+      background: rgba(255, 255, 255, .04);
+      color: #e2e8f0;
     }
 
-    .stat-card { transition: all .3s ease; }
+    .stat-card { transition: all .25s ease; }
     .stat-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 32px rgba(168,85,247,.12);
+      box-shadow: 0 12px 30px rgba(0,0,0,.4), var(--accent-glow);
     }
-
-    .embed-preview {
-      border-left: 4px solid #a855f7;
-      background: #2b2d31;
-      border-radius: 4px;
-    }
-
-    .table-row { transition: background .15s ease; }
-    .table-row:hover { background: rgba(168,85,247,.06); }
 
     .btn-neon {
       transition: all .2s ease;
@@ -141,334 +193,631 @@
       overflow: hidden;
     }
     .btn-neon:hover {
-      box-shadow: 0 0 20px rgba(168,85,247,.3);
+      box-shadow: var(--accent-glow);
       transform: translateY(-1px);
     }
     .btn-neon:active { transform: translateY(0); }
 
+    .embed-preview {
+      border-left: 4px solid var(--accent);
+      background: #2b2d31;
+      border-radius: 4px;
+    }
+
+    .discord-field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+
     .spinner {
-      border: 2px solid rgba(168,85,247,.2);
-      border-top-color: #a855f7;
+      border: 2px solid rgba(var(--accent-rgb), .2);
+      border-top-color: var(--accent);
       border-radius: 50%;
       width: 20px; height: 20px;
       animation: spin .6s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .progress-bar-fill {
-      background: linear-gradient(90deg, #a855f7, #06b6d4);
-      transition: width .6s ease;
-    }
-
     input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
-    input[type="range"]::-webkit-slider-track { height: 6px; background: rgba(168,85,247,.2); border-radius: 3px; }
-    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #a855f7; border-radius: 50%; margin-top: -6px; cursor: pointer; box-shadow: 0 0 10px rgba(168,85,247,.5); }
-    input[type="range"]::-moz-range-track { height: 6px; background: rgba(168,85,247,.2); border-radius: 3px; border: none; }
-    input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: #a855f7; border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 0 10px rgba(168,85,247,.5); }
+    input[type="range"]::-webkit-slider-track { height: 6px; background: rgba(var(--accent-rgb), .2); border-radius: 3px; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; margin-top: -6px; cursor: pointer; box-shadow: var(--accent-glow); }
   </style>
 </head>
-<body class="h-full font-sans text-gray-200 mesh-bg antialiased">
+<body class="h-full font-sans text-gray-200 mesh-bg antialiased selection:bg-purple-500/30">
 
-<!-- Toast Container -->
-<div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+<!-- Toast Notification Container -->
+<div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
 
-<!-- Confirm Modal -->
-<div id="confirm-modal" class="fixed inset-0 z-[9998] hidden items-center justify-center">
-  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="hideConfirmModal()"></div>
-  <div class="relative glass-strong rounded-2xl p-6 max-w-md w-full mx-4 anim-fade-in">
-    <h3 id="modal-title" class="text-lg font-bold text-white mb-2"></h3>
-    <p id="modal-message" class="text-gray-400 mb-6 text-sm"></p>
+<!-- Generic Confirmation Modal -->
+<div id="confirm-modal" class="fixed inset-0 z-[9998] hidden items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/75 backdrop-blur-md" onclick="hideConfirmModal()"></div>
+  <div class="relative glass-strong rounded-2xl p-6 max-w-md w-full anim-fade-in shadow-2xl border border-purple-500/30">
+    <div class="flex items-center gap-3 mb-3">
+      <span id="modal-icon" class="text-2xl">⚠️</span>
+      <h3 id="modal-title" class="text-lg font-bold text-white"></h3>
+    </div>
+    <p id="modal-message" class="text-gray-400 mb-6 text-sm leading-relaxed"></p>
     <div class="flex gap-3 justify-end">
-      <button onclick="hideConfirmModal()" class="px-4 py-2 rounded-lg bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 transition text-sm font-medium">Cancel</button>
-      <button id="modal-confirm-btn" class="px-4 py-2 rounded-lg bg-red-500/80 text-white hover:bg-red-500 transition text-sm font-medium">Confirm</button>
+      <button onclick="hideConfirmModal()" class="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 hover:bg-gray-700 transition text-sm font-medium">Cancel</button>
+      <button id="modal-confirm-btn" class="px-5 py-2 rounded-xl bg-red-600 text-white hover:bg-red-500 transition text-sm font-semibold shadow-lg shadow-red-600/30">Confirm</button>
     </div>
   </div>
 </div>
 
 <!-- Mobile Sidebar Overlay -->
-<div id="sidebar-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
-<!-- Sidebar -->
-<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 glass-strong z-40 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
-  <!-- Logo -->
-  <div class="p-5 border-b border-purple-500/10">
+<!-- Master Sidebar -->
+<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 glass-strong z-40 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 border-r border-purple-500/15">
+  <!-- Brand Header -->
+  <div class="p-5 border-b border-purple-500/10 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-purple-500/20">S</div>
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-cyan-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-purple-500/30">
+        ⚡
+      </div>
       <div>
-        <h1 class="text-xl font-black tracking-tight text-white neon-glow-purple">SkillX</h1>
-        <p class="text-[10px] text-purple-400/60 font-medium tracking-widest uppercase">Command Center</p>
+        <h1 class="text-xl font-black tracking-tight text-white neon-text">SkillX</h1>
+        <p class="text-[9px] text-purple-400 font-bold tracking-widest uppercase">Supreme Control</p>
       </div>
     </div>
   </div>
 
-  <!-- Bot Profile (mini) -->
-  <div id="sidebar-bot-profile" class="px-4 py-3 border-b border-purple-500/10 hidden">
-    <div class="flex items-center gap-2">
-      <img id="sidebar-avatar" class="w-8 h-8 rounded-full ring-2 ring-purple-500/30" src="" alt="">
+  <!-- Bot Mini Status Card -->
+  <div id="sidebar-bot-profile" class="px-4 py-3 border-b border-purple-500/10 hidden bg-purple-500/5">
+    <div class="flex items-center gap-3">
+      <img id="sidebar-avatar" class="w-9 h-9 rounded-full ring-2 ring-purple-500/40 shadow" src="" alt="Bot Avatar">
       <div class="min-w-0">
-        <p id="sidebar-bot-name" class="text-sm font-semibold text-white truncate"></p>
-        <p class="text-[10px] text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block"></span> Online</p>
+        <p id="sidebar-bot-name" class="text-sm font-bold text-white truncate"></p>
+        <p class="text-[10px] text-emerald-400 flex items-center gap-1.5 font-medium">
+          <span class="w-2 h-2 bg-emerald-400 rounded-full icon-pulse"></span> Systems Nominal
+        </p>
       </div>
     </div>
   </div>
 
-  <!-- Navigation -->
-  <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-    <button onclick="switchSection('dashboard')" data-nav="dashboard" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left">
-      <span class="text-lg w-6 text-center">🏠</span> Dashboard
+  <!-- Main Navigation Links -->
+  <nav class="flex-1 py-3 px-3 space-y-1 overflow-y-auto text-xs font-medium">
+    <button onclick="switchSection('dashboard')" data-nav="dashboard" class="nav-item active w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left">
+      <span class="text-base w-5 text-center">🏠</span> Dashboard
     </button>
-    <button onclick="switchSection('activity')" data-nav="activity" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
-      <span class="text-lg w-6 text-center">📊</span> Activity Feed
+    <button onclick="switchSection('ai')" data-nav="ai" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">🤖</span> AI Studio & Fleet
     </button>
-    <button onclick="switchSection('servers')" data-nav="servers" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
-      <span class="text-lg w-6 text-center">🌐</span> Server Directory
+    <button onclick="switchSection('broadcast')" data-nav="broadcast" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">📢</span> Embed & Broadcast
     </button>
-    <button onclick="switchSection('broadcast')" data-nav="broadcast" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
-      <span class="text-lg w-6 text-center">📢</span> Broadcast Center
+    <button onclick="switchSection('servers')" data-nav="servers" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">🌐</span> Server Matrix
     </button>
-    <button onclick="switchSection('ai')" data-nav="ai" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
-      <span class="text-lg w-6 text-center">🤖</span> AI Studio
+    <button onclick="switchSection('automod')" data-nav="automod" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">🛡️</span> AutoMod Console
     </button>
-    <button onclick="switchSection('automod')" data-nav="automod" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
-      <span class="text-lg w-6 text-center">🛡️</span> AutoMod Console
+    <button onclick="switchSection('leveling')" data-nav="leveling" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">🏆</span> Leveling & XP
     </button>
-    <button onclick="switchSection('settings')" data-nav="settings" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left text-gray-400">
-      <span class="text-lg w-6 text-center">⚙️</span> Bot Settings
+    <button onclick="switchSection('tickets')" data-nav="tickets" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">🎫</span> Support Tickets
+    </button>
+    <button onclick="switchSection('welcome')" data-nav="welcome" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">👋</span> Welcome & Roles
+    </button>
+    <button onclick="switchSection('logs')" data-nav="logs" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">📜</span> Audit & Logs
+    </button>
+    <button onclick="switchSection('community')" data-nav="community" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">🎯</span> Community Hub
+    </button>
+    <button onclick="switchSection('settings')" data-nav="settings" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-gray-400">
+      <span class="text-base w-5 text-center">⚙️</span> Settings & Cogs
     </button>
   </nav>
 
-  <!-- Sidebar Footer -->
-  <div class="p-4 border-t border-purple-500/10">
-    <div class="text-[10px] text-gray-500 text-center">SkillX Dashboard v2.0</div>
+  <!-- Sidebar Footer with Version & Status -->
+  <div class="p-4 border-t border-purple-500/10 flex items-center justify-between text-[11px] text-gray-500">
+    <span>SkillX v2.5 Supreme</span>
+    <span class="text-purple-400 font-mono">aiohttp 3.11</span>
   </div>
 </aside>
 
-<!-- Main Content -->
+<!-- Main Wrapper -->
 <div class="lg:ml-64 min-h-full flex flex-col">
-  <!-- Top Bar -->
+  <!-- Supreme Top Bar -->
   <header class="sticky top-0 z-20 glass-strong border-b border-purple-500/10 px-4 lg:px-6 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-purple-500/10 transition text-gray-400">
+      <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl hover:bg-purple-500/10 transition text-gray-400">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
-      <h2 id="page-title" class="text-lg font-bold text-white">Dashboard</h2>
+      <div>
+        <h2 id="page-title" class="text-base font-bold text-white flex items-center gap-2">
+          <span>🏠</span> Dashboard Overview
+        </h2>
+      </div>
     </div>
+
+    <!-- Header Tools: Theme Selector, Sound Effects, Ping & Logout -->
     <div class="flex items-center gap-3">
-      <div id="topbar-latency" class="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 glass rounded-full px-3 py-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      <!-- Theme Switcher -->
+      <div class="relative">
+        <select id="theme-selector" onchange="changeTheme(this.value)" class="bg-cyber-800 text-xs text-gray-300 border border-purple-500/20 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-purple-500">
+          <option value="default">🎨 Cyberpunk</option>
+          <option value="emerald">🟢 Matrix Emerald</option>
+          <option value="crimson">🔴 Crimson Nebula</option>
+          <option value="frost">❄️ Hyper Frost</option>
+          <option value="amber">👑 Golden Luxury</option>
+          <option value="oled">⚫ Midnight OLED</option>
+        </select>
+      </div>
+
+      <!-- Audio Effects Toggle -->
+      <button id="sfx-toggle" onclick="toggleAudio()" class="p-2 rounded-xl glass hover:bg-purple-500/15 text-gray-400 hover:text-white transition" title="Toggle UI Sound Effects">
+        <span id="sfx-icon">🔊</span>
+      </button>
+
+      <!-- Live Gateway Latency Meter -->
+      <div id="topbar-latency" class="hidden sm:flex items-center gap-1.5 text-xs text-gray-300 glass rounded-full px-3 py-1 font-mono">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 icon-pulse"></span>
         <span id="topbar-latency-val">—</span>ms
       </div>
-      <button onclick="showConfirmModal('Logout', 'Are you sure you want to logout?', doLogout)" class="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition" title="Logout">
+
+      <!-- Quick Logout -->
+      <button onclick="showConfirmModal('Logout Session', 'Terminate your web console administrator session?', doLogout)" class="p-2 rounded-xl hover:bg-red-500/15 text-gray-400 hover:text-red-400 transition" title="Logout">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
       </button>
     </div>
   </header>
 
-  <!-- Page Content -->
-  <main class="flex-1 p-4 lg:p-6">
+  <!-- Page Content Router Container -->
+  <main class="flex-1 p-4 lg:p-6 space-y-6">
 
-    <!-- ==================== DASHBOARD SECTION ==================== -->
-    <section id="sec-dashboard" class="section anim-fade-in">
-      <!-- Bot Profile Banner -->
-      <div id="bot-profile-banner" class="glass rounded-2xl p-5 mb-6 hidden neon-border-anim">
-        <div class="flex items-center gap-4">
-          <img id="bot-avatar" class="w-14 h-14 rounded-full ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" src="" alt="">
+    <!-- ======================================================== -->
+    <!-- 1. DASHBOARD OVERVIEW SECTION                            -->
+    <!-- ======================================================== -->
+    <section id="sec-dashboard" class="section anim-fade-in space-y-6">
+      <!-- Bot Profile Hero Banner -->
+      <div id="bot-profile-banner" class="glass rounded-3xl p-6 relative overflow-hidden hidden border border-purple-500/20">
+        <div class="absolute -right-12 -top-12 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5 relative z-10">
+          <img id="bot-avatar" class="w-20 h-20 rounded-2xl ring-4 ring-purple-500/30 shadow-2xl" src="" alt="Avatar">
+          <div class="flex-1 text-center sm:text-left">
+            <div class="flex items-center justify-center sm:justify-start gap-2.5 mb-1">
+              <h3 id="bot-name" class="text-2xl font-black text-white">SkillX</h3>
+              <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold uppercase tracking-wider border border-purple-500/30">Verified Bot</span>
+            </div>
+            <p id="bot-id" class="text-xs text-gray-400 font-mono mb-3"></p>
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-gray-400">
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> WebSocket Active</span>
+              <span>•</span>
+              <span id="hero-uptime">Uptime: —</span>
+              <span>•</span>
+              <span id="hero-cogs">10/10 Cogs Loaded</span>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="switchSection('broadcast')" class="btn-neon px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white text-xs font-semibold shadow-lg shadow-purple-600/25">
+              📢 New Broadcast
+            </button>
+            <button onclick="switchSection('ai')" class="btn-neon px-4 py-2 rounded-xl bg-cyber-700 hover:bg-cyber-600 text-white text-xs font-semibold border border-purple-500/20">
+              🤖 AI Playground
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6 Primary Metric Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl">🌐</span>
+            <span class="text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">GUILDS</span>
+          </div>
+          <div id="stat-guilds" class="text-2xl font-black text-white counter-pop">—</div>
+          <p class="text-[11px] text-gray-400 mt-1">Servers connected</p>
+        </div>
+
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl">👥</span>
+            <span class="text-[9px] font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full">MEMBERS</span>
+          </div>
+          <div id="stat-users" class="text-2xl font-black text-white counter-pop">—</div>
+          <p class="text-[11px] text-gray-400 mt-1">Total user reach</p>
+        </div>
+
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl">⚡</span>
+            <span class="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">LATENCY</span>
+          </div>
+          <div id="stat-ping" class="text-2xl font-black text-emerald-400 counter-pop">— ms</div>
+          <p class="text-[11px] text-gray-400 mt-1">Gateway heartbeat</p>
+        </div>
+
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl">🧠</span>
+            <span class="text-[9px] font-bold text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full">AI CONTEXTS</span>
+          </div>
+          <div id="stat-ai-memory" class="text-2xl font-black text-white counter-pop">—</div>
+          <p class="text-[11px] text-gray-400 mt-1">Active chats</p>
+        </div>
+
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl">🛡️</span>
+            <span class="text-[9px] font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">INFRACTIONS</span>
+          </div>
+          <div id="stat-infractions" class="text-2xl font-black text-white counter-pop">—</div>
+          <p class="text-[11px] text-gray-400 mt-1">Total warnings</p>
+        </div>
+
+        <div class="stat-card glass rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl">🎫</span>
+            <span class="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">TICKETS</span>
+          </div>
+          <div id="stat-tickets" class="text-2xl font-black text-white counter-pop">—</div>
+          <p class="text-[11px] text-gray-400 mt-1">Total created</p>
+        </div>
+      </div>
+
+      <!-- Live Latency Chart & System Telemetry -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="text-purple-400">📈</span> Live Gateway Telemetry (WebSocket Ping)
+            </h3>
+            <span class="text-[11px] text-gray-500">Auto-polls every 3s</span>
+          </div>
+          <div class="h-60 w-full">
+            <canvas id="pingChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Quick Fleet & System Health -->
+        <div class="glass rounded-2xl p-5 flex flex-col justify-between space-y-4">
           <div>
-            <h3 id="bot-name" class="text-xl font-bold text-white"></h3>
-            <p id="bot-id" class="text-xs text-gray-500 font-mono"></p>
+            <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+              <span class="text-cyan-400">💻</span> System Resource Core
+            </h3>
+            <div class="space-y-3 text-xs">
+              <div class="flex justify-between py-1.5 border-b border-purple-500/10">
+                <span class="text-gray-400">RAM Allocation:</span>
+                <span id="sys-mem" class="font-mono text-white font-bold">— MB</span>
+              </div>
+              <div class="flex justify-between py-1.5 border-b border-purple-500/10">
+                <span class="text-gray-400">Python Interpreter:</span>
+                <span id="sys-py" class="font-mono text-white">—</span>
+              </div>
+              <div class="flex justify-between py-1.5 border-b border-purple-500/10">
+                <span class="text-gray-400">discord.py Library:</span>
+                <span id="sys-dpy" class="font-mono text-white">—</span>
+              </div>
+              <div class="flex justify-between py-1.5 border-b border-purple-500/10">
+                <span class="text-gray-400">Active Extensions:</span>
+                <span id="sys-cogs" class="font-mono text-emerald-400 font-bold">—</span>
+              </div>
+            </div>
           </div>
-          <div class="ml-auto hidden sm:flex items-center gap-1.5 text-sm text-emerald-400 font-medium">
-            <span class="w-2 h-2 bg-emerald-400 rounded-full icon-pulse"></span> Online
-          </div>
-        </div>
-      </div>
 
-      <!-- KPI Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card glass rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl icon-pulse">🌐</span>
-            <span class="text-[10px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">GUILDS</span>
-          </div>
-          <div id="stat-guilds" class="text-3xl font-black text-white counter-pop">—</div>
-          <p class="text-xs text-gray-500 mt-1">Servers connected</p>
-        </div>
-        <div class="stat-card glass rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl icon-pulse">👥</span>
-            <span class="text-[10px] font-medium text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full">USERS</span>
-          </div>
-          <div id="stat-users" class="text-3xl font-black text-white counter-pop">—</div>
-          <p class="text-xs text-gray-500 mt-1">Total members</p>
-        </div>
-        <div class="stat-card glass rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl icon-pulse">⚡</span>
-            <span class="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">LATENCY</span>
-          </div>
-          <div id="stat-latency" class="text-3xl font-black text-white counter-pop">—</div>
-          <p class="text-xs text-gray-500 mt-1">Gateway ping (ms)</p>
-        </div>
-        <div class="stat-card glass rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl icon-pulse">⏱️</span>
-            <span class="text-[10px] font-medium text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full">UPTIME</span>
-          </div>
-          <div id="stat-uptime" class="text-2xl font-black text-white counter-pop">—</div>
-          <p class="text-xs text-gray-500 mt-1">Session duration</p>
-        </div>
-        <div class="stat-card glass rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl icon-pulse">🧠</span>
-            <span class="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">AI MEM</span>
-          </div>
-          <div id="stat-ai-mem" class="text-3xl font-black text-white counter-pop">—</div>
-          <p class="text-xs text-gray-500 mt-1">Memory contexts</p>
-        </div>
-        <div class="stat-card glass rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl icon-pulse">🎭</span>
-            <span class="text-[10px] font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">PERSONAS</span>
-          </div>
-          <div id="stat-personas" class="text-3xl font-black text-white counter-pop">—</div>
-          <p class="text-xs text-gray-500 mt-1">Active overrides</p>
-        </div>
-        <div class="stat-card glass rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl icon-pulse">⚠️</span>
-            <span class="text-[10px] font-medium text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">INFRACTIONS</span>
-          </div>
-          <div id="stat-infractions" class="text-3xl font-black text-white counter-pop">—</div>
-          <p class="text-xs text-gray-500 mt-1">Total infractions</p>
-        </div>
-        <div class="stat-card glass rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-2xl icon-pulse">💾</span>
-            <span class="text-[10px] font-medium text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full">MEMORY</span>
-          </div>
-          <div id="stat-memory" class="text-3xl font-black text-white counter-pop">—</div>
-          <p class="text-xs text-gray-500 mt-1">System RAM (MB)</p>
-        </div>
-      </div>
-
-      <!-- Chart + System Info -->
-      <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div class="xl:col-span-2 glass rounded-2xl p-5">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-            <span class="text-cyan-400">⚡</span> Gateway Telemetry
-            <span class="ml-auto text-[10px] text-gray-500 font-normal flex items-center gap-1"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full icon-pulse"></span> Live</span>
-          </h3>
-          <div class="relative h-56 sm:h-64">
-            <canvas id="latency-chart"></canvas>
-          </div>
-        </div>
-        <div class="glass rounded-2xl p-5 flex flex-col gap-4">
-          <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-purple-400">📋</span> System Info</h3>
-          <div class="space-y-3 flex-1">
-            <div class="flex justify-between items-center py-2 border-b border-purple-500/10">
-              <span class="text-xs text-gray-400">Python</span>
-              <span id="sys-python" class="text-xs font-mono text-purple-300 glass rounded-full px-2 py-0.5">—</span>
-            </div>
-            <div class="flex justify-between items-center py-2 border-b border-purple-500/10">
-              <span class="text-xs text-gray-400">discord.py</span>
-              <span id="sys-dpy" class="text-xs font-mono text-cyan-300 glass rounded-full px-2 py-0.5">—</span>
-            </div>
-            <div class="flex justify-between items-center py-2 border-b border-purple-500/10">
-              <span class="text-xs text-gray-400">Cogs Loaded</span>
-              <span id="sys-cogs" class="text-xs font-mono text-emerald-300 glass rounded-full px-2 py-0.5">—</span>
-            </div>
-            <div class="flex justify-between items-center py-2">
-              <span class="text-xs text-gray-400">Memory</span>
-              <span id="sys-mem" class="text-xs font-mono text-pink-300 glass rounded-full px-2 py-0.5">—</span>
-            </div>
+          <div class="pt-2">
+            <button onclick="reloadAllCogs()" class="w-full btn-neon py-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-semibold flex items-center justify-center gap-2">
+              <span>🔄</span> Reload All 10 Cogs
+            </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== ACTIVITY FEED SECTION ==================== -->
-    <section id="sec-activity" class="section hidden">
+    <!-- ======================================================== -->
+    <!-- 2. AI STUDIO & MODEL FLEET SECTION                       -->
+    <!-- ======================================================== -->
+    <section id="sec-ai" class="section hidden anim-fade-in space-y-6">
+      <!-- AI Model Fleet Live Health Matrix -->
       <div class="glass rounded-2xl p-5">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-purple-400">📊</span> Live Activity Stream</h3>
-          <span class="text-[10px] text-gray-500 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full icon-pulse"></span> Auto-refresh 5s</span>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="text-purple-400">🚀</span> Gemini High-Availability Model Fleet
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">Multi-tier fallback chain with automatic 503 retry and intelligent rate-limit cooldown</p>
+          </div>
+          <button onclick="loadAIModels()" class="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-medium transition flex items-center gap-1.5">
+            <span>🔄</span> Refresh Fleet
+          </button>
         </div>
-        <div id="activity-list" class="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
-          <div class="text-center text-gray-500 text-sm py-8">Loading activity…</div>
+        <div id="ai-model-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="col-span-full text-center py-6 text-gray-500 text-sm">Querying model fleet health...</div>
         </div>
       </div>
-    </section>
 
-    <!-- ==================== SERVER DIRECTORY SECTION ==================== -->
-    <section id="sec-servers" class="section hidden">
+      <!-- AI Interactive Playground Tabs -->
       <div class="glass rounded-2xl p-5">
-        <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-cyan-400">🌐</span> Server Directory</h3>
-        <div id="guild-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <div class="text-center text-gray-500 text-sm py-8 col-span-full">Loading guilds…</div>
+        <div class="flex border-b border-purple-500/15 gap-4 mb-4">
+          <button onclick="switchAITab('prompt')" id="ai-tab-btn-prompt" class="pb-2 text-sm font-semibold border-b-2 border-purple-500 text-purple-300">
+            💬 Interactive Chat
+          </button>
+          <button onclick="switchAITab('code')" id="ai-tab-btn-code" class="pb-2 text-sm font-medium text-gray-400 hover:text-white border-b-2 border-transparent">
+            🔍 Code Review Studio
+          </button>
+          <button onclick="switchAITab('summary')" id="ai-tab-btn-summary" class="pb-2 text-sm font-medium text-gray-400 hover:text-white border-b-2 border-transparent">
+            📋 Chat Summarizer
+          </button>
+          <button onclick="switchAITab('memory')" id="ai-tab-btn-memory" class="pb-2 text-sm font-medium text-gray-400 hover:text-white border-b-2 border-transparent">
+            🧠 Memory Sessions
+          </button>
         </div>
-      </div>
-    </section>
 
-    <!-- ==================== BROADCAST CENTER SECTION ==================== -->
-    <section id="sec-broadcast" class="section hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <!-- Composer -->
-        <div class="glass rounded-2xl p-5">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-blue-400">📢</span> Embed Designer</h3>
+        <!-- Tab 1: Chat Prompt -->
+        <div id="ai-tab-prompt" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="space-y-4">
             <div>
-              <label class="text-xs text-gray-400 block mb-1.5">Guild</label>
-              <select id="bc-guild" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition" onchange="loadChannels()">
+              <label class="text-xs text-gray-400 block mb-1">Prompt</label>
+              <textarea id="ai-prompt" rows="5" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-purple-500 resize-none font-mono placeholder-gray-600" placeholder="Ask Gemini anything..."></textarea>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Persona</label>
+              <select id="ai-persona" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                <option value="default">Default (Helpful & Balanced)</option>
+                <option value="developer">Developer (Senior Systems Architect)</option>
+                <option value="tutor">Tutor (Patient Concept Educator)</option>
+                <option value="creative">Creative (Witty Writer & Storyteller)</option>
+                <option value="concise">Concise (Direct & Zero Filler)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Temperature: <span id="ai-temp-val" class="font-mono text-purple-300 font-bold">0.7</span></label>
+              <input id="ai-temp" type="range" min="0" max="1" step="0.05" value="0.7" class="w-full" oninput="document.getElementById('ai-temp-val').textContent=this.value">
+            </div>
+            <button onclick="testAI()" id="ai-send-btn" class="w-full btn-neon py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold text-sm shadow-lg shadow-purple-600/30">
+              ⚡ Generate Response
+            </button>
+          </div>
+
+          <div class="lg:col-span-2 flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold text-gray-400">Response Output</span>
+              <span id="ai-response-meta" class="text-xs text-purple-400 font-mono hidden"></span>
+            </div>
+            <div id="ai-response" class="flex-1 bg-cyber-900 border border-purple-500/20 rounded-2xl p-4 text-sm text-gray-300 min-h-[220px] max-h-[450px] overflow-y-auto whitespace-pre-wrap font-mono leading-relaxed">
+              <span class="text-gray-600 italic">Click Generate Response to see live AI output...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Code Review Studio -->
+        <div id="ai-tab-code" class="hidden space-y-4">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="space-y-4">
+              <div>
+                <label class="text-xs text-gray-400 block mb-1">Language</label>
+                <select id="code-lang" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                  <option value="python">Python</option>
+                  <option value="javascript">JavaScript / TypeScript</option>
+                  <option value="rust">Rust</option>
+                  <option value="go">Go</option>
+                  <option value="cpp">C++</option>
+                  <option value="sql">SQL</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-gray-400 block mb-1">Code Snippet</label>
+                <textarea id="code-input" rows="8" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500 resize-none font-mono" placeholder="Paste your code here..."></textarea>
+              </div>
+              <button onclick="submitCodeReview()" id="code-btn" class="w-full btn-neon py-2.5 rounded-xl bg-purple-600 text-white font-semibold text-sm">
+                🔍 Run AI Code Review
+              </button>
+            </div>
+            <div class="lg:col-span-2">
+              <div class="text-xs font-semibold text-gray-400 mb-2">Review Analysis & Refactor</div>
+              <div id="code-output" class="bg-cyber-900 border border-purple-500/20 rounded-2xl p-4 text-xs text-gray-300 min-h-[250px] max-h-[450px] overflow-y-auto whitespace-pre-wrap font-mono">
+                <span class="text-gray-600 italic">Code review feedback will appear here...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Chat Summarizer -->
+        <div id="ai-tab-summary" class="hidden space-y-4">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="space-y-4">
+              <div>
+                <label class="text-xs text-gray-400 block mb-1">Chat Log / Dialogue Text</label>
+                <textarea id="summary-input" rows="8" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500 resize-none font-mono" placeholder="Paste conversation log here..."></textarea>
+              </div>
+              <button onclick="submitSummary()" id="summary-btn" class="w-full btn-neon py-2.5 rounded-xl bg-cyan-600 text-white font-semibold text-sm">
+                📋 Generate Summary
+              </button>
+            </div>
+            <div class="lg:col-span-2">
+              <div class="text-xs font-semibold text-gray-400 mb-2">Structured Summary</div>
+              <div id="summary-output" class="bg-cyber-900 border border-purple-500/20 rounded-2xl p-4 text-sm text-gray-300 min-h-[250px] max-h-[450px] overflow-y-auto whitespace-pre-wrap font-mono">
+                <span class="text-gray-600 italic">Executive summary will appear here...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Memory Inspector -->
+        <div id="ai-tab-memory" class="hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-bold text-white">Active Conversational Memory Sessions</h4>
+            <button onclick="showConfirmModal('Clear All AI Memory', 'Purge all user conversation histories? This resets bot context globally.', clearAIMemory)" class="btn-neon px-3 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 text-xs font-semibold">
+              🗑️ Clear All Memory
+            </button>
+          </div>
+          <div id="ai-memory-table-wrap" class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-left text-gray-500 border-b border-purple-500/10">
+                  <th class="py-2 px-3">User ID</th>
+                  <th class="py-2 px-3">Turns</th>
+                  <th class="py-2 px-3">Persona</th>
+                  <th class="py-2 px-3">Last Prompt</th>
+                  <th class="py-2 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="ai-memory-tbody">
+                <tr><td colspan="5" class="text-center py-6 text-gray-500">Loading memory sessions...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 3. BROADCAST & EMBED DESIGNER SECTION                    -->
+    <!-- ======================================================== -->
+    <section id="sec-broadcast" class="section hidden anim-fade-in space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Visual Embed Designer Panel -->
+        <div class="glass rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="text-blue-400">📢</span> Embed Designer & Dispatcher
+            </h3>
+            <div class="flex gap-2">
+              <button onclick="loadEmbedPreset('announcement')" class="text-[10px] px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 rounded-lg">Preset: News</button>
+              <button onclick="loadEmbedPreset('rules')" class="text-[10px] px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 rounded-lg">Rules</button>
+              <button onclick="loadEmbedPreset('maintenance')" class="text-[10px] px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 rounded-lg">Maint</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Target Guild</label>
+              <select id="bc-guild" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500" onchange="loadChannels()">
                 <option value="">Select a guild</option>
               </select>
             </div>
             <div>
-              <label class="text-xs text-gray-400 block mb-1.5">Channel</label>
-              <select id="bc-channel" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition">
+              <label class="text-[11px] text-gray-400 block mb-1">Channel</label>
+              <select id="bc-channel" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
                 <option value="">Select a channel</option>
               </select>
             </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-xs text-gray-400 block mb-1.5">Title</label>
-              <input id="bc-title" type="text" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600" placeholder="Embed title" oninput="updateBcPreview()">
+              <label class="text-[11px] text-gray-400 block mb-1">Author Name (Optional)</label>
+              <input id="bc-author-name" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500" placeholder="e.g. SkillX Announcement" oninput="updateBcPreview()">
             </div>
             <div>
-              <label class="text-xs text-gray-400 block mb-1.5">Message</label>
-              <textarea id="bc-message" rows="4" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600 resize-none" placeholder="Embed content…" oninput="updateBcPreview()"></textarea>
+              <label class="text-[11px] text-gray-400 block mb-1">Author Icon URL</label>
+              <input id="bc-author-icon" type="url" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500" placeholder="https://..." oninput="updateBcPreview()">
             </div>
-            <div>
-              <label class="text-xs text-gray-400 block mb-1.5">Embed Color</label>
-              <div class="flex items-center gap-3">
-                <input id="bc-color" type="color" value="#a855f7" class="w-10 h-10 rounded-lg border-0 cursor-pointer bg-transparent" oninput="updateBcPreview()">
-                <span id="bc-color-hex" class="text-xs font-mono text-gray-400">#a855f7</span>
+          </div>
+
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Embed Title</label>
+            <input id="bc-title" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500" placeholder="e.g. Major Server Update Released!" oninput="updateBcPreview()">
+          </div>
+
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Embed Description (Markdown supported)</label>
+            <textarea id="bc-message" rows="4" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500 resize-none font-mono" placeholder="Write announcement details..." oninput="updateBcPreview()"></textarea>
+          </div>
+
+          <!-- Color Picker & Presets -->
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Sidebar Color Accent</label>
+            <div class="flex items-center gap-3">
+              <input id="bc-color" type="color" value="#a855f7" class="w-9 h-9 rounded-xl border-0 cursor-pointer bg-transparent" oninput="updateBcPreview()">
+              <input id="bc-color-hex" type="text" value="#a855f7" class="w-24 bg-cyber-800 border border-purple-500/20 rounded-xl px-2 py-1 text-xs text-white font-mono" onchange="document.getElementById('bc-color').value=this.value; updateBcPreview();">
+              <div class="flex gap-1.5">
+                <button type="button" onclick="setBcColor('#5865F2')" class="w-6 h-6 rounded-full bg-[#5865F2]"></button>
+                <button type="button" onclick="setBcColor('#57F287')" class="w-6 h-6 rounded-full bg-[#57F287]"></button>
+                <button type="button" onclick="setBcColor('#FEE75C')" class="w-6 h-6 rounded-full bg-[#FEE75C]"></button>
+                <button type="button" onclick="setBcColor('#EB459E')" class="w-6 h-6 rounded-full bg-[#EB459E]"></button>
+                <button type="button" onclick="setBcColor('#ED4245')" class="w-6 h-6 rounded-full bg-[#ED4245]"></button>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <input id="bc-use-embed" type="checkbox" checked class="accent-purple-500">
-              <label class="text-xs text-gray-400">Send as embed</label>
-            </div>
-            <button id="bc-send-btn" onclick="sendBroadcast()" class="w-full btn-neon bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-              Send Broadcast
-            </button>
           </div>
+
+          <!-- Images & Footer -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Thumbnail URL</label>
+              <input id="bc-thumbnail" type="url" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white" placeholder="Small top-right image" oninput="updateBcPreview()">
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Image Banner URL</label>
+              <input id="bc-image" type="url" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white" placeholder="Large bottom banner" oninput="updateBcPreview()">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Footer Text</label>
+              <input id="bc-footer" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white" placeholder="SkillX Community" oninput="updateBcPreview()">
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Ping Mention</label>
+              <select id="bc-ping" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white">
+                <option value="none">No Ping</option>
+                <option value="everyone">@everyone</option>
+                <option value="here">@here</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dynamic Custom Fields Builder -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-[11px] text-gray-400 font-semibold">Custom Fields</label>
+              <button type="button" onclick="addEmbedField()" class="text-[11px] text-purple-400 hover:text-purple-300 font-semibold">+ Add Field</button>
+            </div>
+            <div id="embed-fields-container" class="space-y-2"></div>
+          </div>
+
+          <button id="bc-send-btn" onclick="sendBroadcast()" class="w-full btn-neon py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-sm shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2">
+            🚀 Dispatch Announcement
+          </button>
         </div>
-        <!-- Live Preview -->
-        <div class="glass rounded-2xl p-5">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-emerald-400">👁️</span> Live Preview</h3>
-          <div class="bg-[#313338] rounded-lg p-4 min-h-[200px]">
-            <div class="flex items-start gap-3">
-              <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">S</div>
-              <div class="min-w-0 flex-1">
+
+        <!-- Live Discord-Accurate Embed Preview -->
+        <div class="glass rounded-2xl p-5 flex flex-col">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="text-emerald-400">👁️</span> Live Discord Simulation
+          </h3>
+          <div class="bg-[#313338] rounded-2xl p-5 min-h-[350px] shadow-inner font-sans">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow">S</div>
+              <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
-                  <span class="text-sm font-semibold text-purple-300">SkillX Bot</span>
-                  <span class="text-[10px] bg-[#5865f2] text-white px-1 rounded text-[9px] font-medium">BOT</span>
-                  <span class="text-[10px] text-gray-500">Today at <span id="bc-preview-time"></span></span>
+                  <span class="text-sm font-bold text-white">SkillX</span>
+                  <span class="text-[9px] bg-[#5865f2] text-white px-1.5 py-0.2 rounded font-bold uppercase">BOT</span>
+                  <span class="text-[10px] text-gray-400">Today at <span id="preview-time"></span></span>
                 </div>
-                <div id="bc-preview-embed" class="embed-preview p-3 mt-1 max-w-md">
-                  <div id="bc-preview-title" class="font-semibold text-white text-sm mb-1">Your Title Here</div>
-                  <div id="bc-preview-desc" class="text-sm text-gray-300">Your message will appear here…</div>
-                  <div class="text-[10px] text-gray-500 mt-2" id="bc-preview-timestamp"></div>
+
+                <div id="preview-ping-text" class="text-xs text-[#c9cdfb] font-medium mb-1 hidden"></div>
+
+                <!-- The Rich Embed Card -->
+                <div id="preview-embed-card" class="embed-preview p-3.5 max-w-md space-y-2">
+                  <!-- Author -->
+                  <div id="preview-author-wrap" class="flex items-center gap-2 text-xs font-semibold text-white hidden">
+                    <img id="preview-author-icon" class="w-4 h-4 rounded-full" src="" alt="">
+                    <span id="preview-author-name"></span>
+                  </div>
+                  <!-- Title -->
+                  <div id="preview-title" class="font-bold text-white text-base">Your Title Here</div>
+                  <!-- Description -->
+                  <div id="preview-desc" class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">Your announcement message description will be formatted here...</div>
+                  <!-- Custom Fields Grid -->
+                  <div id="preview-fields-wrap" class="discord-field-grid pt-1 hidden"></div>
+                  <!-- Banner Image -->
+                  <div id="preview-image-wrap" class="pt-2 hidden">
+                    <img id="preview-image" class="rounded-lg w-full max-h-60 object-cover" src="" alt="Banner">
+                  </div>
+                  <!-- Footer -->
+                  <div id="preview-footer-wrap" class="flex items-center gap-2 text-[10px] text-gray-400 pt-2 border-t border-white/5">
+                    <span id="preview-footer-text">Broadcasted via SkillX Web Console</span>
+                    <span>•</span>
+                    <span id="preview-timestamp">Today</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -477,133 +826,401 @@
       </div>
     </section>
 
-    <!-- ==================== AI STUDIO SECTION ==================== -->
-    <section id="sec-ai" class="section hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <!-- Input -->
-        <div class="lg:col-span-1 glass rounded-2xl p-5 flex flex-col gap-4">
-          <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-emerald-400">🤖</span> AI Studio</h3>
+    <!-- ======================================================== -->
+    <!-- 4. SERVER DIRECTORY & MATRIX SECTION                     -->
+    <!-- ======================================================== -->
+    <section id="sec-servers" class="section hidden anim-fade-in space-y-6">
+      <div class="glass rounded-2xl p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <label class="text-xs text-gray-400 block mb-1.5">Prompt</label>
-            <textarea id="ai-prompt" rows="5" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600 resize-none" placeholder="Enter your prompt…"></textarea>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="text-cyan-400">🌐</span> Server Directory Matrix
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">Manage connected communities, inspect channels, roles, and security lockdowns</p>
           </div>
-          <div>
-            <label class="text-xs text-gray-400 block mb-1.5">Persona</label>
-            <select id="ai-persona" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition">
-              <option value="default">Default</option>
-              <option value="developer">Developer</option>
-              <option value="tutor">Tutor</option>
-              <option value="creative">Creative</option>
-              <option value="concise">Concise</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-xs text-gray-400 block mb-1.5">Temperature: <span id="ai-temp-val" class="text-purple-300 font-mono">0.7</span></label>
-            <input id="ai-temp" type="range" min="0" max="1" step="0.05" value="0.7" class="w-full" oninput="document.getElementById('ai-temp-val').textContent=this.value">
-          </div>
-          <button id="ai-send-btn" onclick="testAI()" class="w-full btn-neon bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Generate Response
-          </button>
-          <button onclick="showConfirmModal('Clear Memory', 'Clear all AI memory contexts? This cannot be undone.', clearAIMemory)" class="w-full btn-neon bg-red-500/20 border border-red-500/30 text-red-400 font-medium py-2 rounded-lg text-sm hover:bg-red-500/30 transition">
-            🗑️ Clear All Memory
-          </button>
+          <input id="guild-search" type="text" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 w-full sm:w-64" placeholder="Filter servers..." oninput="filterGuilds()">
         </div>
-        <!-- Response -->
-        <div class="lg:col-span-2 glass rounded-2xl p-5 flex flex-col">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-cyan-400">💬</span> Response</h3>
-            <span id="ai-response-time" class="text-[10px] text-gray-500 hidden">Response time: <span id="ai-time-val" class="text-cyan-400 font-mono"></span></span>
-          </div>
-          <div id="ai-response" class="flex-1 bg-cyber-800/50 rounded-xl p-4 text-sm text-gray-300 leading-relaxed min-h-[200px] overflow-y-auto whitespace-pre-wrap font-mono">
-            <span class="text-gray-500 italic">AI response will appear here…</span>
-          </div>
+        <div id="guild-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div class="text-center py-10 text-gray-500 text-sm col-span-full">Querying server directory...</div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== AUTOMOD CONSOLE SECTION ==================== -->
-    <section id="sec-automod" class="section hidden">
+    <!-- ======================================================== -->
+    <!-- 5. AUTOMOD & MODERATION CONSOLE SECTION                  -->
+    <!-- ======================================================== -->
+    <section id="sec-automod" class="section hidden anim-fade-in space-y-6">
+      <!-- Quick Moderation Dispatcher -->
+      <div class="glass rounded-2xl p-5">
+        <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+          <span class="text-red-400">🔨</span> Direct Moderation Action
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <select id="mod-guild" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white"></select>
+          <input id="mod-user-id" type="text" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="Target User ID">
+          <select id="mod-action" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="warn">Warn Member</option>
+            <option value="timeout">Timeout Member (10m)</option>
+            <option value="kick">Kick Member</option>
+            <option value="ban">Ban Member</option>
+          </select>
+          <input id="mod-reason" type="text" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="Reason...">
+        </div>
+        <div class="mt-3 flex justify-end">
+          <button onclick="executeModerationAction()" class="btn-neon px-5 py-2 rounded-xl bg-red-600 text-white font-semibold text-xs shadow-lg shadow-red-600/30">
+            Execute Action
+          </button>
+        </div>
+      </div>
+
+      <!-- Infractions Record Table -->
       <div class="glass rounded-2xl p-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <h3 class="text-sm font-bold text-white flex items-center gap-2"><span class="text-red-400">🛡️</span> AutoMod Console</h3>
-          <input id="inf-search" type="text" class="bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600 w-full sm:w-64" placeholder="Search infractions…" oninput="filterInfractions()">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="text-red-400">🛡️</span> Member Infraction Database
+          </h3>
+          <input id="inf-search" type="text" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 w-full sm:w-64" placeholder="Search by User/Reason..." oninput="filterInfractions()">
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="w-full text-xs">
             <thead>
-              <tr class="text-left text-xs text-gray-500 border-b border-purple-500/10">
-                <th class="py-2 px-3 cursor-pointer hover:text-purple-400 transition" onclick="sortInfractions('user_id')">User ID ↕</th>
-                <th class="py-2 px-3 cursor-pointer hover:text-purple-400 transition" onclick="sortInfractions('guild_id')">Guild ID ↕</th>
-                <th class="py-2 px-3 cursor-pointer hover:text-purple-400 transition" onclick="sortInfractions('moderator')">Moderator ↕</th>
-                <th class="py-2 px-3">Reason</th>
-                <th class="py-2 px-3 cursor-pointer hover:text-purple-400 transition" onclick="sortInfractions('timestamp')">Timestamp ↕</th>
-                <th class="py-2 px-3 text-right">Actions</th>
+              <tr class="text-left text-gray-500 border-b border-purple-500/10">
+                <th class="py-2.5 px-3">Case ID</th>
+                <th class="py-2.5 px-3">User ID</th>
+                <th class="py-2.5 px-3">Guild ID</th>
+                <th class="py-2.5 px-3">Reason</th>
+                <th class="py-2.5 px-3">Timestamp</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody id="inf-tbody">
-              <tr><td colspan="6" class="text-center text-gray-500 py-8">Loading infractions…</td></tr>
+              <tr><td colspan="6" class="text-center py-6 text-gray-500">Loading infractions...</td></tr>
             </tbody>
           </table>
         </div>
-        <div id="inf-pagination" class="flex items-center justify-between mt-4 hidden">
-          <span id="inf-page-info" class="text-xs text-gray-500"></span>
-          <div class="flex gap-2">
-            <button id="inf-prev" onclick="infPage(-1)" class="px-3 py-1 rounded-lg bg-purple-500/10 text-purple-300 text-xs hover:bg-purple-500/20 transition disabled:opacity-30" disabled>← Prev</button>
-            <button id="inf-next" onclick="infPage(1)" class="px-3 py-1 rounded-lg bg-purple-500/10 text-purple-300 text-xs hover:bg-purple-500/20 transition disabled:opacity-30">Next →</button>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 6. LEVELING & LEADERBOARDS SECTION                       -->
+    <!-- ======================================================== -->
+    <section id="sec-leveling" class="section hidden anim-fade-in space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Top 100 Leaderboard -->
+        <div class="lg:col-span-2 glass rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="text-amber-400">🏆</span> Community XP Leaderboard
+            </h3>
+            <span class="text-xs text-gray-400 font-mono">Top Ranked Members</span>
+          </div>
+          <div class="overflow-x-auto max-h-[550px] overflow-y-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-left text-gray-500 border-b border-purple-500/10">
+                  <th class="py-2.5 px-3">Rank</th>
+                  <th class="py-2.5 px-3">User ID</th>
+                  <th class="py-2.5 px-3">Guild ID</th>
+                  <th class="py-2.5 px-3">Level</th>
+                  <th class="py-2.5 px-3">Total XP</th>
+                  <th class="py-2.5 px-3">Messages</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-tbody">
+                <tr><td colspan="6" class="text-center py-6 text-gray-500">Loading leaderboard...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- XP Adjustment Tool -->
+        <div class="glass rounded-2xl p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="text-purple-400">⚡</span> XP Management Console
+          </h3>
+          <p class="text-xs text-gray-400">Award, deduct, or reset XP for a member across your community.</p>
+
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Guild ID</label>
+            <select id="xp-guild-id" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white"></select>
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">User ID</label>
+            <input id="xp-user-id" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="Discord User ID">
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Action Type</label>
+            <select id="xp-action" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white">
+              <option value="add">Add XP</option>
+              <option value="set">Set XP</option>
+              <option value="deduct">Deduct XP</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">XP Amount</label>
+            <input id="xp-amount" type="number" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="e.g. 500">
+          </div>
+          <button onclick="submitXPAdjustment()" class="w-full btn-neon py-2.5 rounded-xl bg-purple-600 text-white font-semibold text-xs shadow-lg shadow-purple-600/30">
+            Apply XP Changes
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 7. SUPPORT TICKETS MANAGEMENT SECTION                    -->
+    <!-- ======================================================== -->
+    <section id="sec-tickets" class="section hidden anim-fade-in space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="text-purple-400">🎫</span> Active Support Tickets
+            </h3>
+            <button onclick="loadTickets()" class="text-xs text-purple-400 hover:text-purple-300">Refresh</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-left text-gray-500 border-b border-purple-500/10">
+                  <th class="py-2.5 px-3">Channel</th>
+                  <th class="py-2.5 px-3">Guild</th>
+                  <th class="py-2.5 px-3">Topic / Info</th>
+                  <th class="py-2.5 px-3">Created</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="tickets-tbody">
+                <tr><td colspan="5" class="text-center py-6 text-gray-500">Loading active tickets...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Deploy Ticket Panel Helper -->
+        <div class="glass rounded-2xl p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="text-cyan-400">🚀</span> Deploy Ticket Panel
+          </h3>
+          <p class="text-xs text-gray-400">Post a permanent interactive panel with an "Open Ticket" button.</p>
+
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Target Channel ID</label>
+            <input id="ticket-deploy-channel" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="Channel ID">
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Panel Title</label>
+            <input id="ticket-deploy-title" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" value="🎫 SkillX Support Desk">
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Panel Description</label>
+            <textarea id="ticket-deploy-desc" rows="3" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl p-3 text-xs text-white resize-none">Click the button below to create a private support ticket with our team.</textarea>
+          </div>
+          <button onclick="deployTicketPanel()" class="w-full btn-neon py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold text-xs">
+            Deploy Button Panel
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 8. WELCOME & ONBOARDING SECTION                          -->
+    <!-- ======================================================== -->
+    <section id="sec-welcome" class="section hidden anim-fade-in space-y-6">
+      <div class="glass rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <span class="text-emerald-400">👋</span> Welcome & Autorole Configurator
+          </h3>
+          <select id="welcome-guild-select" onchange="loadWelcomeConfigForGuild()" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white"></select>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+          <!-- Welcome Settings -->
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Welcome Channel ID</label>
+              <input id="wc-welcome-channel" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="e.g. 1234567890">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Welcome Message Template</label>
+              <textarea id="wc-welcome-message" rows="3" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl p-3 text-xs text-white resize-none font-mono"></textarea>
+              <p class="text-[10px] text-gray-500 mt-1">Variables: <code class="text-purple-300">{user.mention}</code>, <code class="text-purple-300">{user}</code>, <code class="text-purple-300">{server}</code>, <code class="text-purple-300">{member_count}</code></p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Autorole ID (Assigned to Newcomers)</label>
+              <input id="wc-autorole" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="e.g. 9876543210">
+            </div>
+          </div>
+
+          <!-- Goodbye Settings -->
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Goodbye Channel ID</label>
+              <input id="wc-goodbye-channel" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="e.g. 1234567890">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Goodbye Message Template</label>
+              <textarea id="wc-goodbye-message" rows="3" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl p-3 text-xs text-white resize-none font-mono"></textarea>
+            </div>
+            <div class="pt-5">
+              <button onclick="saveWelcomeConfig()" class="w-full btn-neon py-3 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-600/30">
+                💾 Save Welcome Configuration
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== BOT SETTINGS SECTION ==================== -->
-    <section id="sec-settings" class="section hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <!-- Presence Manager -->
-        <div class="glass rounded-2xl p-5">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-purple-400">🟢</span> Presence Manager</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="text-xs text-gray-400 block mb-1.5">Status</label>
-              <select id="pres-status" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition">
-                <option value="online">🟢 Online</option>
-                <option value="idle">🌙 Idle</option>
-                <option value="dnd">⛔ Do Not Disturb</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-xs text-gray-400 block mb-1.5">Activity Type</label>
-              <select id="pres-type" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition">
-                <option value="listening">🎧 Listening to</option>
-                <option value="playing">🎮 Playing</option>
-                <option value="watching">👀 Watching</option>
-                <option value="competing">🏆 Competing in</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-xs text-gray-400 block mb-1.5">Activity Text</label>
-              <input id="pres-text" type="text" class="w-full bg-cyber-700 border border-purple-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50 transition placeholder-gray-600" placeholder="Activity text…">
-            </div>
-            <button onclick="updatePresence()" class="w-full btn-neon bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-2.5 rounded-lg text-sm">Update Presence</button>
+    <!-- ======================================================== -->
+    <!-- 9. AUDIT & SERVER LOGS SECTION                           -->
+    <!-- ======================================================== -->
+    <section id="sec-logs" class="section hidden anim-fade-in space-y-6">
+      <div class="glass rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="text-cyan-400">📜</span> Audit Logging Core
+            </h3>
+            <p class="text-xs text-gray-400">Configure audit logging channel destinations per guild</p>
+          </div>
+          <div class="flex gap-2">
+            <select id="logging-guild-select" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white"></select>
+            <input id="logging-channel-input" type="text" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1.5 text-xs text-white" placeholder="Log Channel ID">
+            <button onclick="saveLoggingConfig()" class="btn-neon px-4 py-1.5 rounded-xl bg-cyan-600 text-white text-xs font-semibold">Save Channel</button>
           </div>
         </div>
 
-        <!-- Cog Manager -->
-        <div class="glass rounded-2xl p-5">
-          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><span class="text-cyan-400">🧩</span> Cog Manager</h3>
-          <div id="cog-list" class="space-y-2">
-            <div class="text-center text-gray-500 text-sm py-4">Loading cogs…</div>
+        <!-- Live Activity Stream with Search & Export -->
+        <div class="pt-2">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-gray-300">Activity Feed</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-400 icon-pulse"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input id="log-search" type="text" class="bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-1 text-xs text-white placeholder-gray-500" placeholder="Filter logs..." oninput="filterLogs()">
+              <button onclick="exportLogs('json')" class="text-xs px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300">JSON</button>
+              <button onclick="exportLogs('csv')" class="text-xs px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300">CSV</button>
+            </div>
+          </div>
+          <div id="activity-list" class="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+            <div class="text-center text-gray-500 text-xs py-6">Connecting to activity feed...</div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <!-- Logout -->
-        <div class="lg:col-span-2 glass rounded-2xl p-5">
+    <!-- ======================================================== -->
+    <!-- 10. COMMUNITY HUB SECTION (POLLS & GIVEAWAYS)            -->
+    <!-- ======================================================== -->
+    <section id="sec-community" class="section hidden anim-fade-in space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Interactive Poll Creator -->
+        <div class="glass rounded-2xl p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="text-purple-400">📊</span> Interactive Button Poll Creator
+          </h3>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Target Channel ID</label>
+            <input id="poll-channel" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="Channel ID">
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Poll Question</label>
+            <input id="poll-question" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="e.g. Which programming language is best?">
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Options (1 per line, min 2, max 5)</label>
+            <textarea id="poll-options" rows="4" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl p-3 text-xs text-white resize-none font-mono">Python&#10;TypeScript&#10;Rust&#10;Go</textarea>
+          </div>
+          <button onclick="deployPoll()" class="w-full btn-neon py-2.5 rounded-xl bg-purple-600 text-white font-semibold text-xs shadow-lg shadow-purple-600/30">
+            🚀 Launch Live Button Poll
+          </button>
+        </div>
+
+        <!-- Automated Giveaway Launcher -->
+        <div class="glass rounded-2xl p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="text-pink-400">🎉</span> Community Giveaway Launcher
+          </h3>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Target Channel ID</label>
+            <input id="gw-channel" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="Channel ID">
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Prize Name</label>
+            <input id="gw-prize" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="e.g. Discord Nitro (1 Month)">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Duration (Seconds)</label>
+              <input id="gw-duration" type="number" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" value="300">
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-400 block mb-1">Winners Count</label>
+              <input id="gw-winners" type="number" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" value="1">
+            </div>
+          </div>
+          <button onclick="deployGiveaway()" class="w-full btn-neon py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold text-xs shadow-lg shadow-pink-600/30">
+            🎁 Start Automated Giveaway
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 11. BOT FLEET SETTINGS & COG MANAGER                     -->
+    <!-- ======================================================== -->
+    <section id="sec-settings" class="section hidden anim-fade-in space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Rich Presence Manager -->
+        <div class="glass rounded-2xl p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="text-purple-400">🟢</span> Presence & Activity Manager
+          </h3>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Discord Status</label>
+            <select id="pres-status" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white">
+              <option value="online">🟢 Online</option>
+              <option value="idle">🌙 Idle</option>
+              <option value="dnd">⛔ Do Not Disturb</option>
+              <option value="invisible">⚪ Invisible</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Activity Type</label>
+            <select id="pres-type" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white">
+              <option value="listening">🎧 Listening to</option>
+              <option value="playing">🎮 Playing</option>
+              <option value="watching">👀 Watching</option>
+              <option value="competing">🏆 Competing in</option>
+              <option value="streaming">🟣 Streaming</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] text-gray-400 block mb-1">Activity Name Text</label>
+            <input id="pres-text" type="text" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="e.g. /help | @SkillX">
+          </div>
+          <div id="pres-stream-url-wrap" class="hidden">
+            <label class="text-[11px] text-gray-400 block mb-1">Streaming URL</label>
+            <input id="pres-stream-url" type="url" class="w-full bg-cyber-800 border border-purple-500/20 rounded-xl px-3 py-2 text-xs text-white" placeholder="https://twitch.tv/...">
+          </div>
+          <button onclick="updatePresence()" class="w-full btn-neon py-2.5 rounded-xl bg-purple-600 text-white font-semibold text-xs shadow-lg shadow-purple-600/30">
+            Apply Presence Update
+          </button>
+        </div>
+
+        <!-- 10 Cogs Extension Manager -->
+        <div class="glass rounded-2xl p-5 space-y-4">
           <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-sm font-bold text-white">Session</h3>
-              <p class="text-xs text-gray-500 mt-1">End your current admin session</p>
-            </div>
-            <button onclick="showConfirmModal('Logout', 'Are you sure you want to logout?', doLogout)" class="btn-neon bg-red-500/20 border border-red-500/30 text-red-400 font-medium px-5 py-2 rounded-lg text-sm hover:bg-red-500/30 transition">Logout</button>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="text-cyan-400">🧩</span> Modular Cog Registry
+            </h3>
+            <button onclick="reloadAllCogs()" class="text-xs text-purple-400 hover:text-purple-300 font-medium">Reload All (10)</button>
+          </div>
+          <div id="cog-list" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+            <div class="text-center py-6 text-gray-500 text-xs">Querying registered cogs...</div>
           </div>
         </div>
       </div>
@@ -612,524 +1229,1145 @@
   </main>
 </div>
 
+<!-- ======================================================== -->
+<!-- MASTER SCRIPT LOGIC (JAVASCRIPT)                         -->
+<!-- ======================================================== -->
 <script>
-// ═══════════════════════════════════════════════════════════
-//  GLOBALS
-// ═══════════════════════════════════════════════════════════
-let latencyHistory = [];
-let latencyChart = null;
-let cachedGuilds = [];
-let allInfractions = [];
-let filteredInfractions = [];
-let infCurrentPage = 0;
-const INF_PER_PAGE = 15;
-let infSortKey = 'timestamp';
-let infSortAsc = false;
-let refreshTimers = {};
+  let currentSection = 'dashboard';
+  let pingChart = null;
+  let audioCtx = null;
+  let sfxEnabled = true;
+  let allLogs = [];
+  let allInfractions = [];
+  let allGuilds = [];
+  let pingHistory = [];
 
-// ═══════════════════════════════════════════════════════════
-//  TOAST NOTIFICATIONS
-// ═══════════════════════════════════════════════════════════
-function showToast(message, type = 'info') {
-  const container = document.getElementById('toast-container');
-  const colors = {
-    success: 'from-emerald-500/90 to-emerald-600/90 border-emerald-400/30',
-    error: 'from-red-500/90 to-red-600/90 border-red-400/30',
-    warning: 'from-amber-500/90 to-amber-600/90 border-amber-400/30',
-    info: 'from-blue-500/90 to-blue-600/90 border-blue-400/30'
+  // Audio Tone Synthesizer (Zero Assets Web Audio)
+  function playTone(freq, type, duration) {
+    if (!sfxEnabled) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+  function sndSuccess() { playTone(587.33, 'sine', 0.1); setTimeout(() => playTone(880, 'sine', 0.15), 80); }
+  function sndClick() { playTone(440, 'triangle', 0.05); }
+  function sndError() { playTone(220, 'sawtooth', 0.15); }
+  function toggleAudio() {
+    sfxEnabled = !sfxEnabled;
+    document.getElementById('sfx-icon').textContent = sfxEnabled ? '🔊' : '🔇';
+    showToast(sfxEnabled ? 'UI Sound Effects enabled' : 'UI Sound Effects muted', 'info');
+  }
+
+  // Toast System
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    const borderCols = {
+      success: 'border-emerald-500/50 bg-emerald-950/80 text-emerald-200',
+      error: 'border-red-500/50 bg-red-950/80 text-red-200',
+      info: 'border-blue-500/50 bg-blue-950/80 text-blue-200',
+      warning: 'border-amber-500/50 bg-amber-950/80 text-amber-200',
+    };
+    const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+
+    toast.className = `p-3.5 rounded-2xl border backdrop-blur-xl shadow-2xl flex items-center gap-3 text-xs font-semibold pointer-events-auto transition-all transform duration-300 translate-x-full ${borderCols[type] || borderCols.info}`;
+    toast.innerHTML = `
+      <span class="text-base">${icons[type] || '✨'}</span>
+      <span class="flex-1">${message}</span>
+    `;
+
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.remove('translate-x-full'));
+
+    if (type === 'success') sndSuccess();
+    else if (type === 'error') sndError();
+
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'scale-95');
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // Confirmation Modal
+  let modalConfirmCallback = null;
+  function showConfirmModal(title, msg, onConfirm) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-message').textContent = msg;
+    modalConfirmCallback = onConfirm;
+    document.getElementById('confirm-modal').classList.remove('hidden');
+    document.getElementById('confirm-modal').classList.add('flex');
+    sndClick();
+  }
+  function hideConfirmModal() {
+    document.getElementById('confirm-modal').classList.add('hidden');
+    document.getElementById('confirm-modal').classList.remove('flex');
+    modalConfirmCallback = null;
+  }
+  document.getElementById('modal-confirm-btn').onclick = () => {
+    if (modalConfirmCallback) modalConfirmCallback();
+    hideConfirmModal();
   };
-  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-  const toast = document.createElement('div');
-  toast.className = `pointer-events-auto toast-in flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r ${colors[type] || colors.info} border backdrop-blur-xl text-white text-sm font-medium shadow-2xl max-w-sm`;
-  toast.innerHTML = `<span class="text-lg flex-shrink-0">${icons[type] || icons.info}</span><span class="min-w-0">${escHtml(message)}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => { toast.classList.remove('toast-in'); toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 300); }, 4000);
-}
 
-// ═══════════════════════════════════════════════════════════
-//  CONFIRM MODAL
-// ═══════════════════════════════════════════════════════════
-let modalCallback = null;
-function showConfirmModal(title, message, onConfirm) {
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-message').textContent = message;
-  modalCallback = onConfirm;
-  const modal = document.getElementById('confirm-modal');
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-  document.getElementById('modal-confirm-btn').onclick = () => { hideConfirmModal(); if (modalCallback) modalCallback(); };
-}
-function hideConfirmModal() {
-  const modal = document.getElementById('confirm-modal');
-  modal.classList.add('hidden');
-  modal.classList.remove('flex');
-  modalCallback = null;
-}
-
-// ═══════════════════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════════════════
-function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-async function apiFetch(url, opts = {}) {
-  try {
-    if (opts.method && opts.method !== 'GET') {
-      opts.headers = { ...opts.headers, 'Content-Type': 'application/json', 'X-CSRF-Token': window.CSRF_TOKEN };
-      if (opts.body && typeof opts.body === 'object') opts.body = JSON.stringify(opts.body);
+  // Section Routing
+  function switchSection(secId) {
+    sndClick();
+    currentSection = secId;
+    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+    const target = document.getElementById(`sec-${secId}`);
+    if (target) {
+      target.classList.remove('hidden');
+      target.classList.add('anim-fade-in');
     }
-    const r = await fetch(url, opts);
-    if (r.status === 401) { window.location.href = '/login'; return null; }
-    if (!r.ok) { const t = await r.text(); throw new Error(t || r.statusText); }
-    return await r.json();
-  } catch (e) {
-    showToast(e.message || 'Network error', 'error');
-    return null;
-  }
-}
 
-function animateCounter(el, target, suffix = '') {
-  const start = parseInt(el.textContent) || 0;
-  if (start === target) { el.textContent = target + suffix; return; }
-  const duration = 600;
-  const startTime = performance.now();
-  function step(now) {
-    const p = Math.min((now - startTime) / duration, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(start + (target - start) * ease) + suffix;
-    if (p < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
+    document.querySelectorAll('.nav-item').forEach(b => {
+      if (b.getAttribute('data-nav') === secId) {
+        b.classList.add('active');
+        b.classList.remove('text-gray-400');
+      } else {
+        b.classList.remove('active');
+        b.classList.add('text-gray-400');
+      }
+    });
 
-function formatTime(ts) {
-  try { const d = new Date(ts); return d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
-  catch { return ts; }
-}
+    const titles = {
+      dashboard: '🏠 Dashboard Overview',
+      ai: '🤖 AI Studio & Model Fleet',
+      broadcast: '📢 Embed & Broadcast Center',
+      servers: '🌐 Server Directory Matrix',
+      automod: '🛡️ AutoMod & Security Console',
+      leveling: '🏆 Leveling & Leaderboards',
+      tickets: '🎫 Support Ticket Console',
+      welcome: '👋 Welcome & Autorole Config',
+      logs: '📜 Audit & Server Logs',
+      community: '🎯 Community Engagement Hub',
+      settings: '⚙️ Bot Fleet & Cog Settings',
+    };
+    document.getElementById('page-title').innerHTML = titles[secId] || 'Console';
 
-// ═══════════════════════════════════════════════════════════
-//  NAVIGATION
-// ═══════════════════════════════════════════════════════════
-const titles = { dashboard:'Dashboard', activity:'Activity Feed', servers:'Server Directory', broadcast:'Broadcast Center', ai:'AI Studio', automod:'AutoMod Console', settings:'Bot Settings' };
+    if (window.innerWidth < 1024) toggleSidebar(false);
 
-function switchSection(name) {
-  document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-  const sec = document.getElementById('sec-' + name);
-  if (sec) { sec.classList.remove('hidden'); sec.classList.add('anim-fade-in'); setTimeout(() => sec.classList.remove('anim-fade-in'), 400); }
-  document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('active'); n.classList.add('text-gray-400'); });
-  const nav = document.querySelector(`[data-nav="${name}"]`);
-  if (nav) { nav.classList.add('active'); nav.classList.remove('text-gray-400'); }
-  document.getElementById('page-title').textContent = titles[name] || name;
-  // close mobile sidebar
-  const sb = document.getElementById('sidebar');
-  if (window.innerWidth < 1024) { sb.classList.add('-translate-x-full'); document.getElementById('sidebar-overlay').classList.add('hidden'); }
-  // load data
-  if (name === 'activity') loadActivity();
-  if (name === 'servers') loadGuilds();
-  if (name === 'broadcast') loadGuildsForBroadcast();
-  if (name === 'automod') loadInfractions();
-  if (name === 'settings') loadSettings();
-}
-
-function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const ov = document.getElementById('sidebar-overlay');
-  sb.classList.toggle('-translate-x-full');
-  ov.classList.toggle('hidden');
-}
-
-// ═══════════════════════════════════════════════════════════
-//  DASHBOARD — Stats + Chart
-// ═══════════════════════════════════════════════════════════
-async function loadStats() {
-  const d = await apiFetch('/api/stats');
-  if (!d) return;
-  animateCounter(document.getElementById('stat-guilds'), d.guilds || 0);
-  animateCounter(document.getElementById('stat-users'), d.users || 0);
-  animateCounter(document.getElementById('stat-latency'), Math.round(d.latency_ms || 0));
-  document.getElementById('stat-uptime').textContent = d.uptime_str || '—';
-  animateCounter(document.getElementById('stat-ai-mem'), d.ai_memory_contexts || 0);
-  animateCounter(document.getElementById('stat-personas'), d.ai_persona_overrides || 0);
-  animateCounter(document.getElementById('stat-infractions'), d.total_infractions || 0);
-  animateCounter(document.getElementById('stat-memory'), Math.round(d.system?.memory_mb || 0));
-  document.getElementById('topbar-latency-val').textContent = Math.round(d.latency_ms || 0);
-
-  // system info
-  if (d.system) {
-    document.getElementById('sys-python').textContent = d.system.python || '—';
-    document.getElementById('sys-dpy').textContent = d.system.discord_py || '—';
-    document.getElementById('sys-cogs').textContent = d.system.cogs_count || '—';
-    document.getElementById('sys-mem').textContent = (d.system.memory_mb || 0).toFixed(1) + ' MB';
+    // Contextual refresh
+    if (secId === 'ai') loadAIModels();
+    if (secId === 'leveling') loadLeaderboard();
+    if (secId === 'tickets') loadTickets();
+    if (secId === 'welcome') loadWelcomeConfigForGuild();
+    if (secId === 'logs') loadLoggingConfig();
   }
 
-  // bot profile
-  if (d.bot_user) {
-    const banner = document.getElementById('bot-profile-banner');
-    banner.classList.remove('hidden');
-    document.getElementById('bot-name').textContent = d.bot_user.name || 'SkillX';
-    document.getElementById('bot-id').textContent = 'ID: ' + (d.bot_user.id || '');
-    if (d.bot_user.avatar) {
-      document.getElementById('bot-avatar').src = d.bot_user.avatar;
-      document.getElementById('sidebar-avatar').src = d.bot_user.avatar;
-      document.getElementById('sidebar-bot-name').textContent = d.bot_user.name || 'SkillX';
+  function toggleSidebar(forceState) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const shouldOpen = forceState !== undefined ? forceState : sidebar.classList.contains('-translate-x-full');
+    if (shouldOpen) {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+    } else {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    }
+  }
+
+  // Theme Management
+  function changeTheme(theme) {
+    document.body.className = `h-full font-sans text-gray-200 mesh-bg antialiased theme-${theme}`;
+    localStorage.setItem('skillx_theme', theme);
+    showToast(`Theme switched to ${theme.toUpperCase()}`, 'info');
+  }
+
+  // API Call Wrapper with CSRF
+  async function api(path, options = {}) {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.CSRF_TOKEN || '',
+      ...(options.headers || {})
+    };
+    try {
+      const resp = await fetch(path, { credentials: 'same-origin', ...options, headers });
+      if (resp.status === 401) {
+        window.location.href = '/login';
+        return null;
+      }
+      return await resp.json();
+    } catch(err) {
+      console.error(`API Error ${path}:`, err);
+      return { error: String(err) };
+    }
+  }
+
+  // Init Telemetry Chart
+  function initChart() {
+    const ctx = document.getElementById('pingChart').getContext('2d');
+    pingChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: Array(15).fill(''),
+        datasets: [{
+          label: 'Gateway WebSocket Latency (ms)',
+          data: Array(15).fill(40),
+          borderColor: '#a855f7',
+          backgroundColor: 'rgba(168, 85, 247, 0.08)',
+          borderWidth: 2.5,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+          pointBackgroundColor: '#06b6d4'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { display: false } },
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+        }
+      }
+    });
+  }
+
+  // Load Primary Bot Telemetry & Metrics
+  async function loadStats() {
+    const data = await api('/api/stats');
+    if (!data || data.error) return;
+
+    document.getElementById('stat-guilds').textContent = data.guilds;
+    document.getElementById('stat-users').textContent = data.users.toLocaleString();
+    document.getElementById('stat-ping').textContent = `${data.latency_ms} ms`;
+    document.getElementById('topbar-latency-val').textContent = data.latency_ms;
+    document.getElementById('stat-ai-memory').textContent = data.ai_memory_contexts;
+    document.getElementById('stat-infractions').textContent = data.total_infractions;
+    document.getElementById('stat-tickets').textContent = data.total_tickets;
+
+    document.getElementById('hero-uptime').textContent = `Uptime: ${data.uptime_str}`;
+    document.getElementById('hero-cogs').textContent = `${data.system.cogs_count}/10 Cogs Loaded`;
+
+    document.getElementById('sys-mem').textContent = `${data.system.memory_mb} MB`;
+    document.getElementById('sys-py').textContent = `v${data.system.python}`;
+    document.getElementById('sys-dpy').textContent = `v${data.system.discord_py}`;
+    document.getElementById('sys-cogs').textContent = `${data.system.cogs_count} modules`;
+
+    // Bot User Info
+    if (data.bot_user) {
+      document.getElementById('bot-name').textContent = data.bot_user.name;
+      document.getElementById('bot-id').textContent = `ID: ${data.bot_user.id}`;
+      document.getElementById('sidebar-bot-name').textContent = data.bot_user.name;
+      if (data.bot_user.avatar) {
+        document.getElementById('bot-avatar').src = data.bot_user.avatar;
+        document.getElementById('sidebar-avatar').src = data.bot_user.avatar;
+      }
+      document.getElementById('bot-profile-banner').classList.remove('hidden');
       document.getElementById('sidebar-bot-profile').classList.remove('hidden');
     }
+
+    // Ping Chart Update
+    if (pingChart) {
+      pingHistory.push(data.latency_ms);
+      if (pingHistory.length > 20) pingHistory.shift();
+      pingChart.data.labels = pingHistory.map((_, i) => `${i*3}s`);
+      pingChart.data.datasets[0].data = pingHistory;
+      pingChart.update('none');
+    }
   }
 
-  // latency chart
-  const lat = Math.round(d.latency_ms || 0);
-  latencyHistory.push(lat);
-  if (latencyHistory.length > 60) latencyHistory.shift();
-  updateChart();
-}
+  // Load Connected Guilds Matrix
+  async function loadGuilds() {
+    const data = await api('/api/guilds');
+    if (!data || data.error) return;
+    allGuilds = data;
 
-function initChart() {
-  const ctx = document.getElementById('latency-chart').getContext('2d');
-  const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-  gradient.addColorStop(0, 'rgba(6,182,212,.25)');
-  gradient.addColorStop(1, 'rgba(6,182,212,.0)');
-  latencyChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: Array(60).fill(''),
-      datasets: [{
-        label: 'Latency (ms)',
-        data: [],
-        borderColor: '#06b6d4',
-        backgroundColor: gradient,
-        borderWidth: 2,
-        fill: true,
-        tension: .4,
-        pointRadius: 0,
-        pointHitRadius: 10,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(13,13,26,.9)', titleColor: '#06b6d4', bodyColor: '#e2e8f0', borderColor: 'rgba(6,182,212,.3)', borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: false } },
-      scales: {
-        x: { display: false },
-        y: { beginAtZero: true, grid: { color: 'rgba(168,85,247,.06)' }, ticks: { color: '#6b7280', font: { size: 10 } } }
-      },
-      interaction: { intersect: false, mode: 'index' }
+    const bcSelect = document.getElementById('bc-guild');
+    const modSelect = document.getElementById('mod-guild');
+    const xpSelect = document.getElementById('xp-guild-id');
+    const wcSelect = document.getElementById('welcome-guild-select');
+    const logSelect = document.getElementById('logging-guild-select');
+
+    [bcSelect, modSelect, xpSelect, wcSelect, logSelect].forEach(sel => {
+      if (!sel) return;
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">Select a Guild...</option>' + data.map(g => `<option value="${g.id}">${g.name} (${g.member_count} members)</option>`).join('');
+      if (prev) sel.value = prev;
+    });
+
+    renderGuildGrid(data);
+  }
+
+  function renderGuildGrid(guilds) {
+    const grid = document.getElementById('guild-grid');
+    if (!guilds.length) {
+      grid.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500">No guilds currently connected.</div>';
+      return;
     }
-  });
-}
 
-function updateChart() {
-  if (!latencyChart) return;
-  latencyChart.data.labels = latencyHistory.map((_, i) => i);
-  latencyChart.data.datasets[0].data = [...latencyHistory];
-  latencyChart.update('none');
-}
-
-// ═══════════════════════════════════════════════════════════
-//  ACTIVITY FEED
-// ═══════════════════════════════════════════════════════════
-async function loadActivity() {
-  const data = await apiFetch('/api/logs');
-  if (!data) return;
-  const list = document.getElementById('activity-list');
-  if (!data.length) { list.innerHTML = '<div class="text-center text-gray-500 text-sm py-8">No activity yet</div>'; return; }
-  const badgeColors = { auth: 'bg-purple-500/20 text-purple-300', broadcast: 'bg-blue-500/20 text-blue-300', ai: 'bg-emerald-500/20 text-emerald-300', mod: 'bg-red-500/20 text-red-300', system: 'bg-amber-500/20 text-amber-300', moderation: 'bg-red-500/20 text-red-300' };
-  const entries = data.slice(0, 50);
-  list.innerHTML = entries.map(e => {
-    const bc = badgeColors[e.type] || 'bg-gray-500/20 text-gray-300';
-    return `<div class="flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-purple-500/5 transition">
-      <span class="text-[10px] text-gray-500 font-mono whitespace-nowrap pt-0.5 w-28 flex-shrink-0">${formatTime(e.timestamp)}</span>
-      <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${bc} flex-shrink-0">${escHtml(e.type || '?')}</span>
-      <span class="text-sm text-gray-300 min-w-0 break-words">${escHtml(e.message || '')}</span>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════════════════
-//  SERVER DIRECTORY
-// ═══════════════════════════════════════════════════════════
-async function loadGuilds() {
-  const data = await apiFetch('/api/guilds');
-  if (!data) return;
-  cachedGuilds = data;
-  renderGuilds();
-}
-
-function renderGuilds() {
-  const grid = document.getElementById('guild-grid');
-  if (!cachedGuilds.length) { grid.innerHTML = '<div class="text-center text-gray-500 text-sm py-8 col-span-full">No guilds found</div>'; return; }
-  grid.innerHTML = cachedGuilds.map((g, i) => {
-    const initial = (g.name || '?')[0].toUpperCase();
-    const icon = g.icon ? `<img src="${g.icon}" class="w-12 h-12 rounded-full" alt="">` : `<div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-cyan-600 flex items-center justify-center text-white font-bold text-lg">${initial}</div>`;
-    return `<div class="glass rounded-xl p-4 glass-hover cursor-pointer transition" onclick="toggleGuildDetail(${i})">
-      <div class="flex items-center gap-3 mb-3">
-        ${icon}
-        <div class="min-w-0">
-          <h4 class="text-sm font-bold text-white truncate">${escHtml(g.name || 'Unknown')}</h4>
-          <p class="text-xs text-gray-500">${g.member_count || '?'} members</p>
+    grid.innerHTML = guilds.map(g => `
+      <div class="glass rounded-2xl p-5 space-y-3.5 border border-purple-500/15">
+        <div class="flex items-center gap-3">
+          ${g.icon ? `<img src="${g.icon}" class="w-12 h-12 rounded-xl ring-2 ring-purple-500/20" alt="">` : `<div class="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center font-bold text-white">${g.name[0]}</div>`}
+          <div class="min-w-0 flex-1">
+            <h4 class="text-sm font-bold text-white truncate">${g.name}</h4>
+            <p class="text-[10px] text-gray-400 font-mono">ID: ${g.id}</p>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 font-semibold">${g.member_count} 👥</span>
+        </div>
+        <div class="text-xs text-gray-400 flex justify-between py-1 border-t border-b border-purple-500/10">
+          <span>Text Channels: <b>${g.text_channels.length}</b></span>
+          <span>Voice: <b>${g.voice_channels.length}</b></span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="document.getElementById('bc-guild').value='${g.id}'; loadChannels(); switchSection('broadcast');" class="flex-1 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 text-xs font-semibold">
+            📢 Broadcast
+          </button>
+          <button onclick="lockdownPrompt('${g.id}')" class="px-3 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-semibold">
+            🔒 Lockdown
+          </button>
         </div>
       </div>
-      <div class="flex gap-3 text-xs text-gray-400">
-        <span>💬 ${g.text_channels?.length || 0} text</span>
-        <span>🔊 ${g.voice_channels?.length || 0} voice</span>
-      </div>
-      <div id="guild-detail-${i}" class="hidden mt-3 pt-3 border-t border-purple-500/10 space-y-2 anim-fade-in">
-        ${(g.text_channels && g.text_channels.length) ? `<div><p class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Text Channels</p><div class="flex flex-wrap gap-1">${g.text_channels.map(c => `<span class="text-[11px] bg-cyber-700 px-2 py-0.5 rounded text-gray-300"># ${escHtml(c.name || c)}</span>`).join('')}</div></div>` : ''}
-        ${(g.voice_channels && g.voice_channels.length) ? `<div><p class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Voice Channels</p><div class="flex flex-wrap gap-1">${g.voice_channels.map(c => `<span class="text-[11px] bg-cyber-700 px-2 py-0.5 rounded text-gray-300">🔊 ${escHtml(c.name || c)}</span>`).join('')}</div></div>` : ''}
-        ${(g.roles_sample && g.roles_sample.length) ? `<div><p class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Roles</p><div class="flex flex-wrap gap-1">${g.roles_sample.map(r => {
-          const color = r.color ? `#${r.color.toString(16).padStart(6,'0')}` : '#8b8b8b';
-          return `<span class="text-[11px] px-2 py-0.5 rounded-full border" style="border-color:${color}; color:${color}">${escHtml(r.name || r)}</span>`;
-        }).join('')}</div></div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleGuildDetail(i) {
-  const el = document.getElementById('guild-detail-' + i);
-  if (el) el.classList.toggle('hidden');
-}
-
-// ═══════════════════════════════════════════════════════════
-//  BROADCAST CENTER
-// ═══════════════════════════════════════════════════════════
-async function loadGuildsForBroadcast() {
-  if (!cachedGuilds.length) {
-    const data = await apiFetch('/api/guilds');
-    if (data) cachedGuilds = data;
+    `).join('');
   }
-  const sel = document.getElementById('bc-guild');
-  sel.innerHTML = '<option value="">Select a guild</option>' + cachedGuilds.map((g, i) => `<option value="${i}">${escHtml(g.name || 'Guild')}</option>`).join('');
-  updateBcPreview();
-}
 
-function loadChannels() {
-  const idx = document.getElementById('bc-guild').value;
-  const ch = document.getElementById('bc-channel');
-  ch.innerHTML = '<option value="">Select a channel</option>';
-  if (idx === '' || !cachedGuilds[idx]) return;
-  const g = cachedGuilds[idx];
-  if (g.text_channels) {
-    ch.innerHTML += g.text_channels.map(c => {
-      const id = c.id || c;
-      const name = c.name || c;
-      return `<option value="${id}"># ${escHtml(name)}</option>`;
+  function filterGuilds() {
+    const q = document.getElementById('guild-search').value.toLowerCase();
+    renderGuildGrid(allGuilds.filter(g => g.name.toLowerCase().includes(q) || g.id.includes(q)));
+  }
+
+  function loadChannels() {
+    const gid = document.getElementById('bc-guild').value;
+    const chSelect = document.getElementById('bc-channel');
+    chSelect.innerHTML = '<option value="">Select a channel</option>';
+    if (!gid) return;
+    const g = allGuilds.find(x => x.id === gid);
+    if (!g) return;
+    chSelect.innerHTML += g.text_channels.map(c => `<option value="${c.id}">#${c.name} ${c.can_send ? '' : '(No Send Perms)'}</option>`).join('');
+  }
+
+  // Load Activity Logs
+  async function loadLogs() {
+    const data = await api('/api/logs');
+    if (!data || data.error) return;
+    allLogs = data;
+    renderLogs(allLogs);
+  }
+
+  function renderLogs(logs) {
+    const list = document.getElementById('activity-list');
+    if (!logs.length) {
+      list.innerHTML = '<div class="text-center text-gray-500 text-xs py-4">No recent activity logged.</div>';
+      return;
+    }
+    const typeBadges = {
+      broadcast: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+      ai: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+      mod: 'bg-red-500/10 text-red-400 border-red-500/20',
+      system: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+      auth: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+      presence: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    };
+    list.innerHTML = logs.map(l => `
+      <div class="p-2.5 rounded-xl bg-cyber-800/60 border border-purple-500/10 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="px-2 py-0.5 rounded-lg border text-[9px] uppercase font-bold ${typeBadges[l.type] || 'bg-gray-700 text-gray-300'}">${l.type}</span>
+          <span class="text-gray-200 truncate">${l.message}</span>
+        </div>
+        <span class="text-[10px] text-gray-500 font-mono ml-3">${l.timestamp}</span>
+      </div>
+    `).join('');
+  }
+
+  function filterLogs() {
+    const q = document.getElementById('log-search').value.toLowerCase();
+    renderLogs(allLogs.filter(l => l.message.toLowerCase().includes(q) || l.type.toLowerCase().includes(q)));
+  }
+
+  function exportLogs(format) {
+    let content = '';
+    let filename = `skillx_logs_${Date.now()}.${format}`;
+    let type = 'text/plain';
+
+    if (format === 'json') {
+      content = JSON.stringify(allLogs, null, 2);
+      type = 'application/json';
+    } else {
+      content = 'Type,Message,Timestamp\n' + allLogs.map(l => `"${l.type}","${l.message.replace(/"/g, '""')}","${l.timestamp}"`).join('\n');
+      type = 'text/csv';
+    }
+
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    showToast(`Exported ${allLogs.length} logs to ${format.toUpperCase()}`);
+  }
+
+  // Load Infractions
+  async function loadInfractions() {
+    const data = await api('/api/infractions');
+    if (!data || data.error) return;
+    allInfractions = data;
+    renderInfractions(allInfractions);
+  }
+
+  function renderInfractions(items) {
+    const tbody = document.getElementById('inf-tbody');
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">No infraction records found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map(inf => `
+      <tr class="border-b border-purple-500/5 hover:bg-purple-500/5 transition">
+        <td class="py-2 px-3 font-mono text-purple-400">#${inf.case_id || '—'}</td>
+        <td class="py-2 px-3 font-mono text-white">${inf.user_id}</td>
+        <td class="py-2 px-3 font-mono text-gray-400">${inf.guild_id}</td>
+        <td class="py-2 px-3 text-gray-300 max-w-xs truncate">${inf.reason || 'No reason'}</td>
+        <td class="py-2 px-3 text-gray-500 font-mono text-[10px]">${inf.timestamp ? new Date(inf.timestamp).toLocaleString() : '—'}</td>
+        <td class="py-2 px-3 text-right">
+          <button onclick="clearUserWarnings('${inf.guild_id}', '${inf.user_id}')" class="px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-semibold">
+            Clear Warns
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function filterInfractions() {
+    const q = document.getElementById('inf-search').value.toLowerCase();
+    renderInfractions(allInfractions.filter(i => (i.reason || '').toLowerCase().includes(q) || String(i.user_id).includes(q) || String(i.guild_id).includes(q)));
+  }
+
+  async function clearUserWarnings(guildId, userId) {
+    showConfirmModal('Clear Warnings', `Wipe all recorded warnings for User ${userId} in Guild ${guildId}?`, async () => {
+      const res = await api('/api/automod/clear-warnings', {
+        method: 'POST',
+        body: JSON.stringify({ guild_id: guildId, user_id: userId })
+      });
+      if (res && res.success) {
+        showToast(`Cleared ${res.cleared_count} warnings`);
+        loadInfractions();
+      } else {
+        showToast(res.error || 'Failed to clear warnings', 'error');
+      }
+    });
+  }
+
+  async function executeModerationAction() {
+    const guild_id = document.getElementById('mod-guild').value;
+    const user_id = document.getElementById('mod-user-id').value.trim();
+    const action = document.getElementById('mod-action').value;
+    const reason = document.getElementById('mod-reason').value.trim() || 'Moderation via Web Console';
+
+    if (!guild_id || !user_id) {
+      showToast('Select a guild and specify a user ID', 'warning');
+      return;
+    }
+
+    const res = await api('/api/moderation/action', {
+      method: 'POST',
+      body: JSON.stringify({ guild_id, user_id, action, reason })
+    });
+    if (res && res.success) {
+      showToast(`Action ${action.toUpperCase()} executed successfully`);
+      loadInfractions();
+    } else {
+      showToast(res.error || 'Moderation action failed', 'error');
+    }
+  }
+
+  async function lockdownPrompt(guildId) {
+    const g = allGuilds.find(x => x.id === guildId);
+    if (!g || !g.text_channels.length) return;
+    const ch = g.text_channels[0];
+    showConfirmModal('Channel Lockdown', `Toggle lockdown for #${ch.name} in ${g.name}?`, async () => {
+      const res = await api('/api/moderation/lockdown', {
+        method: 'POST',
+        body: JSON.stringify({ channel_id: ch.id, action: 'lock', reason: 'Admin Console Emergency Lockdown' })
+      });
+      if (res && res.success) showToast(`Channel #${ch.name} locked down`);
+      else showToast(res.error || 'Lockdown failed', 'error');
+    });
+  }
+
+  // AI Studio Methods
+  async function loadAIModels() {
+    const grid = document.getElementById('ai-model-grid');
+    grid.innerHTML = '<div class="col-span-full text-center py-6 text-gray-500">Querying live model fleet telemetry...</div>';
+    const data = await api('/api/ai/models');
+    if (!data || data.error) {
+      grid.innerHTML = `<div class="col-span-full text-center py-6 text-red-400">Failed to query models: ${data.error}</div>`;
+      return;
+    }
+
+    grid.innerHTML = data.models.map(m => {
+      const isOnline = m.status === 'ONLINE';
+      const isRate = m.status === 'RATE_LIMITED';
+      const badgeCol = isOnline ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : (isRate ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20');
+      const badgeIcon = isOnline ? '🟢' : (isRate ? '🔴' : '🟡');
+      return `
+        <div class="glass rounded-xl p-3.5 space-y-2 border border-purple-500/15">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-xs font-bold text-white truncate">${m.model}</span>
+            <span class="px-2 py-0.5 rounded-full border text-[9px] font-bold ${badgeCol}">${badgeIcon} ${m.status}</span>
+          </div>
+          <div class="flex justify-between text-[11px] text-gray-400">
+            <span>Latency: <b class="text-white">${m.last_latency_ms ? `${m.last_latency_ms}ms` : '—'}</b></span>
+            <span>Success: <b class="text-emerald-400">${m.successes}</b> / <b class="text-red-400">${m.failures}</b></span>
+          </div>
+          ${m.cooldown_remaining > 0 ? `<div class="text-[10px] text-amber-400">Cooldown active: ${m.cooldown_remaining}s remaining</div>` : ''}
+        </div>
+      `;
     }).join('');
   }
-}
 
-function updateBcPreview() {
-  const title = document.getElementById('bc-title').value || 'Your Title Here';
-  const msg = document.getElementById('bc-message').value || 'Your message will appear here…';
-  const color = document.getElementById('bc-color').value;
-  document.getElementById('bc-color-hex').textContent = color;
-  document.getElementById('bc-preview-title').textContent = title;
-  document.getElementById('bc-preview-desc').textContent = msg;
-  document.getElementById('bc-preview-embed').style.borderLeftColor = color;
-  const now = new Date();
-  document.getElementById('bc-preview-time').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('bc-preview-timestamp').textContent = now.toLocaleString();
-}
-
-async function sendBroadcast() {
-  const channelId = document.getElementById('bc-channel').value;
-  if (!channelId) { showToast('Select a channel first', 'warning'); return; }
-  const title = document.getElementById('bc-title').value;
-  const message = document.getElementById('bc-message').value;
-  if (!message) { showToast('Enter a message', 'warning'); return; }
-  const color = document.getElementById('bc-color').value;
-  const useEmbed = document.getElementById('bc-use-embed').checked;
-  const btn = document.getElementById('bc-send-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Sending…';
-  const r = await apiFetch('/api/broadcast', { method: 'POST', body: { channel_id: channelId, title, message, color, use_embed: useEmbed } });
-  btn.disabled = false;
-  btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Broadcast';
-  if (r) showToast('Broadcast sent successfully!', 'success');
-}
-
-// ═══════════════════════════════════════════════════════════
-//  AI STUDIO
-// ═══════════════════════════════════════════════════════════
-async function testAI() {
-  const prompt = document.getElementById('ai-prompt').value.trim();
-  if (!prompt) { showToast('Enter a prompt', 'warning'); return; }
-  const persona = document.getElementById('ai-persona').value;
-  const temperature = parseFloat(document.getElementById('ai-temp').value);
-  const btn = document.getElementById('ai-send-btn');
-  const respEl = document.getElementById('ai-response');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Generating…';
-  respEl.innerHTML = '<div class="flex items-center gap-3 text-gray-500"><span class="spinner"></span> Generating response…</div>';
-  const startTime = performance.now();
-  const r = await apiFetch('/api/ai-test', { method: 'POST', body: { prompt, persona, temperature } });
-  const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
-  btn.disabled = false;
-  btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Response';
-  if (r) {
-    const text = r.response || r.message || JSON.stringify(r);
-    respEl.textContent = text;
-    document.getElementById('ai-response-time').classList.remove('hidden');
-    document.getElementById('ai-time-val').textContent = elapsed + 's';
-    showToast('AI response generated', 'success');
-  } else {
-    respEl.innerHTML = '<span class="text-red-400">Failed to generate response.</span>';
+  function switchAITab(tab) {
+    sndClick();
+    ['prompt', 'code', 'summary', 'memory'].forEach(t => {
+      const el = document.getElementById(`ai-tab-${t}`);
+      const btn = document.getElementById(`ai-tab-btn-${t}`);
+      if (t === tab) {
+        el.classList.remove('hidden');
+        btn.className = 'pb-2 text-sm font-semibold border-b-2 border-purple-500 text-purple-300';
+      } else {
+        el.classList.add('hidden');
+        btn.className = 'pb-2 text-sm font-medium text-gray-400 hover:text-white border-b-2 border-transparent';
+      }
+    });
+    if (tab === 'memory') loadAIMemory();
   }
-}
 
-async function clearAIMemory() {
-  const r = await apiFetch('/api/clear-memory', { method: 'POST', body: {} });
-  if (r) { showToast('AI memory cleared', 'success'); loadStats(); }
-}
+  async function testAI() {
+    const prompt = document.getElementById('ai-prompt').value.trim();
+    const persona = document.getElementById('ai-persona').value;
+    const temperature = parseFloat(document.getElementById('ai-temp').value);
+    const out = document.getElementById('ai-response');
+    const meta = document.getElementById('ai-response-meta');
+    const btn = document.getElementById('ai-send-btn');
 
-// ═══════════════════════════════════════════════════════════
-//  AUTOMOD CONSOLE
-// ═══════════════════════════════════════════════════════════
-async function loadInfractions() {
-  const data = await apiFetch('/api/infractions');
-  if (!data) return;
-  allInfractions = data;
-  filteredInfractions = [...allInfractions];
-  infCurrentPage = 0;
-  renderInfractions();
-}
+    if (!prompt) {
+      showToast('Please type a prompt', 'warning');
+      return;
+    }
 
-function filterInfractions() {
-  const q = document.getElementById('inf-search').value.toLowerCase();
-  filteredInfractions = allInfractions.filter(inf => {
-    const haystack = [inf.user_id, inf.guild_id, inf.moderator, inf.reason, inf.timestamp].join(' ').toLowerCase();
-    return haystack.includes(q);
-  });
-  infCurrentPage = 0;
-  renderInfractions();
-}
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner inline-block"></div> Generating...';
+    out.textContent = 'Contacting Gemini model chain with resilient failover...';
+    meta.classList.add('hidden');
 
-function sortInfractions(key) {
-  if (infSortKey === key) infSortAsc = !infSortAsc;
-  else { infSortKey = key; infSortAsc = true; }
-  filteredInfractions.sort((a, b) => {
-    const va = (a[key] || '').toString().toLowerCase();
-    const vb = (b[key] || '').toString().toLowerCase();
-    return infSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-  });
-  infCurrentPage = 0;
-  renderInfractions();
-}
+    const res = await api('/api/ai-test', {
+      method: 'POST',
+      body: JSON.stringify({ prompt, persona, temperature })
+    });
 
-function renderInfractions() {
-  const tbody = document.getElementById('inf-tbody');
-  const start = infCurrentPage * INF_PER_PAGE;
-  const page = filteredInfractions.slice(start, start + INF_PER_PAGE);
-  if (!page.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8 text-sm">No infractions found</td></tr>';
-    document.getElementById('inf-pagination').classList.add('hidden');
-    return;
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Generate Response';
+
+    if (res && res.success) {
+      out.textContent = res.response;
+      meta.textContent = `Model: ${res.model} (${res.elapsed_ms}ms)`;
+      meta.classList.remove('hidden');
+      showToast(`Generated via ${res.model} in ${res.elapsed_ms}ms`);
+    } else {
+      out.textContent = `Error: ${res.error || 'All models failed'}`;
+      showToast(res.error || 'AI generation failed', 'error');
+    }
   }
-  tbody.innerHTML = page.map(inf => `<tr class="table-row border-b border-purple-500/5">
-    <td class="py-2.5 px-3 text-xs font-mono text-gray-300">${escHtml(String(inf.user_id || ''))}</td>
-    <td class="py-2.5 px-3 text-xs font-mono text-gray-400">${escHtml(String(inf.guild_id || ''))}</td>
-    <td class="py-2.5 px-3 text-xs text-gray-300">${escHtml(String(inf.moderator || ''))}</td>
-    <td class="py-2.5 px-3 text-xs text-gray-400 max-w-[200px] truncate">${escHtml(inf.reason || '—')}</td>
-    <td class="py-2.5 px-3 text-[10px] text-gray-500 font-mono">${formatTime(inf.timestamp)}</td>
-    <td class="py-2.5 px-3 text-right">
-      <div class="flex gap-1 justify-end">
-        <button onclick="modAction('warn','${inf.guild_id}','${inf.user_id}')" class="px-2 py-1 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition" title="Warn">⚠️</button>
-        <button onclick="modAction('kick','${inf.guild_id}','${inf.user_id}')" class="px-2 py-1 rounded text-[10px] font-semibold bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition" title="Kick">👢</button>
-        <button onclick="modAction('ban','${inf.guild_id}','${inf.user_id}')" class="px-2 py-1 rounded text-[10px] font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition" title="Ban">🔨</button>
+
+  async function submitCodeReview() {
+    const code = document.getElementById('code-input').value.trim();
+    const language = document.getElementById('code-lang').value;
+    const out = document.getElementById('code-output');
+    const btn = document.getElementById('code-btn');
+
+    if (!code) {
+      showToast('Paste code snippet to review', 'warning');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Reviewing...';
+    out.textContent = 'Performing deep architectural & security inspection...';
+
+    const res = await api('/api/ai/code-review', {
+      method: 'POST',
+      body: JSON.stringify({ code, language })
+    });
+
+    btn.disabled = false;
+    btn.textContent = '🔍 Run AI Code Review';
+
+    if (res && res.success) {
+      out.textContent = res.review;
+      showToast(`Code review complete (${res.model})`);
+    } else {
+      out.textContent = res.error || 'Code review failed';
+      showToast(res.error || 'Review failed', 'error');
+    }
+  }
+
+  async function submitSummary() {
+    const text = document.getElementById('summary-input').value.trim();
+    const out = document.getElementById('summary-output');
+    const btn = document.getElementById('summary-btn');
+
+    if (!text) {
+      showToast('Enter text to summarize', 'warning');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Summarizing...';
+    out.textContent = 'Synthesizing executive summary...';
+
+    const res = await api('/api/ai/summarize', {
+      method: 'POST',
+      body: JSON.stringify({ text })
+    });
+
+    btn.disabled = false;
+    btn.textContent = '📋 Generate Summary';
+
+    if (res && res.success) {
+      out.textContent = res.summary;
+      showToast(`Summary generated (${res.model})`);
+    } else {
+      out.textContent = res.error || 'Summarization failed';
+      showToast(res.error || 'Failed', 'error');
+    }
+  }
+
+  async function loadAIMemory() {
+    const tbody = document.getElementById('ai-memory-tbody');
+    const data = await api('/api/ai/memory');
+    if (!data || data.error || !data.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-gray-500">No active conversational memory sessions stored.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(m => `
+      <tr class="border-b border-purple-500/5 hover:bg-purple-500/5">
+        <td class="py-2.5 px-3 font-mono text-white font-bold">${m.user_id}</td>
+        <td class="py-2.5 px-3 text-cyan-400 font-semibold">${m.turns_count} turns</td>
+        <td class="py-2.5 px-3 text-purple-300">${m.persona}</td>
+        <td class="py-2.5 px-3 text-gray-400 max-w-xs truncate">${m.preview}</td>
+        <td class="py-2.5 px-3 text-right">
+          <button onclick="clearUserAIMemory('${m.user_id}')" class="px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px]">Wipe</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function clearUserAIMemory(userId) {
+    const res = await api('/api/ai/memory/clear-user', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId })
+    });
+    if (res && res.success) {
+      showToast(`Cleared memory for user ${userId}`);
+      loadAIMemory();
+    }
+  }
+
+  async function clearAIMemory() {
+    const res = await api('/api/clear-memory', { method: 'POST' });
+    if (res && res.success) {
+      showToast(`Wiped ${res.cleared_count} conversation sessions`);
+      loadAIMemory();
+    }
+  }
+
+  // Embed Studio Custom Fields Builder
+  let embedFields = [];
+  function addEmbedField(name = '', value = '', inline = false) {
+    embedFields.push({ name, value, inline });
+    renderEmbedFields();
+    updateBcPreview();
+  }
+  function removeEmbedField(idx) {
+    embedFields.splice(idx, 1);
+    renderEmbedFields();
+    updateBcPreview();
+  }
+  function renderEmbedFields() {
+    const c = document.getElementById('embed-fields-container');
+    c.innerHTML = embedFields.map((f, i) => `
+      <div class="flex items-center gap-2 bg-cyber-800 p-2 rounded-xl border border-purple-500/10">
+        <input type="text" value="${f.name}" placeholder="Field Name" class="w-1/3 bg-cyber-900 border border-purple-500/20 rounded-lg px-2 py-1 text-xs text-white" oninput="embedFields[${i}].name=this.value; updateBcPreview();">
+        <input type="text" value="${f.value}" placeholder="Field Value" class="flex-1 bg-cyber-900 border border-purple-500/20 rounded-lg px-2 py-1 text-xs text-white" oninput="embedFields[${i}].value=this.value; updateBcPreview();">
+        <label class="flex items-center gap-1 text-[10px] text-gray-400">
+          <input type="checkbox" ${f.inline ? 'checked' : ''} onchange="embedFields[${i}].inline=this.checked; updateBcPreview();"> Inline
+        </label>
+        <button type="button" onclick="removeEmbedField(${i})" class="text-red-400 hover:text-red-300 text-xs px-1">✕</button>
       </div>
-    </td>
-  </tr>`).join('');
-
-  // pagination
-  const totalPages = Math.ceil(filteredInfractions.length / INF_PER_PAGE);
-  const pag = document.getElementById('inf-pagination');
-  if (totalPages > 1) {
-    pag.classList.remove('hidden');
-    document.getElementById('inf-page-info').textContent = `Page ${infCurrentPage + 1} of ${totalPages} (${filteredInfractions.length} total)`;
-    document.getElementById('inf-prev').disabled = infCurrentPage === 0;
-    document.getElementById('inf-next').disabled = infCurrentPage >= totalPages - 1;
-  } else {
-    pag.classList.add('hidden');
+    `).join('');
   }
-}
 
-function infPage(dir) { infCurrentPage += dir; renderInfractions(); }
+  function setBcColor(hex) {
+    document.getElementById('bc-color').value = hex;
+    document.getElementById('bc-color-hex').value = hex;
+    updateBcPreview();
+  }
 
-function modAction(action, guildId, userId) {
-  const labels = { warn: 'Warn', kick: 'Kick', ban: 'Ban' };
-  showConfirmModal(`${labels[action]} User`, `Are you sure you want to ${action} user ${userId}?`, async () => {
-    const r = await apiFetch('/api/moderation/action', { method: 'POST', body: { action, guild_id: guildId, user_id: userId, reason: `Action from dashboard: ${action}` } });
-    if (r) { showToast(`User ${action}ed successfully`, 'success'); loadInfractions(); }
-  });
-}
+  function updateBcPreview() {
+    const authorName = document.getElementById('bc-author-name').value.trim();
+    const authorIcon = document.getElementById('bc-author-icon').value.trim();
+    const title = document.getElementById('bc-title').value.trim();
+    const desc = document.getElementById('bc-message').value.trim();
+    const color = document.getElementById('bc-color').value;
+    const thumbnail = document.getElementById('bc-thumbnail').value.trim();
+    const image = document.getElementById('bc-image').value.trim();
+    const footer = document.getElementById('bc-footer').value.trim();
+    const ping = document.getElementById('bc-ping').value;
 
-// ═══════════════════════════════════════════════════════════
-//  BOT SETTINGS
-// ═══════════════════════════════════════════════════════════
-async function loadSettings() {
-  const cogs = await apiFetch('/api/cogs');
-  const cogList = document.getElementById('cog-list');
-  if (!cogs || !cogs.length) { cogList.innerHTML = '<div class="text-center text-gray-500 text-sm py-4">No cogs available</div>'; return; }
-  cogList.innerHTML = cogs.map(c => {
-    return `<div class="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-purple-500/5 transition">
-      <div class="flex items-center gap-3">
-        <span class="${c.loaded ? 'text-emerald-400' : 'text-red-400'} text-base">${c.loaded ? '✅' : '❌'}</span>
+    document.getElementById('bc-color-hex').value = color;
+    document.getElementById('preview-embed-card').style.borderLeftColor = color;
+
+    // Author
+    const authorWrap = document.getElementById('preview-author-wrap');
+    if (authorName) {
+      authorWrap.classList.remove('hidden');
+      document.getElementById('preview-author-name').textContent = authorName;
+      document.getElementById('preview-author-icon').src = authorIcon || '';
+    } else {
+      authorWrap.classList.add('hidden');
+    }
+
+    document.getElementById('preview-title').textContent = title || 'Your Title Here';
+    document.getElementById('preview-desc').textContent = desc || 'Your announcement message description will be formatted here...';
+    document.getElementById('preview-time').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('preview-footer-text').textContent = footer || 'Broadcasted via SkillX Web Console';
+
+    // Banner Image
+    const imgWrap = document.getElementById('preview-image-wrap');
+    if (image && image.startsWith('http')) {
+      imgWrap.classList.remove('hidden');
+      document.getElementById('preview-image').src = image;
+    } else {
+      imgWrap.classList.add('hidden');
+    }
+
+    // Ping Mention Preview
+    const pingText = document.getElementById('preview-ping-text');
+    if (ping === 'everyone') {
+      pingText.textContent = '@everyone';
+      pingText.classList.remove('hidden');
+    } else if (ping === 'here') {
+      pingText.textContent = '@here';
+      pingText.classList.remove('hidden');
+    } else {
+      pingText.classList.add('hidden');
+    }
+
+    // Fields
+    const fieldsWrap = document.getElementById('preview-fields-wrap');
+    if (embedFields.length) {
+      fieldsWrap.classList.remove('hidden');
+      fieldsWrap.innerHTML = embedFields.map(f => `
+        <div class="space-y-0.5">
+          <div class="text-[11px] font-bold text-white">${f.name || 'Field'}</div>
+          <div class="text-xs text-gray-300 whitespace-pre-wrap">${f.value || '—'}</div>
+        </div>
+      `).join('');
+    } else {
+      fieldsWrap.classList.add('hidden');
+    }
+  }
+
+  function loadEmbedPreset(preset) {
+    if (preset === 'announcement') {
+      document.getElementById('bc-title').value = '🚀 New Features Released in SkillX!';
+      document.getElementById('bc-message').value = "We have rolled out our Supreme AI Model Fleet with instantaneous multi-tier fallback, sub-3s latency, and automated health recovery!\n\nCheck out the updates using `/help` or `/aimodels`.";
+      setBcColor('#a855f7');
+      embedFields = [
+        { name: '✨ 9-Model Fleet', value: 'Gemini 3.5 Flash Lite, Gemma 26B & more', inline: true },
+        { name: '⚡ Latency Target', value: '< 2,500ms global', inline: true }
+      ];
+    } else if (preset === 'rules') {
+      document.getElementById('bc-title').value = '📜 Server Community Guidelines';
+      document.getElementById('bc-message').value = "Welcome to our community! Please adhere to our core server rules to keep discussions respectful and engaging.";
+      setBcColor('#06b6d4');
+      embedFields = [
+        { name: '1. Respect Everyone', value: 'Harassment and hate speech are strictly prohibited.', inline: false },
+        { name: '2. No Unauthorized Links', value: 'Posting external invites will trigger AutoMod locks.', inline: false }
+      ];
+    } else if (preset === 'maintenance') {
+      document.getElementById('bc-title').value = '🛠️ Scheduled Bot Maintenance Notice';
+      document.getElementById('bc-message').value = "We will be executing a database migration tonight. Temporary command downtime may occur for 5–10 minutes.";
+      setBcColor('#f59e0b');
+      embedFields = [
+        { name: '⏰ Estimated Time', value: '23:00 UTC', inline: true },
+        { name: '🛡️ Scope', value: 'Database persistence update', inline: true }
+      ];
+    }
+    renderEmbedFields();
+    updateBcPreview();
+    showToast(`Loaded ${preset} preset`);
+  }
+
+  async function sendBroadcast() {
+    const channel_id = document.getElementById('bc-channel').value;
+    const title = document.getElementById('bc-title').value.trim();
+    const message = document.getElementById('bc-message').value.trim();
+    const color = document.getElementById('bc-color').value;
+    const author_name = document.getElementById('bc-author-name').value.trim();
+    const author_icon = document.getElementById('bc-author-icon').value.trim();
+    const thumbnail_url = document.getElementById('bc-thumbnail').value.trim();
+    const image_url = document.getElementById('bc-image').value.trim();
+    const footer_text = document.getElementById('bc-footer').value.trim();
+    const ping = document.getElementById('bc-ping').value;
+    const btn = document.getElementById('bc-send-btn');
+
+    if (!channel_id || !message) {
+      showToast('Select a channel and provide message content', 'warning');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner inline-block"></div> Dispatching...';
+
+    const res = await api('/api/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({
+        channel_id,
+        title,
+        message,
+        color,
+        author_name,
+        author_icon,
+        thumbnail_url,
+        image_url,
+        footer_text,
+        fields: embedFields,
+        ping
+      })
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Dispatch Announcement';
+
+    if (res && res.success) {
+      showToast('Announcement dispatched successfully!');
+      loadLogs();
+    } else {
+      showToast(res.error || 'Failed to dispatch announcement', 'error');
+    }
+  }
+
+  // Leveling Leaderboard
+  async function loadLeaderboard() {
+    const tbody = document.getElementById('leaderboard-tbody');
+    const data = await api('/api/leaderboard');
+    if (!data || data.error || !data.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">No ranked members found.</td></tr>';
+      return;
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    tbody.innerHTML = data.map((e, idx) => `
+      <tr class="border-b border-purple-500/5 hover:bg-purple-500/5">
+        <td class="py-2.5 px-3 font-bold">${medals[idx] || `#${idx+1}`}</td>
+        <td class="py-2.5 px-3 font-mono text-white">${e.user_id}</td>
+        <td class="py-2.5 px-3 font-mono text-gray-400">${e.guild_id}</td>
+        <td class="py-2.5 px-3 font-bold text-amber-400">Lvl ${e.level}</td>
+        <td class="py-2.5 px-3 text-cyan-400 font-mono font-bold">${e.xp.toLocaleString()} XP</td>
+        <td class="py-2.5 px-3 text-gray-400">${e.messages || '—'} msgs</td>
+      </tr>
+    `).join('');
+  }
+
+  async function submitXPAdjustment() {
+    const guild_id = document.getElementById('xp-guild-id').value;
+    const user_id = document.getElementById('xp-user-id').value.trim();
+    const action = document.getElementById('xp-action').value;
+    const xp = parseInt(document.getElementById('xp-amount').value || '0');
+
+    if (!guild_id || !user_id || isNaN(xp)) {
+      showToast('Fill in Guild, User ID, and XP Amount', 'warning');
+      return;
+    }
+
+    const res = await api('/api/leveling/adjust-xp', {
+      method: 'POST',
+      body: JSON.stringify({ guild_id, user_id, action, xp })
+    });
+    if (res && res.success) {
+      showToast(`User ${user_id} updated: ${res.new_xp} XP (Level ${res.new_level})`);
+      loadLeaderboard();
+    } else {
+      showToast(res.error || 'Failed to adjust XP', 'error');
+    }
+  }
+
+  // Support Tickets
+  async function loadTickets() {
+    const tbody = document.getElementById('tickets-tbody');
+    const data = await api('/api/tickets/config');
+    if (!data || data.error) return;
+    const active = data.active_tickets || [];
+    if (!active.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-gray-500">No open ticket channels found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = active.map(t => `
+      <tr class="border-b border-purple-500/5 hover:bg-purple-500/5">
+        <td class="py-2.5 px-3 font-bold text-purple-300">#${t.channel_name}</td>
+        <td class="py-2.5 px-3 text-white">${t.guild_name}</td>
+        <td class="py-2.5 px-3 text-gray-400 max-w-xs truncate">${t.topic}</td>
+        <td class="py-2.5 px-3 text-gray-500 font-mono text-[10px]">${t.created_at || '—'}</td>
+        <td class="py-2.5 px-3 text-right">
+          <button onclick="closeTicket('${t.channel_id}')" class="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold">Close</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function closeTicket(channelId) {
+    showConfirmModal('Close Support Ticket', 'Delete ticket channel and archive transcript?', async () => {
+      const res = await api('/api/tickets/close', {
+        method: 'POST',
+        body: JSON.stringify({ channel_id: channelId, reason: 'Closed by Admin via Web Console' })
+      });
+      if (res && res.success) {
+        showToast('Ticket closed and removed');
+        loadTickets();
+      } else {
+        showToast(res.error || 'Failed to close ticket', 'error');
+      }
+    });
+  }
+
+  async function deployTicketPanel() {
+    const channel_id = document.getElementById('ticket-deploy-channel').value.trim();
+    const title = document.getElementById('ticket-deploy-title').value.trim();
+    const description = document.getElementById('ticket-deploy-desc').value.trim();
+
+    if (!channel_id) {
+      showToast('Specify a valid target channel ID', 'warning');
+      return;
+    }
+
+    const res = await api('/api/tickets/deploy', {
+      method: 'POST',
+      body: JSON.stringify({ channel_id, title, description })
+    });
+    if (res && res.success) showToast('Ticket button panel deployed!');
+    else showToast(res.error || 'Failed to deploy panel', 'error');
+  }
+
+  // Welcome Config
+  async function loadWelcomeConfigForGuild() {
+    const gid = document.getElementById('welcome-guild-select').value;
+    if (!gid) return;
+    const configs = await api('/api/welcome/config');
+    if (!configs || configs.error) return;
+    const cfg = configs[gid] || {};
+
+    document.getElementById('wc-welcome-channel').value = cfg.welcome_channel || '';
+    document.getElementById('wc-welcome-message').value = cfg.welcome_message || "Welcome to **{server}**, {user.mention}!";
+    document.getElementById('wc-goodbye-channel').value = cfg.goodbye_channel || '';
+    document.getElementById('wc-goodbye-message').value = cfg.goodbye_message || "**{user}** has left **{server}**.";
+    document.getElementById('wc-autorole').value = cfg.autorole_id || '';
+  }
+
+  async function saveWelcomeConfig() {
+    const guild_id = document.getElementById('welcome-guild-select').value;
+    const welcome_channel = document.getElementById('wc-welcome-channel').value.trim();
+    const welcome_message = document.getElementById('wc-welcome-message').value.trim();
+    const goodbye_channel = document.getElementById('wc-goodbye-channel').value.trim();
+    const goodbye_message = document.getElementById('wc-goodbye-message').value.trim();
+    const autorole_id = document.getElementById('wc-autorole').value.trim();
+
+    if (!guild_id) {
+      showToast('Select a guild first', 'warning');
+      return;
+    }
+
+    const res = await api('/api/welcome/config', {
+      method: 'POST',
+      body: JSON.stringify({ guild_id, welcome_channel, welcome_message, goodbye_channel, goodbye_message, autorole_id })
+    });
+    if (res && res.success) showToast('Welcome & Autorole settings saved');
+    else showToast(res.error || 'Failed to save settings', 'error');
+  }
+
+  // Audit Logging Config
+  async function loadLoggingConfig() {
+    const data = await api('/api/logging/config');
+    if (!data || data.error) return;
+    const gid = document.getElementById('logging-guild-select').value;
+    if (gid && data[gid]) {
+      document.getElementById('logging-channel-input').value = data[gid];
+    }
+  }
+
+  async function saveLoggingConfig() {
+    const guild_id = document.getElementById('logging-guild-select').value;
+    const channel_id = document.getElementById('logging-channel-input').value.trim();
+    if (!guild_id) {
+      showToast('Select a guild', 'warning');
+      return;
+    }
+    const res = await api('/api/logging/config', {
+      method: 'POST',
+      body: JSON.stringify({ guild_id, channel_id })
+    });
+    if (res && res.success) showToast('Audit logging destination channel saved');
+    else showToast(res.error || 'Failed to save', 'error');
+  }
+
+  // Community Hub (Polls & Giveaways)
+  async function deployPoll() {
+    const channel_id = document.getElementById('poll-channel').value.trim();
+    const question = document.getElementById('poll-question').value.trim();
+    const lines = document.getElementById('poll-options').value.split('\n').map(x => x.trim()).filter(Boolean);
+
+    if (!channel_id || !question || lines.length < 2) {
+      showToast('Enter channel, question, and at least 2 options', 'warning');
+      return;
+    }
+
+    const res = await api('/api/community/poll', {
+      method: 'POST',
+      body: JSON.stringify({ channel_id, question, options: lines })
+    });
+    if (res && res.success) {
+      showToast('Interactive button poll dispatched!');
+      loadLogs();
+    } else {
+      showToast(res.error || 'Poll failed', 'error');
+    }
+  }
+
+  async function deployGiveaway() {
+    const channel_id = document.getElementById('gw-channel').value.trim();
+    const prize = document.getElementById('gw-prize').value.trim();
+    const duration_seconds = parseInt(document.getElementById('gw-duration').value || '300');
+    const winners = parseInt(document.getElementById('gw-winners').value || '1');
+
+    if (!channel_id || !prize) {
+      showToast('Enter channel and giveaway prize', 'warning');
+      return;
+    }
+
+    const res = await api('/api/community/giveaway', {
+      method: 'POST',
+      body: JSON.stringify({ channel_id, prize, duration_seconds, winners })
+    });
+    if (res && res.success) {
+      showToast('Automated giveaway launched!');
+      loadLogs();
+    } else {
+      showToast(res.error || 'Giveaway failed', 'error');
+    }
+  }
+
+  // Presence & Settings
+  document.getElementById('pres-type').onchange = (e) => {
+    document.getElementById('pres-stream-url-wrap').classList.toggle('hidden', e.target.value !== 'streaming');
+  };
+
+  async function updatePresence() {
+    const status = document.getElementById('pres-status').value;
+    const activity_type = document.getElementById('pres-type').value;
+    const text = document.getElementById('pres-text').value.trim();
+    const stream_url = document.getElementById('pres-stream-url').value.trim();
+
+    const res = await api('/api/presence', {
+      method: 'POST',
+      body: JSON.stringify({ status, activity_type, text, stream_url })
+    });
+    if (res && res.success) showToast('Bot presence updated successfully');
+    else showToast(res.error || 'Presence update failed', 'error');
+  }
+
+  // Cogs Manager
+  async function loadCogs() {
+    const list = document.getElementById('cog-list');
+    const cogs = await api('/api/cogs');
+    if (!cogs || cogs.error) return;
+
+    list.innerHTML = cogs.map(c => `
+      <div class="p-3 rounded-xl bg-cyber-800 border border-purple-500/10 flex items-center justify-between">
         <div>
           <div class="flex items-center gap-2">
-            <span class="text-sm text-white font-medium">${escHtml(c.name)}</span>
-            <span class="text-[10px] text-gray-500 font-mono">${escHtml(c.extension)}</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">${c.commands_count} cmds</span>
+            <span class="w-2 h-2 rounded-full ${c.loaded ? 'bg-emerald-400' : 'bg-red-500'}"></span>
+            <span class="text-xs font-bold text-white">${c.name}</span>
+            <span class="text-[10px] text-gray-500 font-mono">${c.extension}</span>
           </div>
-          <p class="text-xs text-gray-400 mt-0.5">${escHtml(c.description)}</p>
+          <p class="text-[10px] text-gray-400 mt-0.5">${c.description}</p>
         </div>
+        <button onclick="reloadCog('${c.extension}')" class="px-3 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 text-xs font-medium transition">
+          Reload
+        </button>
       </div>
-      <button onclick="reloadCog('${escHtml(c.extension)}')" class="px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-300 text-xs font-medium hover:bg-cyan-500/20 transition flex items-center gap-1.5">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        Reload
-      </button>
-    </div>`;
-  }).join('');
-}
+    `).join('');
+  }
 
-async function reloadCog(ext) {
-  const r = await apiFetch('/api/cogs/reload', { method: 'POST', body: { extension: ext } });
-  if (r) { showToast(`Reloaded ${ext}`, 'success'); loadSettings(); }
-}
+  async function reloadCog(extension) {
+    showToast(`Reloading ${extension}...`, 'info');
+    const res = await api('/api/cogs/reload', {
+      method: 'POST',
+      body: JSON.stringify({ extension })
+    });
+    if (res && res.success) {
+      showToast(`Reloaded ${extension}`);
+      loadCogs();
+      loadStats();
+    } else {
+      showToast(res.error || 'Reload failed', 'error');
+    }
+  }
 
-async function updatePresence() {
-  const status = document.getElementById('pres-status').value;
-  const activityType = document.getElementById('pres-type').value;
-  const text = document.getElementById('pres-text').value;
-  if (!text) { showToast('Enter activity text', 'warning'); return; }
-  const r = await apiFetch('/api/presence', { method: 'POST', body: { status, activity_type: activityType, text } });
-  if (r) showToast('Presence updated', 'success');
-}
+  async function reloadAllCogs() {
+    showConfirmModal('Reload All Cogs', 'Hot-reload all 10 bot extensions in memory?', async () => {
+      showToast('Hot-reloading all extensions...', 'info');
+      const res = await api('/api/cogs/reload-all', { method: 'POST' });
+      if (res && res.success) {
+        showToast('All 10 cogs successfully reloaded!');
+        loadCogs();
+        loadStats();
+      } else {
+        showToast(res.error || 'Failed to reload all cogs', 'error');
+      }
+    });
+  }
 
-async function doLogout() {
-  await apiFetch('/api/logout', { method: 'POST', body: {} });
-  window.location.href = '/login';
-}
+  // Logout
+  async function doLogout() {
+    await api('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
+  }
 
-// ═══════════════════════════════════════════════════════════
-//  AUTO REFRESH TIMERS
-// ═══════════════════════════════════════════════════════════
-function startRefreshTimers() {
-  // Stats every 3s
-  loadStats();
-  refreshTimers.stats = setInterval(loadStats, 3000);
+  // Global Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideConfirmModal();
+  });
 
-  // Activity every 5s (only when visible)
-  refreshTimers.activity = setInterval(() => {
-    if (!document.getElementById('sec-activity').classList.contains('hidden')) loadActivity();
-  }, 5000);
-}
+  // Initialization
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('skillx_theme') || 'default';
+    if (savedTheme !== 'default') {
+      document.body.className = `h-full font-sans text-gray-200 mesh-bg antialiased theme-${savedTheme}`;
+      document.getElementById('theme-selector').value = savedTheme;
+    }
 
-// ═══════════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  initChart();
-  startRefreshTimers();
-  updateBcPreview();
-});
+    initChart();
+    loadStats();
+    loadGuilds();
+    loadLogs();
+    loadInfractions();
+    loadCogs();
+    updateBcPreview();
+
+    // High frequency telemetry polling
+    setInterval(loadStats, 3000);
+    setInterval(loadLogs, 5000);
+  });
 </script>
 </body>
 </html>

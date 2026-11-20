@@ -88,6 +88,42 @@ class TestDashboardSecurity(unittest.IsolatedAsyncioTestCase):
                 lb = await resp.json()
                 self.assertIsInstance(lb, list)
 
+            # 7. Fetch AI Models Fleet
+            mock_ai = MagicMock()
+            mock_ai.gemini.get_model_status.return_value = {
+                "total_models": 9,
+                "healthy_models": 9,
+                "models": [{"model": "gemini-3.5-flash-lite", "status": "ONLINE"}],
+            }
+            mock_ai.memory = {}
+            mock_ai.user_personas = {}
+            self.mock_bot.get_cog.side_effect = lambda name: mock_ai if name == "AI Chat" else None
+
+            async with session.get(f"{self.base_url}/api/ai/models") as resp:
+                self.assertEqual(resp.status, 200)
+                ai_data = await resp.json()
+                self.assertEqual(ai_data["total_models"], 9)
+
+            # 8. Fetch AI Memory List
+            async with session.get(f"{self.base_url}/api/ai/memory") as resp:
+                self.assertEqual(resp.status, 200)
+                mem = await resp.json()
+                self.assertIsInstance(mem, list)
+
+            # 9. Fetch Welcome Config
+            async with session.get(f"{self.base_url}/api/welcome/config") as resp:
+                self.assertEqual(resp.status, 200)
+
+            # 10. Fetch Tickets Config
+            async with session.get(f"{self.base_url}/api/tickets/config") as resp:
+                self.assertEqual(resp.status, 200)
+                t_data = await resp.json()
+                self.assertIn("active_tickets", t_data)
+
+            # 11. Fetch Logging Config
+            async with session.get(f"{self.base_url}/api/logging/config") as resp:
+                self.assertEqual(resp.status, 200)
+
     async def test_brute_force_rate_limiting(self):
         async with aiohttp.ClientSession() as session:
             for _ in range(5):
