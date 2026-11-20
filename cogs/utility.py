@@ -326,10 +326,183 @@ class Utility(commands.Cog, name="Utility"):
         )
         embed.add_field(
             name="🔧 Utilities & System",
-            value="`/ping` • `/serverinfo` • `/userinfo` • `/botinfo` • `/help`\n*Diagnostics, latency graphs, and profile inspection*",
+            value="`/ping` • `/serverinfo` • `/userinfo` • `/botinfo` • `/stresstest` • `/autoheal` • `/help`\n*Diagnostics, latency graphs, profile inspection, and system stress testing*",
             inline=False,
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    # ---------------------------------------------------------
+    # STRESS TEST & AUTO-HEALING
+    # ---------------------------------------------------------
+
+    @app_commands.command(
+        name="stresstest",
+        description="Run a multi-subsystem stress test and automatic remediation benchmark (Admin)",
+    )
+    @app_commands.describe(
+        intensity="Workload intensity level",
+        auto_heal="Automatically execute self-healing and optimization post-test",
+    )
+    @app_commands.choices(intensity=[
+        app_commands.Choice(name="Low (Quick Health Check)", value="low"),
+        app_commands.Choice(name="Medium (Standard Load)", value="medium"),
+        app_commands.Choice(name="High (Heavy Concurrency)", value="high"),
+    ])
+    @app_commands.default_permissions(administrator=True)
+    async def stresstest_slash(
+        self,
+        interaction: discord.Interaction,
+        intensity: Optional[app_commands.Choice[str]] = None,
+        auto_heal: Optional[bool] = True,
+    ):
+        await interaction.response.defer(thinking=True)
+        from stress_test import SystemStressTester
+
+        level = intensity.value if intensity else "medium"
+        tester = SystemStressTester(self.bot)
+        report = await tester.run_full_stress_test(intensity=level, auto_heal=bool(auto_heal))
+
+        embed = base_embed(
+            title="⚡ SkillX Supreme Stress Test Report",
+            description=(
+                f"**System Resilience Score:** `{report['resilience_score']}/100` • **Grade:** `{report['grade']}`\n"
+                f"**Benchmark Intensity:** `{report['intensity']}` • **Duration:** `{report['duration_seconds']}s`"
+            ),
+            color=0x2ECC71 if report["resilience_score"] >= 85 else 0xF1C40F,
+            user=interaction.user,
+            footer_text="SkillX Self-Healing Diagnostics Core",
+        )
+
+        sub = report["subsystems"]
+        loop_s = sub["event_loop"]
+        embed.add_field(
+            name="⏱️ Event Loop Responsiveness",
+            value=f"• Jitter: `{loop_s['avg_jitter_ms']}ms` (P95: `{loop_s['p95_jitter_ms']}ms`)\n• Status: **{loop_s['status']}**",
+            inline=True,
+        )
+
+        io_s = sub["database_io"]
+        embed.add_field(
+            name="💾 Storage & File I/O",
+            value=f"• Throughput: `{io_s['iops']} ops/sec`\n• Avg Op: `{io_s['avg_op_latency_ms']}ms` ({io_s['status']})",
+            inline=True,
+        )
+
+        ai_s = sub["ai_fleet"]
+        embed.add_field(
+            name="🤖 AI Model Fleet",
+            value=f"• Healthy: `{ai_s['healthy_models']}/{ai_s['total_models']}` Models\n• Status: **{ai_s['status']}**",
+            inline=True,
+        )
+
+        if report.get("remediation"):
+            rem = report["remediation"]
+            actions_str = "\n".join(f"✓ {a}" for a in rem["actions_taken"][:4])
+            embed.add_field(
+                name="🛠️ Automatic Solution & Self-Healing",
+                value=f"**Remediation Status: {rem['status']}** ({rem['duration_ms']}ms)\n{actions_str}\n• Freed RAM: `{rem['freed_memory_mb']} MB`",
+                inline=False,
+            )
+
+        await interaction.followup.send(embed=embed)
+
+    @commands.command(
+        name="stresstest",
+        aliases=["stress", "sysbenchmark"],
+        help="Run multi-subsystem stress test and auto-remediation (Admin only).",
+    )
+    @commands.has_permissions(administrator=True)
+    async def stresstest_prefix(self, ctx: commands.Context, intensity: str = "medium"):
+        async with ctx.typing():
+            from stress_test import SystemStressTester
+
+            tester = SystemStressTester(self.bot)
+            report = await tester.run_full_stress_test(intensity=intensity, auto_heal=True)
+
+        embed = base_embed(
+            title="⚡ SkillX Supreme Stress Test Report",
+            description=(
+                f"**Resilience Score:** `{report['resilience_score']}/100` ({report['grade']})\n"
+                f"**Intensity:** `{report['intensity']}` • **Elapsed:** `{report['duration_seconds']}s`"
+            ),
+            color=0x2ECC71 if report["resilience_score"] >= 85 else 0xF1C40F,
+            user=ctx.author,
+            footer_text="SkillX Self-Healing Diagnostics Core",
+        )
+
+        sub = report["subsystems"]
+        embed.add_field(
+            name="⏱️ Event Loop",
+            value=f"`{sub['event_loop']['avg_jitter_ms']}ms` jitter ({sub['event_loop']['status']})",
+            inline=True,
+        )
+        embed.add_field(
+            name="💾 Storage I/O",
+            value=f"`{sub['database_io']['iops']} IOPS` ({sub['database_io']['status']})",
+            inline=True,
+        )
+        embed.add_field(
+            name="🤖 AI Fleet",
+            value=f"`{sub['ai_fleet']['healthy_models']}/{sub['ai_fleet']['total_models']}` online",
+            inline=True,
+        )
+
+        if report.get("remediation"):
+            rem = report["remediation"]
+            embed.add_field(
+                name="🛠️ Automated Remediation",
+                value=f"Memory Freed: `{rem['freed_memory_mb']} MB` • Pruned Cache: `{rem['pruned_cache_items']}` items",
+                inline=False,
+            )
+
+        await ctx.reply(embed=embed, mention_author=False)
+
+    @app_commands.command(
+        name="autoheal",
+        description="Execute automatic self-healing, garbage collection, and cache optimization (Admin)",
+    )
+    @app_commands.default_permissions(administrator=True)
+    async def autoheal_slash(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
+        from stress_test import AutoHealingEngine
+
+        rep = await AutoHealingEngine.run_remediation(self.bot)
+        embed = base_embed(
+            title="🛠️ SkillX System Auto-Healing Completed",
+            description=f"Automated self-healing pass executed in **{rep['duration_ms']}ms** with status **{rep['status']}**.",
+            color=0x2ECC71,
+            user=interaction.user,
+            footer_text="SkillX Self-Healing Core",
+        )
+        for act in rep["actions_taken"]:
+            embed.add_field(name="✓ Action Executed", value=act, inline=False)
+        embed.add_field(name="🧹 Memory Reclaimed", value=f"`{rep['freed_memory_mb']} MB`", inline=True)
+        embed.add_field(name="⚡ Event Loop Lag", value=f"`{rep['event_loop_lag_ms']} ms`", inline=True)
+        await interaction.followup.send(embed=embed)
+
+    @commands.command(
+        name="autoheal",
+        aliases=["remediate", "optimize"],
+        help="Run instant system auto-healing and memory reclamation (Admin only).",
+    )
+    @commands.has_permissions(administrator=True)
+    async def autoheal_prefix(self, ctx: commands.Context):
+        async with ctx.typing():
+            from stress_test import AutoHealingEngine
+
+            rep = await AutoHealingEngine.run_remediation(self.bot)
+
+        embed = base_embed(
+            title="🛠️ SkillX System Auto-Healing Completed",
+            description=f"Self-healing pass executed in **{rep['duration_ms']}ms**.",
+            color=0x2ECC71,
+            user=ctx.author,
+            footer_text="SkillX Self-Healing Core",
+        )
+        embed.add_field(name="🧹 Memory Freed", value=f"`{rep['freed_memory_mb']} MB`", inline=True)
+        embed.add_field(name="⚡ Event Loop Lag", value=f"`{rep['event_loop_lag_ms']} ms`", inline=True)
+        embed.add_field(name="🎯 Pruned Cache", value=f"`{rep['pruned_cache_items']}` items", inline=True)
+        await ctx.reply(embed=embed, mention_author=False)
 
 
 async def setup(bot: commands.Bot):

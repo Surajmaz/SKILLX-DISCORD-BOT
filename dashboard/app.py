@@ -30,6 +30,8 @@ class DashboardApp:
         self.app = web.Application(middlewares=[security_headers_middleware])
         self.runner: Optional[web.AppRunner] = None
         self.activity_logs: list[dict] = []
+        from stress_test import SystemStressTester
+        self.stress_tester = SystemStressTester(self.bot, self)
         self._setup_routes()
 
     def log_activity(self, event_type: str, message: str, meta: Optional[dict] = None) -> None:
@@ -82,6 +84,11 @@ class DashboardApp:
         self.app.router.add_post("/api/logging/config", self.handle_api_logging_config_post)
         self.app.router.add_post("/api/community/poll", self.handle_api_community_poll)
         self.app.router.add_post("/api/community/giveaway", self.handle_api_community_giveaway)
+
+        # Stress Test & Auto-Remediation APIs
+        self.app.router.add_post("/api/stress-test/run", self.handle_api_stress_test_run)
+        self.app.router.add_post("/api/auto-heal/run", self.handle_api_auto_heal_run)
+        self.app.router.add_get("/api/stress-test/last-report", self.handle_api_stress_test_report)
 
     def _get_client_ip(self, request: web.Request) -> str:
         forwarded = request.headers.get("X-Forwarded-For")
@@ -1152,6 +1159,59 @@ class DashboardApp:
             return web.json_response({"success": True})
         except Exception as exc:
             return web.json_response({"error": str(exc)}, status=500)
+
+    # ---------------------------------------------------------
+    # STRESS TEST & AUTO-HEALING APIS
+    # ---------------------------------------------------------
+
+    async def handle_api_stress_test_run(self, request: web.Request) -> web.Response:
+        is_auth, token = self._authenticate_request(request)
+        if not is_auth or not self._verify_csrf(request, token):
+            return web.json_response({"error": "Unauthorized or invalid CSRF token."}, status=403)
+
+        try:
+            body = await request.json()
+            mode = str(body.get("mode", "full")).lower()
+            intensity = str(body.get("intensity", "medium")).lower()
+            auto_heal = bool(body.get("auto_heal", True))
+        except Exception:
+            return web.json_response({"error": "Malformed payload."}, status=400)
+
+        if mode == "loop":
+            cycles = 200 if intensity == "high" else (100 if intensity == "medium" else 50)
+            res = await self.stress_tester.run_event_loop_stress(cycles)
+            report = {"mode": "loop", "result": res}
+        elif mode == "io":
+            ops = 800 if intensity == "high" else (400 if intensity == "medium" else 200)
+            res = await self.stress_tester.run_io_stress(ops)
+            report = {"mode": "io", "result": res}
+        elif mode == "web":
+            reqs = 200 if intensity == "high" else (100 if intensity == "medium" else 50)
+            res = await self.stress_tester.run_web_api_stress(reqs)
+            report = {"mode": "web", "result": res}
+        elif mode == "ai":
+            res = await self.stress_tester.run_ai_fleet_stress()
+            report = {"mode": "ai", "result": res}
+        else:
+            report = await self.stress_tester.run_full_stress_test(intensity, auto_heal)
+
+        return web.json_response({"success": True, "report": report})
+
+    async def handle_api_auto_heal_run(self, request: web.Request) -> web.Response:
+        is_auth, token = self._authenticate_request(request)
+        if not is_auth or not self._verify_csrf(request, token):
+            return web.json_response({"error": "Unauthorized or invalid CSRF token."}, status=403)
+
+        from stress_test import AutoHealingEngine
+        remediation_report = await AutoHealingEngine.run_remediation(self.bot, self)
+        self.log_activity("system", "Executed system auto-healing & remediation routine")
+        return web.json_response({"success": True, "report": remediation_report})
+
+    async def handle_api_stress_test_report(self, request: web.Request) -> web.Response:
+        is_auth, _ = self._authenticate_request(request)
+        if not is_auth:
+            return web.json_response({"error": "Unauthorized"}, status=401)
+        return web.json_response(self.stress_tester.last_report or {})
 
 
 async def start_dashboard(bot, host: str = "0.0.0.0", port: int = 8080, password: str = "", secret_key: str = ""):

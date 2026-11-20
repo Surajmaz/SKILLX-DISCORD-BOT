@@ -124,6 +124,74 @@ class TestDashboardSecurity(unittest.IsolatedAsyncioTestCase):
             async with session.get(f"{self.base_url}/api/logging/config") as resp:
                 self.assertEqual(resp.status, 200)
 
+    async def test_stress_test_and_auto_heal_routes(self):
+        async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
+            # Login
+            login_resp = await session.post(f"{self.base_url}/api/login", json={"password": self.password})
+            self.assertEqual(login_resp.status, 200)
+
+            cookies = session.cookie_jar.filter_cookies(URL(f"{self.base_url}/"))
+            session_token = cookies["skillx_session"].value
+            csrf_token = self.dashboard.security.generate_csrf_token(session_token)
+
+            # 1. Unauthenticated /api/stress-test/last-report
+            async with aiohttp.ClientSession() as unauth_session:
+                async with unauth_session.get(f"{self.base_url}/api/stress-test/last-report") as resp:
+                    self.assertEqual(resp.status, 401)
+
+            # 2. Stress test without CSRF
+            async with session.post(f"{self.base_url}/api/stress-test/run", json={"mode": "full"}) as resp:
+                self.assertEqual(resp.status, 403)
+
+            # 3. Stress test with CSRF (low intensity full test)
+            headers = {"X-CSRF-Token": csrf_token}
+            async with session.post(
+                f"{self.base_url}/api/stress-test/run",
+                headers=headers,
+                json={"mode": "full", "intensity": "low", "auto_heal": True},
+            ) as resp:
+                self.assertEqual(resp.status, 200)
+                data = await resp.json()
+                self.assertTrue(data["success"])
+                report = data["report"]
+                self.assertIn("resilience_score", report)
+                self.assertIn("subsystems", report)
+                self.assertIn("event_loop", report["subsystems"])
+                self.assertIn("database_io", report["subsystems"])
+                self.assertIn("remediation", report)
+                self.assertIsNotNone(report["remediation"])
+
+            # 4. Specific subsystem tests
+            for mode in ["loop", "io", "web", "ai"]:
+                async with session.post(
+                    f"{self.base_url}/api/stress-test/run",
+                    headers=headers,
+                    json={"mode": mode, "intensity": "low"},
+                ) as resp:
+                    self.assertEqual(resp.status, 200)
+                    data = await resp.json()
+                    self.assertTrue(data["success"])
+                    self.assertEqual(data["report"]["mode"], mode)
+                    self.assertIn("result", data["report"])
+
+            # 5. Last report endpoint
+            async with session.get(f"{self.base_url}/api/stress-test/last-report") as resp:
+                self.assertEqual(resp.status, 200)
+                last = await resp.json()
+                self.assertIn("resilience_score", last)
+
+            # 6. Auto-heal without CSRF
+            async with session.post(f"{self.base_url}/api/auto-heal/run") as resp:
+                self.assertEqual(resp.status, 403)
+
+            # 7. Auto-heal with CSRF
+            async with session.post(f"{self.base_url}/api/auto-heal/run", headers=headers) as resp:
+                self.assertEqual(resp.status, 200)
+                data = await resp.json()
+                self.assertTrue(data["success"])
+                self.assertEqual(data["report"]["status"], "HEALTHY")
+                self.assertIn("actions_taken", data["report"])
+
     async def test_brute_force_rate_limiting(self):
         async with aiohttp.ClientSession() as session:
             for _ in range(5):
@@ -133,6 +201,64 @@ class TestDashboardSecurity(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(resp.status, 429)
                 data = await resp.json()
                 self.assertIn("Too many failed attempts", data["error"])
+
+
+class TestSystemStressTester(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.mock_bot = MagicMock()
+        self.mock_ai = MagicMock()
+        self.mock_ai.gemini.get_model_status.return_value = {
+            "total_models": 9,
+            "healthy_models": 9,
+            "models": [],
+        }
+        self.mock_ai.gemini.model_chain = ["gemini-3.5-flash-lite"]
+        self.mock_ai.gemini.model_cooldowns = {}
+        self.mock_ai.response_cache = {"key1": ("prompt", "answer", 0.0)}
+        self.mock_ai.memory = {123: []}
+        self.mock_bot.get_cog.side_effect = lambda n: self.mock_ai if n == "AI Chat" else None
+        self.mock_dashboard = MagicMock()
+        self.mock_dashboard.activity_logs = ["log1"] * 70
+
+    async def test_auto_healing_engine(self):
+        from stress_test import AutoHealingEngine
+        rep = await AutoHealingEngine.run_remediation(self.mock_bot, self.mock_dashboard)
+        self.assertEqual(rep["status"], "HEALTHY")
+        self.assertGreater(len(rep["actions_taken"]), 0)
+        self.assertEqual(rep["pruned_cache_items"], 1)
+        self.assertEqual(rep["pruned_memory_contexts"], 1)
+        self.assertLessEqual(len(self.mock_dashboard.activity_logs), 60)
+
+    async def test_system_stress_tester_subsystems(self):
+        from stress_test import SystemStressTester
+        tester = SystemStressTester(self.mock_bot, self.mock_dashboard)
+
+        # Loop stress
+        loop_res = await tester.run_event_loop_stress(cycles=20)
+        self.assertIn("avg_jitter_ms", loop_res)
+        self.assertIn(loop_res["status"], ["EXCELLENT", "GOOD", "DEGRADED"])
+
+        # IO stress
+        io_res = await tester.run_io_stress(operations=20)
+        self.assertIn("iops", io_res)
+        self.assertEqual(io_res["operations"], 20)
+
+        # Web API stress
+        web_res = await tester.run_web_api_stress(requests_count=10, concurrency=2)
+        self.assertIn("rps", web_res)
+        self.assertEqual(web_res["total_requests"], 10)
+
+        # AI Fleet stress
+        ai_res = await tester.run_ai_fleet_stress()
+        self.assertEqual(ai_res["healthy_models"], 9)
+        self.assertEqual(ai_res["total_models"], 9)
+
+        # Full stress test with auto-healing
+        full_report = await tester.run_full_stress_test(intensity="low", auto_heal=True)
+        self.assertIn("resilience_score", full_report)
+        self.assertIn("remediation", full_report)
+        self.assertIsNotNone(full_report["remediation"])
+        self.assertIsNotNone(tester.last_report)
 
 
 if __name__ == "__main__":
