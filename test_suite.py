@@ -265,5 +265,101 @@ class TestBroadcastColorClamping(unittest.TestCase):
             self.assertEqual(color_int, expected)
 
 
+class TestMultiLanguageTranslationAndHelpUI(unittest.IsolatedAsyncioTestCase):
+    def test_supported_languages_schema_and_limits(self):
+        from ui import SUPPORTED_LANGUAGES
+        self.assertEqual(len(SUPPORTED_LANGUAGES), 25)
+        for lang in SUPPORTED_LANGUAGES:
+            self.assertIn("code", lang)
+            self.assertIn("name", lang)
+            self.assertIn("native", lang)
+            self.assertIn("desc", lang)
+            self.assertIn("emoji", lang)
+            label = f"{lang['native']} ({lang['name']})"
+            self.assertLessEqual(len(label), 100)
+            self.assertLessEqual(len(lang["desc"]), 100)
+            self.assertLessEqual(len(lang["name"]), 100)
+
+    def test_build_help_embed_categories(self):
+        from ui import build_help_embed, HELP_CATEGORIES
+        for cat in HELP_CATEGORIES:
+            embed = build_help_embed(cat)
+            self.assertIsNotNone(embed.title)
+            self.assertIsNotNone(embed.description)
+            self.assertGreater(len(embed.fields), 0)
+            self.assertIn("Translate", embed.footer.text)
+
+    async def test_translate_embed_logic(self):
+        from ui import translate_embed
+        orig_embed = discord.Embed(title="SkillX Manual", description="Test description")
+        orig_embed.add_field(name="AI Chat", value="/chat with gemini", inline=False)
+        orig_embed.set_footer(text="Original footer")
+
+        mock_gemini = unittest.mock.AsyncMock()
+        mock_gemini.translate_text.return_value = (
+            "[[TITLE]] Manual de SkillX\n\n"
+            "[[DESCRIPTION]]\nDescripción de prueba\n\n"
+            "[[FIELD_0_NAME]] Chat de IA\n\n"
+            "[[FIELD_0_VAL]] /chat con gemini\n\n"
+            "[[FOOTER]] Pie de página original",
+            "gemini-2.5-flash-lite",
+        )
+
+        # 1. Translate to Spanish
+        trans_embed = await translate_embed(orig_embed, mock_gemini, "Spanish")
+        self.assertEqual(trans_embed.title, "Manual de SkillX")
+        self.assertEqual(trans_embed.description, "Descripción de prueba")
+        self.assertEqual(trans_embed.fields[0].name, "Chat de IA")
+        self.assertEqual(trans_embed.fields[0].value, "/chat con gemini")
+        self.assertIn("Spanish", trans_embed.footer.text)
+
+        # 2. English returns original without calling gemini
+        eng_embed = await translate_embed(orig_embed, mock_gemini, "English")
+        self.assertEqual(eng_embed, orig_embed)
+
+    async def test_gemini_client_translate_text(self):
+        from gemini_client import GeminiClient
+        client = GeminiClient("fake_key")
+        client.generate_with_fallback = unittest.mock.AsyncMock(return_value=("Hola Mundo", "gemini-3.5-flash"))
+
+        # First call -> calls gemini
+        res, model = await client.translate_text("Hello World", "Spanish")
+        self.assertEqual(res, "Hola Mundo")
+        self.assertEqual(model, "gemini-3.5-flash")
+
+        # Second call with same text and target language -> hit cache
+        client.generate_with_fallback.reset_mock()
+        res2, model2 = await client.translate_text("Hello World", "Spanish")
+        self.assertEqual(res2, "Hola Mundo")
+        self.assertEqual(model2, "cache")
+        client.generate_with_fallback.assert_not_called()
+
+        # English passthrough
+        res3, model3 = await client.translate_text("Hello World", "English")
+        self.assertEqual(res3, "Hello World")
+        self.assertEqual(model3, "original")
+
+    def test_help_menu_and_language_views(self):
+        from ui import HelpMenuView, LanguageSelectView, TranslateFeaturesButton, build_help_embed
+        mock_bot = unittest.mock.MagicMock()
+        embed = build_help_embed("overview")
+
+        # HelpMenuView
+        help_view = HelpMenuView(mock_bot, author_id=123, current_embed=embed)
+        self.assertEqual(len(help_view.children), 4)
+
+        # LanguageSelectView
+        from ui import LanguageSelect
+        lang_view = LanguageSelectView(embed, mock_bot, author_id=123)
+        self.assertEqual(len(lang_view.children), 3)
+        dropdown = next(c for c in lang_view.children if isinstance(c, LanguageSelect))
+        self.assertEqual(dropdown.placeholder, "🌐 Select your preferred language...")
+        self.assertEqual(len(dropdown.options), 25)
+
+        # Standalone button
+        btn = TranslateFeaturesButton(source_embed=embed, bot=mock_bot)
+        self.assertEqual(btn.label, "Translate Features")
+
+
 if __name__ == "__main__":
     unittest.main()

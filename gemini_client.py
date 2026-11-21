@@ -99,6 +99,7 @@ class GeminiClient:
                 threshold="BLOCK_MEDIUM_AND_ABOVE",
             ),
         ]
+        self._translation_cache: dict[tuple[int, str], str] = {}
 
     def _classify_error(self, exc: Exception) -> str:
         """Categorizes exception into standardized failure categories."""
@@ -380,3 +381,51 @@ class GeminiClient:
             temperature=0.4,
             timeout_per_model=14.0,
         )
+
+    async def translate_text(
+        self,
+        text: str,
+        target_language: str,
+        source_language: str = "English",
+    ) -> tuple[Optional[str], str]:
+        """
+        Translates text, markdown, or Discord documentation into the specified target language
+        using the Gemini fallback fleet with in-memory caching for minimal latency and quota efficiency.
+        """
+        target_clean = target_language.strip().title()
+        if target_clean in ("English", "En") and source_language.lower() == "english":
+            return text, "original"
+
+        if not hasattr(self, "_translation_cache"):
+            self._translation_cache = {}
+
+        cache_key = (hash(text), target_clean.lower())
+        if cache_key in self._translation_cache:
+            return self._translation_cache[cache_key], "cache"
+
+        prompt = (
+            f"You are a professional localization and translation engine for Discord bot interfaces.\n"
+            f"Translate the following Discord embed and command documentation from {source_language} into {target_clean}.\n\n"
+            "STRICT LOCALIZATION RULES:\n"
+            "1. Preserve ALL markdown formatting exactly (*, **, `, ```, >, #, •, bullet points, emoji).\n"
+            "2. Keep all command names, aliases, parameter syntax tokens, and mentions intact (e.g. keep `/ping`, `/chat`, `/help`, `/ban`, `@SkillX`, `<user>`, `[intensity]` as they are). DO NOT translate command names or slash tokens.\n"
+            "3. DO NOT translate Discord structured section tags like [[TITLE]], [[DESCRIPTION]], [[FIELD_x_NAME]], [[FIELD_x_VAL]], [[FOOTER]] if present.\n"
+            "4. Translate the descriptions, explanations, instructions, and titles naturally and accurately into fluent, native {target_clean}.\n"
+            "5. Output ONLY the translated text without conversational filler, intros, or disclaimers.\n\n"
+            f"Text to translate:\n{text}"
+        )
+
+        translated, model = await self.generate_with_fallback(
+            prompt=prompt,
+            persona="concise",
+            temperature=0.2,
+            max_output_tokens=3500,
+            timeout_per_model=14.0,
+        )
+
+        if translated:
+            if len(self._translation_cache) > 250:
+                self._translation_cache.clear()
+            self._translation_cache[cache_key] = translated
+
+        return translated, model

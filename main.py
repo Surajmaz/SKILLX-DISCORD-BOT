@@ -75,8 +75,12 @@ class EmbedHelpCommand(commands.HelpCommand):
                 inline=False,
             )
 
-        embed.set_footer(text="SkillX Bot Manual • All commands rate-limited")
-        await self.get_destination().send(embed=embed)
+        embed.set_footer(text="SkillX Bot Manual • All commands rate-limited • Click 🌐 to Translate")
+        from ui import HelpMenuView
+        author_id = self.context.author.id if hasattr(self, "context") and self.context else 0
+        bot_instance = self.context.bot if hasattr(self, "context") and self.context else None
+        view = HelpMenuView(bot_instance, author_id, current_embed=embed)
+        await self.get_destination().send(embed=embed, view=view)
 
     async def send_command_help(self, command: commands.Command):
         embed = discord.Embed(

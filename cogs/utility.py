@@ -9,7 +9,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from config import BOT_NAME, VERSION
-from embeds import BRAND_COLOR, base_embed, info_embed
+from embeds import BRAND_COLOR, base_embed, info_embed, error_embed
+from ui import HelpMenuView, LanguageSelectView, build_help_embed
 
 
 class Utility(commands.Cog, name="Utility"):
@@ -18,6 +19,19 @@ class Utility(commands.Cog, name="Utility"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.start_time = datetime.now(timezone.utc)
+        self.ctx_menu = app_commands.ContextMenu(
+            name="Translate with Gemini",
+            callback=self.translate_message_context,
+        )
+        if hasattr(self.bot, "tree"):
+            self.bot.tree.add_command(self.ctx_menu)
+
+    def cog_unload(self):
+        if hasattr(self.bot, "tree"):
+            try:
+                self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
+            except Exception:
+                pass
 
     # ---------------------------------------------------------
     # PING / DIAGNOSTICS
@@ -270,66 +284,114 @@ class Utility(commands.Cog, name="Utility"):
     # HELP REFERENCE
     # ---------------------------------------------------------
 
-    @app_commands.command(name="help", description="Display interactive command manual")
-    async def help_slash(self, interaction: discord.Interaction):
+    @app_commands.command(
+        name="help",
+        description="Display interactive command manual with multi-language AI translation",
+    )
+    @app_commands.describe(category="Jump directly to a specific feature category")
+    @app_commands.choices(category=[
+        app_commands.Choice(name="Overview (All Features)", value="overview"),
+        app_commands.Choice(name="🤖 Artificial Intelligence", value="ai"),
+        app_commands.Choice(name="🛡️ Moderation & AutoMod", value="moderation"),
+        app_commands.Choice(name="🎉 Community & Engagement", value="community"),
+        app_commands.Choice(name="🎮 Fun & Mini-Games", value="fun"),
+        app_commands.Choice(name="📈 Leveling & XP", value="leveling"),
+        app_commands.Choice(name="🎫 Support Tickets", value="tickets"),
+        app_commands.Choice(name="👋 Welcome & AutoRole", value="welcome"),
+        app_commands.Choice(name="📋 Server Audit Logs", value="logs"),
+        app_commands.Choice(name="⚡ Utilities & Diagnostics", value="utility"),
+    ])
+    async def help_slash(
+        self,
+        interaction: discord.Interaction,
+        category: Optional[app_commands.Choice[str]] = None,
+    ):
+        cat_key = category.value if category else "overview"
+        embed = build_help_embed(cat_key, interaction.user)
+        view = HelpMenuView(self.bot, interaction.user.id, current_embed=embed)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+    @commands.command(
+        name="help",
+        aliases=["commands", "manual", "features"],
+        help="Display interactive command manual with multi-language AI translation.",
+    )
+    async def help_prefix(self, ctx: commands.Context, category: Optional[str] = "overview"):
+        embed = build_help_embed(category or "overview", ctx.author)
+        view = HelpMenuView(self.bot, ctx.author.id, current_embed=embed)
+        await ctx.reply(embed=embed, view=view, mention_author=False)
+
+    # ---------------------------------------------------------
+    # MULTI-LANGUAGE TRANSLATION
+    # ---------------------------------------------------------
+
+    @app_commands.command(
+        name="translate",
+        description="Translate any text into 25+ languages using Gemini AI",
+    )
+    @app_commands.describe(
+        text="The text or feature description to translate",
+        target_language="Target language (e.g. Spanish, French, Japanese, Hindi, German, Russian)",
+        private="Keep the translation visible only to you (ephemeral)",
+    )
+    async def translate_slash(
+        self,
+        interaction: discord.Interaction,
+        text: str,
+        target_language: str,
+        private: bool = True,
+    ):
+        await interaction.response.defer(ephemeral=private)
+        ai_cog = self.bot.get_cog("AI Chat") if hasattr(self.bot, "get_cog") else None
+        if ai_cog and hasattr(ai_cog, "gemini"):
+            client = ai_cog.gemini
+        else:
+            from config import GEMINI_API_KEY
+            from gemini_client import GeminiClient
+            client = GeminiClient(GEMINI_API_KEY)
+
+        translated, model = await client.translate_text(text, target_language)
+        if not translated:
+            await interaction.followup.send(
+                content="❌ Translation failed. Gemini AI service may be momentarily busy.",
+                ephemeral=private,
+            )
+            return
+
         embed = base_embed(
-            title="📖 SkillX Command Directory",
-            description=(
-                "⚡ **Prefix-less & Slash System**\n"
-                "• **Slash Commands:** Type `/` to select from all available commands.\n"
-                "• **Conversational AI:** Mention `@SkillX <prompt>` or reply to any bot message.\n"
-                "• **Direct Words:** Standard commands like `ping`, `help`, and `serverinfo` work directly without prefixes."
-            ),
-            color=BRAND_COLOR,
+            title=f"🌐 Translated to {target_language.strip().title()}",
+            description=translated,
+            color=0x6C5CE7,
             user=interaction.user,
-            footer_text="SkillX Bot Manual • All commands rate-limited",
+            footer_text=f"SkillX Translation Engine • Gemini ({model})",
         )
-        embed.add_field(
-            name="🤖 Artificial Intelligence",
-            value="`/chat` • `/persona` • `/code` • `/summarize` • `/forget`\n*Conversational Gemini 3.x, code reviews, and chat recaps*",
-            inline=False,
+        embed.add_field(name="Original", value=text[:1024], inline=False)
+        await interaction.followup.send(embed=embed, ephemeral=private)
+
+    async def translate_message_context(self, interaction: discord.Interaction, message: discord.Message):
+        content = message.clean_content or (message.embeds[0].description if message.embeds else "")
+        if not content:
+            await interaction.response.send_message("❌ Message contains no translatable text.", ephemeral=True)
+            return
+
+        msg_embed = discord.Embed(
+            title="📝 Message Content",
+            description=content[:2000],
+            color=0x6C5CE7,
         )
-        embed.add_field(
-            name="🛡️ Moderation & AutoMod",
-            value="`/kick` • `/ban` • `/timeout` • `/purge` • `/warn` • `/warnings` • `/clearwarns` • `/lock` • `/unlock` • `/slowmode`\n*Server safety suite with anti-spam, invite filters, and infractions*",
-            inline=False,
+        msg_embed.set_author(name=f"Message by {message.author.display_name}", icon_url=message.author.display_avatar.url)
+        view = LanguageSelectView(msg_embed, self.bot, interaction.user.id)
+
+        prompt_embed = discord.Embed(
+            title="🌐 Translate Message with Gemini AI",
+            description=(
+                f"**Original message from {message.author.mention}:**\n> {content[:250]}...\n\n"
+                "Select a target language from the dropdown menu below:"
+            ),
+            color=0x6C5CE7,
         )
-        embed.add_field(
-            name="🎉 Community & Engagement",
-            value="`/poll` • `/giveaway` • `/remind` • `/avatar`\n*Interactive button polls with live bars, automated giveaways, and timers*",
-            inline=False,
-        )
-        embed.add_field(
-            name="🎮 Fun & Mini-Games",
-            value="`/trivia` • `/8ball` • `/coinflip` • `/dice` • `/rps` • `/joke` • `/fact` • `/rate` • `/ship` • `/roast` • `/compliment` • `/mock` • `/reverse`\n*Interactive button trivia, dice, roasts, jokes, and games*",
-            inline=False,
-        )
-        embed.add_field(
-            name="📈 Leveling & XP",
-            value="`/rank` • `/leaderboard` • `/setxp` • `/resetxp`\n*XP progression, visual rank cards, and competitive leaderboards*",
-            inline=False,
-        )
-        embed.add_field(
-            name="🎫 Support Tickets",
-            value="`/ticket-setup` • `/ticket-add` • `/ticket-remove`\n*Channel-based private ticket system with transcript exports*",
-            inline=False,
-        )
-        embed.add_field(
-            name="👋 Welcome & AutoRole",
-            value="`/setwelcome` • `/setgoodbye` • `/testwelcome` • `/autorole`\n*Automated join greetings, farewell embeds, and role assignment*",
-            inline=False,
-        )
-        embed.add_field(
-            name="📋 Server Audit Logs",
-            value="`/setlogchannel` • `/clearlogchannel`\n*Automatic channel logging for deletes, edits, joins, bans, and voice activity*",
-            inline=False,
-        )
-        embed.add_field(
-            name="🔧 Utilities & System",
-            value="`/ping` • `/serverinfo` • `/userinfo` • `/botinfo` • `/stresstest` • `/autoheal` • `/help`\n*Diagnostics, latency graphs, profile inspection, and system stress testing*",
-            inline=False,
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        prompt_embed.set_footer(text="Translated via Google Gemini AI")
+        await interaction.response.send_message(embed=prompt_embed, view=view, ephemeral=True)
 
     # ---------------------------------------------------------
     # STRESS TEST & AUTO-HEALING
